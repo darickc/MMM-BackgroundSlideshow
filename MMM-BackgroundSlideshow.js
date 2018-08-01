@@ -3,7 +3,7 @@
 /* MMM-BackgroundSlideshow.js
  * 
  * Magic Mirror
- * Module: MMM-ImageSlideshow
+ * Module: MMM-BackgroundSlideshow
  * 
  * Magic Mirror By Michael Teeuw http://michaelteeuw.nl
  * MIT Licensed.
@@ -26,10 +26,23 @@ Module.register("MMM-BackgroundSlideshow", {
     treatAllPathsAsOne: false,
     // list of valid file extensions, seperated by commas
     validImageFileExtensions: "bmp,jpg,gif,png",
-    backgroundOpacity: "1",
-    transitionSpeed: 1000,
-    backgroundSize: "contain",
-    transitionImages: false
+    // transition speed from one image to the other, transitionImages must be true
+    transitionSpeed: "1s",
+    // the sizing of the background image
+    // cover: Resize the background image to cover the entire container, even if it has to stretch the image or cut a little bit off one of the edges
+    // contain: Resize the background image to make sure the image is fully visible
+    backgroundSize: "cover", // cover or contain
+    // transition from one image to the other (may be a bit choppy on slower devices, or if the images are too big)
+    transitionImages: false,
+    // the gradient to make the text more visible
+    gradient: [
+      "rgba(0, 0, 0, 0.75) 0%",
+      "rgba(0, 0, 0, 0) 40%",
+      "rgba(0, 0, 0, 0) 80%",
+      "rgba(0, 0, 0, 0.75) 100%"
+    ],
+    // opacity of the gradient
+    gradientOpacity: "0.6"
   },
   // load function
   start: function() {
@@ -77,6 +90,10 @@ Module.register("MMM-BackgroundSlideshow", {
     this.div1 = this.createDiv("big1");
     this.div2 = this.createDiv("big2");
     var div3 = document.createElement("div");
+
+    div3.style.backgroundImage =
+      "linear-gradient( to bottom, " + this.config.gradient.join() + ")";
+    div3.style.opacity = this.config.opacity;
     div3.className = "gradient";
 
     wrapper.appendChild(this.div1);
@@ -90,6 +107,8 @@ Module.register("MMM-BackgroundSlideshow", {
     var div = document.createElement("div");
     div.id = name + this.identifier;
     div.style.backgroundSize = this.config.backgroundSize;
+    div.style.transition =
+      "opacity " + this.config.transitionSpeed + " ease-in-out";
     div.className = "backgroundSlideShow";
     return div;
   },

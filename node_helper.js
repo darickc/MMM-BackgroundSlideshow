@@ -3,7 +3,7 @@
 /* node_helper.js
  * 
  * Magic Mirror
- * Module: MMM-ImageSlideshow
+ * Module: MMM-BackgroundSlideshow
  * 
  * Magic Mirror By Michael Teeuw http://michaelteeuw.nl
  * MIT Licensed.

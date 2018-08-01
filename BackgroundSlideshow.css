@@ -1,21 +1,14 @@
-.backgroundSlideShow {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0;
-    transition: opacity 1s ease-in-out;
+.backgroundSlideShow,
+.gradient {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
 
-.gradient {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background-image: linear-gradient( to bottom, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.75) 25%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0.75) 85%, rgba(0, 0, 0, 0.75) 100%);
-    opacity: 0.6;
+.backgroundSlideShow {
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
 }
