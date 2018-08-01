@@ -1,5 +1,5 @@
 # Module: Background Slideshow
-Show a slideshow of images in the background.  Great for a photo from instead of a mirror.
+Show a slideshow of images in the background.  Great for a photo frame from instead of a mirror.
 
 The `MMM-BackgroundSlideshow` module is designed to display images fullscreen, one at a time on a fixed interval, from one or many directories.  These images can be shown in order or at random, one directory at a time or all at time. The images can transition from one to the other and be shown with no edge (cover) or the enter image(contain).
 
