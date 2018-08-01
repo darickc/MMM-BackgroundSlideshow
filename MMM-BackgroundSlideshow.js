@@ -22,6 +22,7 @@ Module.register("MMM-BackgroundSlideshow", {
     // if true randomize image order, otherwise do alphabetical
     randomizeImageOrder: false,
     // if true combine all images in all the paths
+
     // if false each path with be viewed seperately in the order listed
     treatAllPathsAsOne: false,
     // list of valid file extensions, seperated by commas
@@ -41,7 +42,7 @@ Module.register("MMM-BackgroundSlideshow", {
       "rgba(0, 0, 0, 0) 80%",
       "rgba(0, 0, 0, 0.75) 100%"
     ],
-    // opacity of the gradient
+    // overall opacity of the gradient
     gradientOpacity: "0.6"
   },
   // load function
