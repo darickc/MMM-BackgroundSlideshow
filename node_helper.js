@@ -19,11 +19,11 @@ var FileSystemImageSlideshow = require("fs");
 // the main module helper create
 module.exports = NodeHelper.create({
   // subclass start method, clears the initial config array
-  start: function() {
-    this.moduleConfigs = [];
+  start: function () {
+    //this.moduleConfigs = [];
   },
   // shuffles an array at random and returns it
-  shuffleArray: function(array) {
+  shuffleArray: function (array) {
     var currentIndex = array.length,
       temporaryValue,
       randomIndex;
@@ -37,14 +37,14 @@ module.exports = NodeHelper.create({
     return array;
   },
   // sort by filename attribute
-  sortByFilename: function(a, b) {
+  sortByFilename: function (a, b) {
     aL = a.filename.toLowerCase();
     bL = b.filename.toLowerCase();
     if (aL > bL) return 1;
     else return -1;
   },
   // checks there's a valid image file extension
-  checkValidImageFileExtension: function(filename, extensions) {
+  checkValidImageFileExtension: function (filename, extensions) {
     var extList = extensions.split(",");
     for (var extIndex = 0; extIndex < extList.length; extIndex++) {
       if (filename.toLowerCase().endsWith(extList[extIndex])) return true;
@@ -52,7 +52,7 @@ module.exports = NodeHelper.create({
     return false;
   },
   // gathers the image list
-  gatherImageList: function(config) {
+  gatherImageList: function (config) {
     var self = this;
     // create an empty main image list
     var imageList = [];
@@ -111,10 +111,10 @@ module.exports = NodeHelper.create({
     return imageListComplete;
   },
   // subclass socketNotificationReceived, received notification from module
-  socketNotificationReceived: function(notification, payload) {
+  socketNotificationReceived: function (notification, payload) {
     if (notification === "BACKGROUNDSLIDESHOW_REGISTER_CONFIG") {
       // add the current config to an array of all configs used by the helper
-      this.moduleConfigs.push(payload);
+      //this.moduleConfigs.push(payload);
       // this to self
       var self = this;
       // get the image list
