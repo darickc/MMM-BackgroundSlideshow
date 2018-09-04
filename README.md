@@ -143,7 +143,7 @@ The following properties can be configured:
 			</td>
 		</tr>
     <tr>
-			<td><code>gradientOpacity</code></td>
+			<td><code>opacity</code></td>
 			<td>Overall opacity of the gradient<br>
 				<br><b>Example:</b> <code>'.8'</code>
 				<br><b>Default value:</b> <code>'0.6'</code>
