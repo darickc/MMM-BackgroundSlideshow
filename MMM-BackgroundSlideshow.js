@@ -12,38 +12,38 @@
  * MIT Licensed.
  */
 
-Module.register("MMM-BackgroundSlideshow", {
+Module.register('MMM-BackgroundSlideshow', {
   // Default module config.
   defaults: {
     // an array of strings, each is a path to a directory with images
-    imagePaths: ["modules/MMM-BackgroundSlideshow/exampleImages"],
+    imagePaths: ['modules/MMM-BackgroundSlideshow/exampleImages'],
     // the speed at which to switch between images, in milliseconds
     slideshowSpeed: 10 * 1000,
     // if true randomize image order, otherwise do alphabetical
     randomizeImageOrder: false,
-    // if true combine all images in all the paths
-
     // if false each path with be viewed seperately in the order listed
-    treatAllPathsAsOne: false,
+    recursiveSubDirectories: false,
     // list of valid file extensions, seperated by commas
-    validImageFileExtensions: "bmp,jpg,gif,png",
+    validImageFileExtensions: 'bmp,jpg,gif,png',
     // transition speed from one image to the other, transitionImages must be true
-    transitionSpeed: "1s",
+    transitionSpeed: '1s',
     // the sizing of the background image
     // cover: Resize the background image to cover the entire container, even if it has to stretch the image or cut a little bit off one of the edges
     // contain: Resize the background image to make sure the image is fully visible
-    backgroundSize: "cover", // cover or contain
+    backgroundSize: 'cover', // cover or contain
     // transition from one image to the other (may be a bit choppy on slower devices, or if the images are too big)
     transitionImages: false,
     // the gradient to make the text more visible
     gradient: [
-      "rgba(0, 0, 0, 0.75) 0%",
-      "rgba(0, 0, 0, 0) 40%",
-      "rgba(0, 0, 0, 0) 80%",
-      "rgba(0, 0, 0, 0.75) 100%"
+      'rgba(0, 0, 0, 0.75) 0%',
+      'rgba(0, 0, 0, 0) 40%',
+      'rgba(0, 0, 0, 0) 80%',
+      'rgba(0, 0, 0, 0.75) 100%'
     ],
     // overall opacity of the gradient
-    gradientOpacity: "0.6"
+    // gradientOpacity: '0.6',
+    // the direction the gradient goes, vertical or horizontal
+    gradientDirection: 'vertical'
   },
   // load function
   start: function() {
@@ -55,7 +55,7 @@ Module.register("MMM-BackgroundSlideshow", {
     this.errorMessage = null;
     if (this.config.imagePaths.length == 0) {
       this.errorMessage =
-        "MMM-BackgroundSlideshow: Missing required parameter.";
+        'MMM-BackgroundSlideshow: Missing required parameter.';
     } else {
       // create an empty image list
       this.imageList = [];
@@ -67,14 +67,15 @@ Module.register("MMM-BackgroundSlideshow", {
   // Define required scripts.
   getStyles: function() {
     // the css contains the make grayscale code
-    return ["BackgroundSlideshow.css"];
+    return ['BackgroundSlideshow.css'];
   },
   // the socket handler
   socketNotificationReceived: function(notification, payload) {
     // if an update was received
-    if (notification === "BACKGROUNDSLIDESHOW_FILELIST") {
+    if (notification === 'BACKGROUNDSLIDESHOW_FILELIST') {
       // check this is for this module based on the woeid
       if (payload.identifier === this.identifier) {
+        // console.info('Returning Images, payload:' + JSON.stringify(payload));
         // set the image list
         this.imageList = payload.imageList;
         // if image list actually contains images
@@ -87,15 +88,22 @@ Module.register("MMM-BackgroundSlideshow", {
   },
   // Override dom generator.
   getDom: function() {
-    var wrapper = document.createElement("div");
-    this.div1 = this.createDiv("big1");
-    this.div2 = this.createDiv("big2");
-    var div3 = document.createElement("div");
+    var wrapper = document.createElement('div');
+    this.div1 = this.createDiv('big1');
+    this.div2 = this.createDiv('big2');
+    var div3 = document.createElement('div');
+
+    var direction =
+      this.config.gradientDirection == 'horizontal' ? 'right' : 'bottom';
 
     div3.style.backgroundImage =
-      "linear-gradient( to bottom, " + this.config.gradient.join() + ")";
-    div3.style.opacity = this.config.opacity;
-    div3.className = "gradient";
+      'linear-gradient( to ' +
+      direction +
+      ', ' +
+      this.config.gradient.join() +
+      ')';
+    // div3.style.opacity = this.config.gradientOpacity;
+    div3.className = 'gradient';
 
     wrapper.appendChild(this.div1);
     wrapper.appendChild(this.div2);
@@ -105,12 +113,12 @@ Module.register("MMM-BackgroundSlideshow", {
   },
 
   createDiv: function(name) {
-    var div = document.createElement("div");
+    var div = document.createElement('div');
     div.id = name + this.identifier;
     div.style.backgroundSize = this.config.backgroundSize;
     div.style.transition =
-      "opacity " + this.config.transitionSpeed + " ease-in-out";
-    div.className = "backgroundSlideShow";
+      'opacity ' + this.config.transitionSpeed + ' ease-in-out';
+    div.className = 'backgroundSlideShow';
     return div;
   },
 
@@ -128,8 +136,8 @@ Module.register("MMM-BackgroundSlideshow", {
         var image = new Image();
         image.onload = function() {
           div1.style.backgroundImage = "url('" + this.src + "')";
-          div1.style.opacity = "1";
-          div2.style.opacity = "0";
+          div1.style.opacity = '1';
+          div2.style.opacity = '0';
         };
         image.src = this.imageList[this.imageIndex];
 
@@ -161,9 +169,10 @@ Module.register("MMM-BackgroundSlideshow", {
   },
   updateImageList: function() {
     this.suspend();
+    // console.info('Getting Images');
     // ask helper function to get the image list
     this.sendSocketNotification(
-      "BACKGROUNDSLIDESHOW_REGISTER_CONFIG",
+      'BACKGROUNDSLIDESHOW_REGISTER_CONFIG',
       this.config
     );
   }
