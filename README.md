@@ -21,21 +21,21 @@ Extra configurations include setting the amount of time an image is shown for, s
 
 ## Using the module
 
-Use Git to download. Make sure Git is installed on your system.  In the command line/terminal, go to the modules directory of the your Magic Mirror install.  run: 'git clone https://github.com/darickc/MMM-BackgroundSlideshow.git'. The advantage of using Git is when there is an update, you can run 'git pull' and it will pull down all the updates.  Magic Mirror can even let you know when there are updates.
+Use Git to download. Make sure Git is installed on your system. In the command line/terminal, go to the modules directory of the your Magic Mirror install. run: 'git clone https://github.com/darickc/MMM-BackgroundSlideshow.git'. The advantage of using Git is when there is an update, you can run 'git pull' and it will pull down all the updates. Magic Mirror can even let you know when there are updates.
 
 Or
 
-Download the zip file https://github.com/darickc/MMM-BackgroundSlideshow/archive/master.zip.  Unzip contents into the modules directory of your Magic Mirror install.  Rename the 'MMM-BackgroundSlideshow-master' folder to 'MMM-BackgroundSlideshow'.
+Download the zip file https://github.com/darickc/MMM-BackgroundSlideshow/archive/master.zip. Unzip contents into the modules directory of your Magic Mirror install. Rename the 'MMM-BackgroundSlideshow-master' folder to 'MMM-BackgroundSlideshow'.
 
 Add the module to the modules array in the `config/config.js` file:
 
 ```javascript
 modules: [
   {
-    module: "MMM-BackgroundSlideshow",
-    position: "fullscreen_below",
+    module: 'MMM-BackgroundSlideshow',
+    position: 'fullscreen_below',
     config: {
-      imagePaths: ["modules/MMM-BackgroundSlideshow/example1"],
+      imagePaths: ['modules/MMM-BackgroundSlideshow/example1'],
       transitionImages: true,
       randomizeImageOrder: true
     }
@@ -91,8 +91,8 @@ The following properties can be configured:
 			</td>
 		</tr>
         <tr>
-			<td><code>treatAllPathsAsOne</code></td>
-			<td>Boolean value, if true will treat all the paths specified in <code>imagePaths</code> as one path. Otherwise, if false, images will only be shown from one path at a time in the order of <code>imagePaths</code>, until all the images in that path are exhausted, before continuing to the next path.<br>
+			<td><code>recursiveSubDirectories</code></td>
+			<td>Boolean value, if true it will scan all sub-directories in the imagePaths.<br>
 				<br><b>Example:</b> <code>true</code>
 				<br><b>Default value:</b> <code>false</code>
 				<br>This value is <b>OPTIONAL</b>
@@ -149,10 +149,10 @@ The following properties can be configured:
 			</td>
 		</tr>
     <tr>
-			<td><code>gradientOpacity</code></td>
-			<td>Overall opacity of the gradient<br>
-				<br><b>Example:</b> <code>'.8'</code>
-				<br><b>Default value:</b> <code>'0.6'</code>
+			<td><code>gradientDirection</code></td>
+			<td>The direction of the gradient<br>
+				<br><b>Example:</b> <code>'horizontal'</code>
+				<br><b>Default value:</b> <code>'vertical'</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
