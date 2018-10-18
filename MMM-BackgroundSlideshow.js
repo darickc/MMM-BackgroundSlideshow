@@ -139,7 +139,7 @@ Module.register('MMM-BackgroundSlideshow', {
           div1.style.opacity = '1';
           div2.style.opacity = '0';
         };
-        image.src = this.imageList[this.imageIndex];
+        image.src = encodeURI(this.imageList[this.imageIndex]);
 
         this.imageIndex += 1;
       } else {
