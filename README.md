@@ -134,7 +134,23 @@ The following properties can be configured:
 		</tr>
     <tr>
 			<td><code>gradient</code></td>
-			<td>The gradient to make the text more visible.  Enter gradient stops as an array.<br>
+			<td>The vertical gradient to make the text more visible.  Enter gradient stops as an array.<br>
+				<br><b>Example:</b> <code>[
+      "rgba(0, 0, 0, 0.75) 0%",
+      "rgba(0, 0, 0, 0) 40%"
+    ]</code>
+				<br><b>Default value:</b> <code>[
+      "rgba(0, 0, 0, 0.75) 0%",
+      "rgba(0, 0, 0, 0) 40%",
+      "rgba(0, 0, 0, 0) 80%",
+      "rgba(0, 0, 0, 0.75) 100%"
+    ]</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>horizontalGradient</code></td>
+			<td>The horizontal gradient to make the text more visible.  Enter gradient stops as an array.<br>
 				<br><b>Example:</b> <code>[
       "rgba(0, 0, 0, 0.75) 0%",
       "rgba(0, 0, 0, 0) 40%"
@@ -153,6 +169,7 @@ The following properties can be configured:
 			<td>The direction of the gradient<br>
 				<br><b>Example:</b> <code>'horizontal'</code>
 				<br><b>Default value:</b> <code>'vertical'</code>
+				<br><b>Possible values:</b> <code>'vertical', 'horizontal', 'both'</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
