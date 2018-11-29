@@ -1,13 +1,13 @@
 /* global Module */
 
 /* MMM-BackgroundSlideshow.js
- * 
+ *
  * Magic Mirror
  * Module: MMM-BackgroundSlideshow
- * 
+ *
  * Magic Mirror By Michael Teeuw http://michaelteeuw.nl
  * MIT Licensed.
- * 
+ *
  * Module MMM-Slideshow By Darick Carpenter
  * MIT Licensed.
  */
@@ -40,8 +40,12 @@ Module.register('MMM-BackgroundSlideshow', {
       'rgba(0, 0, 0, 0) 80%',
       'rgba(0, 0, 0, 0.75) 100%'
     ],
-    // overall opacity of the gradient
-    // gradientOpacity: '0.6',
+    horizontalGradient: [
+      'rgba(0, 0, 0, 0.75) 0%',
+      'rgba(0, 0, 0, 0) 40%',
+      'rgba(0, 0, 0, 0) 80%',
+      'rgba(0, 0, 0, 0.75) 100%'
+    ],
     // the direction the gradient goes, vertical or horizontal
     gradientDirection: 'vertical'
   },
@@ -91,25 +95,33 @@ Module.register('MMM-BackgroundSlideshow', {
     var wrapper = document.createElement('div');
     this.div1 = this.createDiv('big1');
     this.div2 = this.createDiv('big2');
-    var div3 = document.createElement('div');
-
-    var direction =
-      this.config.gradientDirection == 'horizontal' ? 'right' : 'bottom';
-
-    div3.style.backgroundImage =
-      'linear-gradient( to ' +
-      direction +
-      ', ' +
-      this.config.gradient.join() +
-      ')';
-    // div3.style.opacity = this.config.gradientOpacity;
-    div3.className = 'gradient';
 
     wrapper.appendChild(this.div1);
     wrapper.appendChild(this.div2);
-    wrapper.appendChild(div3);
+
+    if (
+      this.config.gradientDirection === 'vertical' ||
+      this.config.gradientDirection === 'both'
+    ) {
+      this.createGradientDiv('bottom', this.config.gradient, wrapper);
+    }
+
+    if (
+      this.config.gradientDirection === 'horizontal' ||
+      this.config.gradientDirection === 'both'
+    ) {
+      this.createGradientDiv('right', this.config.gradient, wrapper);
+    }
 
     return wrapper;
+  },
+
+  createGradientDiv: function(direction, gradient, wrapper) {
+    var div = document.createElement('div');
+    div.style.backgroundImage =
+      'linear-gradient( to ' + direction + ', ' + gradient.join() + ')';
+    div.className = 'gradient';
+    wrapper.appendChild(div);
   },
 
   createDiv: function(name) {
