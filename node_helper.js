@@ -1,13 +1,13 @@
 /* global Module */
 
 /* node_helper.js
- * 
+ *
  * Magic Mirror
  * Module: MMM-BackgroundSlideshow
- * 
+ *
  * Magic Mirror By Michael Teeuw http://michaelteeuw.nl
  * MIT Licensed.
- * 
+ *
  * Module MMM-BackgroundSlideshow By Darick Carpenter
  * MIT Licensed.
  */
@@ -38,8 +38,8 @@ module.exports = NodeHelper.create({
   },
   // sort by filename attribute
   sortByFilename: function(a, b) {
-    aL = a.filename.toLowerCase();
-    bL = b.filename.toLowerCase();
+    aL = a.toLowerCase();
+    bL = b.toLowerCase();
     if (aL > bL) return 1;
     else return -1;
   },
