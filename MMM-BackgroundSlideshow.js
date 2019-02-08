@@ -85,6 +85,7 @@ Module.register('MMM-BackgroundSlideshow', {
         // if image list actually contains images
         // set loaded flag to true and update dom
         if (this.imageList.length > 0) {
+          this.updateImage(); //Added to show the image at least once, but not change it within this.resume()
           this.resume();
         }
       }
@@ -173,7 +174,7 @@ Module.register('MMM-BackgroundSlideshow', {
     }
   },
   resume: function() {
-    this.updateImage();
+    //this.updateImage(); //Removed to prevent image change whenever MMM-Carousel changes slides
     var self = this;
     this.timer = setInterval(function() {
       self.updateImage();
