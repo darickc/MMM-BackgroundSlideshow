@@ -82,8 +82,6 @@ The following notifications can be used:
 			<td>Change to the next image and start the timer for image changes<br>
 			</td>
 		</tr>
-
-	</tbody>
 </table>
 
 
