@@ -73,6 +73,35 @@ Module.register('MMM-BackgroundSlideshow', {
     // the css contains the make grayscale code
     return ['BackgroundSlideshow.css'];
   },
+  // generic notification handler
+  notificationReceived: function(notification, payload, sender) {
+    if (sender) {
+      Log.log(this.name + " received a module notification: " + notification + " from sender: " + sender.name);
+      if(notification === 'BACKGROUNDSLIDESHOW_IMAGE_UPDATE'){
+        Log.log("MMM-BackgroundSlideshow: Changing Background");
+        this.suspend();
+        this.updateImage();
+        this.resume();
+      }
+      else if (notification === 'BACKGROUNDSLIDESHOW_NEXT'){ // Change to next image
+        this.updateImage();
+        if(this.timer){   // Restart timer only if timer was already running
+          this.resume();  
+        }
+
+      }
+      else if (notification === 'BACKGROUNDSLIDESHOW_PLAY'){ // Change to next image and start timer.
+        this.updateImage();
+        this.resume();
+      }
+      else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE'){ // Stop timer.
+        this.suspend();
+      }
+      else {
+        Log.log(this.name + " received a system notification: " + notification);
+      }
+    }
+  },
   // the socket handler
   socketNotificationReceived: function(notification, payload) {
     // if an update was received
@@ -153,7 +182,7 @@ Module.register('MMM-BackgroundSlideshow', {
           div2.style.opacity = '0';
         };
         image.src = encodeURI(this.imageList[this.imageIndex]);
-
+        this.sendNotification('BACKGROUNDSLIDESHOW_IMAGE_UPDATED', {url:image.src});
         this.imageIndex += 1;
       } else {
         this.imageIndex = 0;
@@ -171,10 +200,12 @@ Module.register('MMM-BackgroundSlideshow', {
   suspend: function() {
     if (this.timer) {
       clearInterval(this.timer);
+      this.timer = null;
     }
   },
   resume: function() {
     //this.updateImage(); //Removed to prevent image change whenever MMM-Carousel changes slides
+    this.suspend();
     var self = this;
     this.timer = setInterval(function() {
       self.updateImage();

@@ -54,6 +54,37 @@ body {
 }
 ```
 
+## Notification options
+
+The following notifications can be used:
+
+<table width="100%">
+	<!-- why, markdown... -->
+	<thead>
+		<tr>
+			<th>Notification</th>
+			<th width="100%">Description</th>
+		</tr>
+	<thead>
+	<tbody>
+		<tr>
+			<td><code>BACKGROUNDSLIDESHOW_NEXT</code></td>
+			<td>Change to the next image, restart the timer for image changes only if already running<br>
+			</td>
+		</tr>
+		<tr>
+			<td><code>BACKGROUNDSLIDESHOW_PAUSE</code></td>
+			<td>Pause the timer for image changes<br>
+			</td>
+		</tr>		
+		<tr>
+			<td><code>BACKGROUNDSLIDESHOW_PLAY</code></td>
+			<td>Change to the next image and start the timer for image changes<br>
+			</td>
+		</tr>
+</table>
+
+
 ## Configuration options
 
 The following properties can be configured:
