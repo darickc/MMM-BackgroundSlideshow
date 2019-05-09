@@ -35,7 +35,7 @@ modules: [
     module: 'MMM-BackgroundSlideshow',
     position: 'fullscreen_below',
     config: {
-      imagePaths: ['modules/MMM-BackgroundSlideshow/example1'],
+      imagePaths: ['modules/MMM-BackgroundSlideshow/exampleImages/'],
       transitionImages: true,
       randomizeImageOrder: true
     }
@@ -101,7 +101,7 @@ The following properties can be configured:
 		<tr>
 			<td><code>imagePaths</code></td>
 			<td>Array value containing strings. Each string should be a path to a directory where image files can be found.<br>
-				<br><b>Example:</b> <code>['modules/MMM-ImageSlideshow/example1']</code>
+				<br><b>Example:</b> <code>['modules/MMM-BackgroundSlideshow/exampleImages/']</code>
 				<br>This value is <b>REQUIRED</b>
 			</td>
 		</tr>
