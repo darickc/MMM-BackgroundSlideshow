@@ -1,0 +1,10 @@
+{
+  "name": "mmm-backgroundslideshow",
+  "version": "1.0.0",
+  "description": "",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "exif-js": "^2.3.0"
+  }
+}
