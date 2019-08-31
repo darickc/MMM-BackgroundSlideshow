@@ -68,7 +68,12 @@ Module.register('MMM-BackgroundSlideshow', {
       this.updateImageList();
     }
   },
-  // Define required scripts.
+
+    getScripts: function() {
+		return ["modules/" + this.name + "/node_modules/exif-js/exif.js"];
+	},
+
+
   getStyles: function() {
     // the css contains the make grayscale code
     return ['BackgroundSlideshow.css'];
@@ -173,16 +178,34 @@ Module.register('MMM-BackgroundSlideshow', {
         var div1 = this.div1;
         var div2 = this.div2;
 
-        // div2.style.backgroundImage = div1.style.backgroundImage;
 
         var image = new Image();
         image.onload = function() {
-          div1.style.backgroundImage = "url('" + this.src + "')";
-          div1.style.opacity = '1';
+			div1.style.backgroundImage = "url('" + this.src + "')";
+			div1.style.opacity = '1';
+			div1.style.transform="rotate(0deg)";			  
+			EXIF.getData(image, function() {	
+				var Orientation = EXIF.getTag(this, "Orientation");
+				if (Orientation != null) {
+					// console.info('Updating image, orientation:' + Orientation);
+					if (Orientation == 6) {
+						// console.info('Updating rotation to 90deg');
+						div1.style.transform="rotate(90deg)";
+					}
+					else
+						if (Orientation == 8) {
+						// console.info('Updating rotation to -90deg');
+						div1.style.transform="rotate(-90deg)";
+						}
+					}
+				}
+			)
+ 		  
           div2.style.opacity = '0';
         };
         image.src = encodeURI(this.imageList[this.imageIndex]);
         this.sendNotification('BACKGROUNDSLIDESHOW_IMAGE_UPDATED', {url:image.src});
+		    // console.info('Updating image, source:' + image.src);
         this.imageIndex += 1;
       } else {
         this.imageIndex = 0;
@@ -208,12 +231,13 @@ Module.register('MMM-BackgroundSlideshow', {
     this.suspend();
     var self = this;
     this.timer = setInterval(function() {
+		// console.info('MMM-BackgroundSlideshow updating from resume');
       self.updateImage();
     }, self.config.slideshowSpeed);
   },
   updateImageList: function() {
     this.suspend();
-    // console.info('Getting Images');
+     // console.info('Getting Images');
     // ask helper function to get the image list
     this.sendSocketNotification(
       'BACKGROUNDSLIDESHOW_REGISTER_CONFIG',
