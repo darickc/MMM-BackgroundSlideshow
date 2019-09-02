@@ -27,6 +27,15 @@ Or
 
 Download the zip file https://github.com/darickc/MMM-BackgroundSlideshow/archive/master.zip. Unzip contents into the modules directory of your Magic Mirror install. Rename the 'MMM-BackgroundSlideshow-master' folder to 'MMM-BackgroundSlideshow'.
 
+Once downloaded, install dependencies:
+````
+cd ~/MagicMirror/modules/MMM-BackgroundSlideshow
+````
+
+````
+npm install
+````
+
 Add the module to the modules array in the `config/config.js` file:
 
 ```javascript
