@@ -173,6 +173,14 @@ The following properties can be configured:
 			</td>
 		</tr>
     <tr>
+			<td><code>opacity</code></td>
+			<td>Opacity applied to the entire module (0 through 1), a lower opacity will darken the entire image. Can be used independently or in conjunciton with gradient settings.<br>
+				<br><b>Example:</b> <code>0.5</code>
+				<br><b>Default value:</b> <code>1</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+    <tr>
 			<td><code>gradient</code></td>
 			<td>The vertical gradient to make the text more visible.  Enter gradient stops as an array.<br>
 				<br><b>Example:</b> <code>[

@@ -33,6 +33,8 @@ Module.register('MMM-BackgroundSlideshow', {
     backgroundSize: 'cover', // cover or contain
     // transition from one image to the other (may be a bit choppy on slower devices, or if the images are too big)
     transitionImages: false,
+    // opacity (0 to 1) can be used to darken the entire image
+    opacity: 1,
     // the gradient to make the text more visible
     gradient: [
       'rgba(0, 0, 0, 0.75) 0%',
@@ -182,7 +184,7 @@ Module.register('MMM-BackgroundSlideshow', {
         var image = new Image();
         image.onload = function() {
 			div1.style.backgroundImage = "url('" + this.src + "')";
-			div1.style.opacity = '1';
+			div1.style.opacity = this.config.opacity;
 			div1.style.transform="rotate(0deg)";			  
 			EXIF.getData(image, function() {	
 				var Orientation = EXIF.getTag(this, "Orientation");
