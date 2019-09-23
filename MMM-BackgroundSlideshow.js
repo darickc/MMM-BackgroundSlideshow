@@ -40,7 +40,13 @@ Module.register('MMM-BackgroundSlideshow', {
       'rgba(0, 0, 0, 0) 80%',
       'rgba(0, 0, 0, 0.75) 100%'
     ],
-    // the direction the gradient goes: vertical, horizontal, both, or false
+    horizontalGradient: [
+      'rgba(0, 0, 0, 0.75) 0%',
+      'rgba(0, 0, 0, 0) 40%',
+      'rgba(0, 0, 0, 0) 80%',
+      'rgba(0, 0, 0, 0.75) 100%'
+    ],
+    // the direction the gradient goes, vertical or horizontal
     gradientDirection: 'vertical'
   },
   // load function

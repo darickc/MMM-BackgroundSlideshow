@@ -85,7 +85,7 @@ The following notifications can be used:
 			<td><code>BACKGROUNDSLIDESHOW_PAUSE</code></td>
 			<td>Pause the timer for image changes<br>
 			</td>
-		</tr>
+		</tr>		
 		<tr>
 			<td><code>BACKGROUNDSLIDESHOW_PLAY</code></td>
 			<td>Change to the next image and start the timer for image changes<br>
@@ -175,6 +175,22 @@ The following properties can be configured:
     <tr>
 			<td><code>gradient</code></td>
 			<td>The vertical gradient to make the text more visible.  Enter gradient stops as an array.<br>
+				<br><b>Example:</b> <code>[
+      "rgba(0, 0, 0, 0.75) 0%",
+      "rgba(0, 0, 0, 0) 40%"
+    ]</code>
+				<br><b>Default value:</b> <code>[
+      "rgba(0, 0, 0, 0.75) 0%",
+      "rgba(0, 0, 0, 0) 40%",
+      "rgba(0, 0, 0, 0) 80%",
+      "rgba(0, 0, 0, 0.75) 100%"
+    ]</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>horizontalGradient</code></td>
+			<td>The horizontal gradient to make the text more visible.  Enter gradient stops as an array.<br>
 				<br><b>Example:</b> <code>[
       "rgba(0, 0, 0, 0.75) 0%",
       "rgba(0, 0, 0, 0) 40%"
