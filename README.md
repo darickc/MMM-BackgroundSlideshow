@@ -213,5 +213,13 @@ The following properties can be configured:
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
+    <tr>
+			<td><code>backgroundColor</code></td>
+			<td>Background behind background image<br>
+				<br><b>Example:</b> <code>'lightblue'</code>
+				<br><b>Default value:</b> <code>'black'</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
     </tbody>
 </table>
