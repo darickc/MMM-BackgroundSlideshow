@@ -47,7 +47,9 @@ Module.register('MMM-BackgroundSlideshow', {
       'rgba(0, 0, 0, 0.75) 100%'
     ],
     // the direction the gradient goes, vertical or horizontal
-    gradientDirection: 'vertical'
+    gradientDirection: 'vertical',
+    // Background behind background image
+    backgroundColor: 'black'
   },
   // load function
   start: function() {
@@ -163,6 +165,7 @@ Module.register('MMM-BackgroundSlideshow', {
     var div = document.createElement('div');
     div.id = name + this.identifier;
     div.style.backgroundSize = this.config.backgroundSize;
+    div.style.backgroundColor = this.config.backgroundColor;
     div.style.transition =
       'opacity ' + this.config.transitionSpeed + ' ease-in-out';
     div.className = 'backgroundSlideShow';
