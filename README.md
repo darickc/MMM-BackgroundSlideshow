@@ -1,3 +1,4 @@
+
 # Module: Background Slideshow
 
 Show a slideshow of images in the background. Great for a photo frame from instead of a mirror.
@@ -161,6 +162,14 @@ The following properties can be configured:
         contain: Resize the background image to make sure the image is fully visible<br>
 				<br><b>Example:</b> <code>'contain'</code>
 				<br><b>Default value:</b> <code>'cover'</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+    <tr>
+			<td><code>backgroundPosition</code></td>
+			<td>How to zoom the background image if backgroundSize is "contain". The most useful options: "top" or "center" or "bottom"<br>
+				<br><b>Example:</b> <code>'top'</code>
+				<br><b>Default value:</b> <code>'center'</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
