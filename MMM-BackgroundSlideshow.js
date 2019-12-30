@@ -31,6 +31,8 @@ Module.register('MMM-BackgroundSlideshow', {
     // cover: Resize the background image to cover the entire container, even if it has to stretch the image or cut a little bit off one of the edges
     // contain: Resize the background image to make sure the image is fully visible
     backgroundSize: 'cover', // cover or contain
+    // if backgroundSize contain, determine where to zoom the picture. Towards top, center or bottom
+    backgroundPosition: 'center', // Most useful options: "top" or "center" or "bottom"
     // transition from one image to the other (may be a bit choppy on slower devices, or if the images are too big)
     transitionImages: false,
     // the gradient to make the text more visible
@@ -91,7 +93,7 @@ Module.register('MMM-BackgroundSlideshow', {
       else if (notification === 'BACKGROUNDSLIDESHOW_NEXT'){ // Change to next image
         this.updateImage();
         if(this.timer){   // Restart timer only if timer was already running
-          this.resume();  
+          this.resume();
         }
 
       }
@@ -163,6 +165,7 @@ Module.register('MMM-BackgroundSlideshow', {
     var div = document.createElement('div');
     div.id = name + this.identifier;
     div.style.backgroundSize = this.config.backgroundSize;
+    div.style.backgroundPosition = this.config.backgroundPosition;
     div.style.transition =
       'opacity ' + this.config.transitionSpeed + ' ease-in-out';
     div.className = 'backgroundSlideShow';
@@ -183,8 +186,8 @@ Module.register('MMM-BackgroundSlideshow', {
         image.onload = function() {
 			div1.style.backgroundImage = "url('" + this.src + "')";
 			div1.style.opacity = '1';
-			div1.style.transform="rotate(0deg)";			  
-			EXIF.getData(image, function() {	
+			div1.style.transform="rotate(0deg)";
+			EXIF.getData(image, function() {
 				var Orientation = EXIF.getTag(this, "Orientation");
 				if (Orientation != null) {
 					// console.info('Updating image, orientation:' + Orientation);
@@ -200,7 +203,7 @@ Module.register('MMM-BackgroundSlideshow', {
 					}
 				}
 			)
- 		  
+
           div2.style.opacity = '0';
         };
         image.src = encodeURI(this.imageList[this.imageIndex]);
