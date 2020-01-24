@@ -167,7 +167,7 @@ The following properties can be configured:
 		</tr>
     <tr>
 			<td><code>backgroundPosition</code></td>
-			<td>How to zoom the background image if backgroundSize is "contain". The most useful options: "top" or "center" or "bottom"<br>
+			<td>Determines where the background image is placed if it doesn't fill the whole screen (i.e. backgroundSize is 'contain'). Module already defaults to 'center', so the most useful options would be: 'top' 'bottom' 'left' or 'right'. However, any valid value for [background-position](https://developer.mozilla.org/en-US/docs/Web/CSS/background-position) could be used.<br>
 				<br><b>Example:</b> <code>'top'</code>
 				<br><b>Default value:</b> <code>'center'</code>
 				<br>This value is <b>OPTIONAL</b>
