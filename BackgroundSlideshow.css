@@ -8,6 +8,75 @@
 }
 
 .backgroundSlideShow {
+  background-position: center;
   background-repeat: no-repeat;
   opacity: 0;
+}
+
+.infoDivHeader {
+  text-transform: uppercase;
+  font-size: 15px;
+  font-family: "Roboto Condensed", Arial, Helvetica, sans-serif;
+  font-weight: 400;
+  line-height: 15px;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+  color: #999;
+}
+
+.exifBg {
+  display: inline-block;
+  padding: 15pt;
+  background-color: #000;
+  opacity: 0.4;
+  border-color: #666;
+  border-style: solid;
+  font-family: "Roboto Condensed", sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 25px;
+}
+
+.bottomLeft {
+  position: absolute;
+  bottom: 0pt;
+  left: 0pt;
+  border-bottom-width: 0px;
+  border-left-width: 0px;
+  border-top-width: 1pt;
+  border-right-width: 1pt;
+  border-top-right-radius: 20pt;
+}
+
+.bottomRight {
+  position: absolute;
+  bottom: 0pt;
+  right: 0pt;
+  border-bottom-width: 0px;
+  border-right-width: 0px;
+  border-top-width: 1pt;
+  border-left-width: 1pt;
+  border-top-left-radius: 20pt;
+}
+
+.topRight {
+  position: absolute;
+  top: 0pt;
+  right: 0pt;
+  border-top-width: 0px;
+  border-right-width: 0px;
+  border-bottom-width: 1pt;
+  border-left-width: 1pt;
+  border-bottom-left-radius: 20pt;
+}
+
+.topLeft {
+  position: absolute;
+  top: 0pt;
+  left: 0pt;
+  border-top-width: 0px;
+  border-left-width: 0px;
+  border-bottom-width: 1pt;
+  border-right-width: 1pt;
+  border-bottom-right-radius: 20pt;
 }
