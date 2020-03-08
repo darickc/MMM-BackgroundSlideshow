@@ -26,7 +26,11 @@ Module.register('MMM-BackgroundSlideshow', {
     // list of valid file extensions, separated by commas
     validImageFileExtensions: 'bmp,jpg,jpeg,gif,png',
     // show a panel containing information about the image currently displayed.
-    showmageInfo: false,
+    showImageInfo: false,
+    // whether to show the image name as part of the info div
+    showImageName: false,
+    // location of the info div
+    imageInfoLocation: 'bottomRight', // Other possibilities are: bottomLeft, topLeft, topRight
     // transition speed from one image to the other, transitionImages must be true
     transitionSpeed: '1s',
     // show a progress bar indicating how long till the next image is displayed.
@@ -35,8 +39,6 @@ Module.register('MMM-BackgroundSlideshow', {
     // cover: Resize the background image to cover the entire container, even if it has to stretch the image or cut a little bit off one of the edges
     // contain: Resize the background image to make sure the image is fully visible
     backgroundSize: 'cover', // cover or contain
-    // if backgroundSize contain, determine where to zoom the picture. Towards top, center or bottom
-    backgroundPosition: 'center', // Most useful options: "top" or "center" or "bottom"
     // transition from one image to the other (may be a bit choppy on slower devices, or if the images are too big)
     transitionImages: false,
     // the gradient to make the text more visible
@@ -77,8 +79,12 @@ Module.register('MMM-BackgroundSlideshow', {
   },
 
   getScripts: function() {
-		return ["modules/" + this.name + "/node_modules/exif-js/exif.js"];
-	},
+    return [
+      "modules/" + this.name + "/node_modules/exif-js/exif.js",
+      "modules/" + this.name + "/node_modules/moment/moment.js"
+    ];
+  },
+
 
   getStyles: function() {
     // the css contains the make grayscale code
@@ -88,8 +94,8 @@ Module.register('MMM-BackgroundSlideshow', {
   // generic notification handler
   notificationReceived: function(notification, payload, sender) {
     if (sender) {
-      // Log.log(this.name + " received a module notification: " + notification + " from sender: " + sender.name);
-      if(notification === 'BACKGROUNDSLIDESHOW_IMAGE_UPDATE'){
+      Log.log(this.name + " received a module notification: " + notification + " from sender: " + sender.name);
+      if (notification === 'BACKGROUNDSLIDESHOW_IMAGE_UPDATE'){
         Log.log("MMM-BackgroundSlideshow: Changing Background");
         this.suspend();
         this.updateImage();
@@ -107,11 +113,11 @@ Module.register('MMM-BackgroundSlideshow', {
           this.resume();
         }
       }
-      else if (notification === 'BACKGROUNDSLIDESHOW_PLAY'){ // Change to next image and start timer.
+      else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') { // Change to next image and start timer.
         this.updateImage();
         this.resume();
       }
-      else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE'){ // Stop timer.
+      else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') { // Stop timer.
         this.suspend();
       }
       else {
@@ -162,12 +168,12 @@ Module.register('MMM-BackgroundSlideshow', {
       this.createGradientDiv('right', this.config.gradient, wrapper);
     }
 
-    if (this.config.showmageInfo) {
-      this.imageInfoDiv = this.createImageInfoDiv(wrapper);
+    if (this.config.showImageInfo) {
+        this.imageInfoDiv = this.createImageInfoDiv(wrapper);
     }
-
+                
     if (this.config.showProgressBar) {
-      this.createProgressbarDiv(wrapper, this.config.slideshowSpeed);
+        this.createProgressbarDiv(wrapper, this.config.slideshowSpeed);
     }
 
     return wrapper;
@@ -194,11 +200,11 @@ Module.register('MMM-BackgroundSlideshow', {
 
   createImageInfoDiv: function(wrapper) {
     const div = document.createElement('div');
-    div.className = 'info';
+    div.className = 'info ' + this.config.imageInfoLocation;
     wrapper.appendChild(div);
     return div;
   },
-
+                
   createProgressbarDiv: function(wrapper, slideshowSpeed) {
     const div = document.createElement('div');
     div.className = 'progress';
@@ -208,8 +214,8 @@ Module.register('MMM-BackgroundSlideshow', {
     inner.style.animation = `move ${slideshowSpeed}ms linear`;
     div.appendChild(inner);
     wrapper.appendChild(div);
-  },
-
+   },
+                
   updateImage: function(backToPreviousImage = false) {
     if (!this.imageList || !this.imageList.length) {
       return;
@@ -242,10 +248,6 @@ Module.register('MMM-BackgroundSlideshow', {
       this.div1.style.opacity = '1';
       this.div1.style.transform="rotate(0deg)";
 
-      if (this.config.showmageInfo) {
-        this.updateImageInfo(decodeURI(image.src));
-      }
-
       if (this.config.showProgressBar) {
         // Restart css animation
         const oldDiv = document.getElementsByClassName('progress-inner')[0];
@@ -255,6 +257,28 @@ Module.register('MMM-BackgroundSlideshow', {
       }
 
       EXIF.getData(image, () => {
+        if (this.config.showImageInfo) {
+          var dateTime = EXIF.getTag(image, "DateTimeOriginal");
+          // attempt to parse the date if possible
+          if (dateTime !== null) {
+            try {
+              dateTime = moment(dateTime, 'YYYY:MM:DD HH:mm:ss');
+              dateTime = dateTime.format("dddd MMMM D, YYYY HH:mm");
+            } catch (e) {
+              console.log('Failed to parse dateTime: ' + dateTime + ' to format YYYY:MM:DD HH:mm:ss');
+              dateTime = '';
+            }
+          }
+          // TODO: allow for location lookup via openMaps
+          // var lat = EXIF.getTag(this, "GPSLatitude");
+          // var lon = EXIF.getTag(this, "GPSLongitude");
+          // // Only display the location if we have both longitute and lattitude
+          // if (lat && lon) {
+          //   // Get small map of location
+          // }
+          this.updateImageInfo(decodeURI(image.src), dateTime);
+          
+        }
         const exifOrientation = EXIF.getTag(image, "Orientation");
         this.div1.style.transform = this.getImageTransformCss(exifOrientation);
       });
@@ -288,7 +312,7 @@ Module.register('MMM-BackgroundSlideshow', {
     }
   },
 
-  updateImageInfo: function(imageSrc) {
+  updateImageInfo: function(imageSrc, imageDate) {
     // Only display last path component as image name if recurseSubDirectories is not set.
     let imageName = imageSrc.split('/').pop();
 
@@ -307,7 +331,8 @@ Module.register('MMM-BackgroundSlideshow', {
       }
     }
 
-    this.imageInfoDiv.innerHTML = imageName;
+    this.imageInfoDiv.innerHTML = '<header class="infoDivHeader">Picture Info</header>' + 
+      (this.config.showImageName ? imageName + '<br/>' + imageDate : imageDate);
   },
 
   swapDivs: function() {
@@ -343,3 +368,5 @@ Module.register('MMM-BackgroundSlideshow', {
     );
   }
 });
+
+ 
