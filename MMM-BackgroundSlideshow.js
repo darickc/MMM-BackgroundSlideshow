@@ -184,26 +184,34 @@ Module.register('MMM-BackgroundSlideshow', {
 
         var image = new Image();
         image.onload = function() {
-			div1.style.backgroundImage = "url('" + this.src + "')";
-			div1.style.opacity = '1';
-			div1.style.transform="rotate(0deg)";
-			EXIF.getData(image, function() {
-				var Orientation = EXIF.getTag(this, "Orientation");
-				if (Orientation != null) {
-					// console.info('Updating image, orientation:' + Orientation);
-					if (Orientation == 6) {
-						// console.info('Updating rotation to 90deg');
-						div1.style.transform="rotate(90deg)";
-					}
-					else
-						if (Orientation == 8) {
-						// console.info('Updating rotation to -90deg');
-						div1.style.transform="rotate(-90deg)";
-						}
-					}
-				}
-			)
+          div1.style.backgroundImage = "url('" + this.src + "')";
+          div1.style.opacity = '1';
+          div1.style.transform="rotate(0deg)";
+          EXIF.getData(image, function() {
+            var Orientation = EXIF.getTag(this, "Orientation");
+            if (Orientation == null) {
+              return;
+            }
 
+            var imageTransformCss = "rotate(0deg)";
+            if(Orientation == 2) {
+              imageTransformCss = "scaleX(-1)";
+            } else if (Orientation == 3) {
+              imageTransformCss = "scaleX(-1) scaleY(-1)";
+            } else if (Orientation == 4) {
+              imageTransformCss = "scaleY(-1)";
+            } else if (Orientation == 5) {
+              imageTransformCss = "scaleX(-1) rotate(90deg)";
+            } else if (Orientation == 6) {
+              imageTransformCss = "rotate(90deg)";
+            } else if (Orientation == 7) {
+              imageTransformCss = "scaleX(-1) rotate(-90deg)";
+            } else if (Orientation == 8) {
+              imageTransformCss = "rotate(-90deg)";
+            }
+            // console.info("Updating image EXIF orientation= " + Orientation + " css=" + imageTransformCss);
+            div1.style.transform = imageTransformCss;
+          })
           div2.style.opacity = '0';
         };
         image.src = encodeURI(this.imageList[this.imageIndex]);
