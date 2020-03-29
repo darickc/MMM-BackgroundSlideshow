@@ -184,7 +184,7 @@ Module.register('MMM-BackgroundSlideshow', {
 
         var image = new Image();
         image.onload = function() {
-          div1.style.backgroundImage = "url('" + this.src + "')";
+          div1.style.backgroundImage = `url("${this.src}")`;
           div1.style.opacity = '1';
           div1.style.transform="rotate(0deg)";
           EXIF.getData(image, function() {
@@ -211,7 +211,7 @@ Module.register('MMM-BackgroundSlideshow', {
             }
             // console.info("Updating image EXIF orientation= " + Orientation + " css=" + imageTransformCss);
             div1.style.transform = imageTransformCss;
-          })
+          });
           div2.style.opacity = '0';
         };
         image.src = encodeURI(this.imageList[this.imageIndex]);
