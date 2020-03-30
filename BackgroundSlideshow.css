@@ -23,3 +23,24 @@
   padding: 10px 12px;
   text-align: left;
 }
+
+@keyframes move {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.progress {
+  position: absolute;
+  bottom: 0px;
+  height: 2px;
+  width: 100%;
+}
+
+.progress-inner {
+  height: 100%;
+  background-color: white;
+}
