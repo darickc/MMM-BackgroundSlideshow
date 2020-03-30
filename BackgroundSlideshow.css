@@ -11,3 +11,15 @@
   background-repeat: no-repeat;
   opacity: 0;
 }
+
+.info {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  background-color: rgba(0,0,0,0.3);
+  border-radius: 20px;
+  font-size: 11px;
+  line-height: 100%;
+  padding: 10px 12px;
+  text-align: left;
+}
