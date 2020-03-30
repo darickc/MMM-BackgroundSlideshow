@@ -25,6 +25,8 @@ Module.register('MMM-BackgroundSlideshow', {
     recursiveSubDirectories: false,
     // list of valid file extensions, seperated by commas
     validImageFileExtensions: 'bmp,jpg,gif,png',
+    // show a panel containing information about the image currently displayed.
+    showmageInfo: false,
     // transition speed from one image to the other, transitionImages must be true
     transitionSpeed: '1s',
     // the sizing of the background image
@@ -150,6 +152,10 @@ Module.register('MMM-BackgroundSlideshow', {
       this.createGradientDiv('right', this.config.gradient, wrapper);
     }
 
+    if (this.config.showmageInfo) {
+      this.imageInfoDiv = this.createImageInfoDiv(wrapper);
+    }
+
     return wrapper;
   },
 
@@ -172,6 +178,13 @@ Module.register('MMM-BackgroundSlideshow', {
     return div;
   },
 
+  createImageInfoDiv: function(wrapper) {
+    const div = document.createElement('div');
+    div.className = 'info';
+    wrapper.appendChild(div);
+    return div;
+  },
+
   updateImage: function() {
     if (this.imageList && this.imageList.length) {
       if (this.imageIndex < this.imageList.length) {
@@ -180,13 +193,28 @@ Module.register('MMM-BackgroundSlideshow', {
         }
         var div1 = this.div1;
         var div2 = this.div2;
-
+        var imageInfoDiv = this.config.showmageInfo ? this.imageInfoDiv : null;
+        var recursiveSubDirectories = this.config.recursiveSubDirectories;
 
         var image = new Image();
         image.onload = function() {
           div1.style.backgroundImage = `url("${this.src}")`;
           div1.style.opacity = '1';
           div1.style.transform="rotate(0deg)";
+
+          if (imageInfoDiv) {
+            // Heuristic: display last path component as image name.
+            // If recursiveSubDirectories is set, display parent directory as well.
+            const pathComponents = decodeURI(this.src).split('/');
+            let imageName = pathComponents.pop();
+            // 3 = ['http', '', 'domain']
+            if (recursiveSubDirectories && pathComponents.length > 3) {
+              const dirName = pathComponents.pop();
+              imageName = `${dirName}/${imageName}`;
+            }
+            imageInfoDiv.innerHTML = imageName;
+          }
+
           EXIF.getData(image, function() {
             var Orientation = EXIF.getTag(this, "Orientation");
             if (Orientation == null) {

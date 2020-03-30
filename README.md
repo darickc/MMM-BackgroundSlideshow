@@ -147,6 +147,16 @@ The following properties can be configured:
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
+		<tr>
+			<td><code>showmageInfo</code></td>
+			<td>Boolean value, if true a bubble containing the currently displayed image file
+			name will be shown. The parent directory is also displayed if the
+			recursiveSubDirectories option is set to true.<br>
+				<br><b>Example:</b> <code>true</code>
+				<br><b>Default value:</b> <code>false</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
     <tr>
 			<td><code>transitionSpeed</code></td>
 			<td>Transition speed from one image to the other, transitionImages must be true. Must be a valid css transition duration.<br>
