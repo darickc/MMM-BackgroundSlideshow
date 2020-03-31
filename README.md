@@ -165,6 +165,15 @@ The following properties can be configured:
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
+		<tr>
+			<td><code>showProgressBar</code></td>
+			<td>Boolean value, if true a progress bar indicating how long till the next image is
+			displayed is shown.<br>
+				<br><b>Example:</b> <code>true</code>
+				<br><b>Default value:</b> <code>false</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
     <tr>
 			<td><code>backgroundSize</code></td>
 			<td>The sizing of the background image. Values can be:<br>

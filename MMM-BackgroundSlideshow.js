@@ -29,6 +29,8 @@ Module.register('MMM-BackgroundSlideshow', {
     showmageInfo: false,
     // transition speed from one image to the other, transitionImages must be true
     transitionSpeed: '1s',
+    // show a progress bar indicating how long till the next image is displayed.
+    showProgressBar: false,
     // the sizing of the background image
     // cover: Resize the background image to cover the entire container, even if it has to stretch the image or cut a little bit off one of the edges
     // contain: Resize the background image to make sure the image is fully visible
@@ -156,6 +158,10 @@ Module.register('MMM-BackgroundSlideshow', {
       this.imageInfoDiv = this.createImageInfoDiv(wrapper);
     }
 
+    if (this.config.showProgressBar) {
+      this.createProgressbarDiv(wrapper, this.config.slideshowSpeed);
+    }
+
     return wrapper;
   },
 
@@ -185,6 +191,17 @@ Module.register('MMM-BackgroundSlideshow', {
     return div;
   },
 
+  createProgressbarDiv: function(wrapper, slideshowSpeed) {
+    const div = document.createElement('div');
+    div.className = 'progress';
+    const inner = document.createElement('div');
+    inner.className = 'progress-inner';
+    inner.style.display = 'none';
+    inner.style.animation = `move ${slideshowSpeed}ms linear`;
+    div.appendChild(inner);
+    wrapper.appendChild(div);
+  },
+
   updateImage: function() {
     if (this.imageList && this.imageList.length) {
       if (this.imageIndex < this.imageList.length) {
@@ -193,8 +210,8 @@ Module.register('MMM-BackgroundSlideshow', {
         }
         var div1 = this.div1;
         var div2 = this.div2;
-        var imageInfoDiv = this.config.showmageInfo ? this.imageInfoDiv : null;
-        var recursiveSubDirectories = this.config.recursiveSubDirectories;
+        const imageInfoDiv = this.config.showmageInfo ? this.imageInfoDiv : null;
+        const config = this.config;
 
         var image = new Image();
         image.onload = function() {
@@ -208,11 +225,19 @@ Module.register('MMM-BackgroundSlideshow', {
             const pathComponents = decodeURI(this.src).split('/');
             let imageName = pathComponents.pop();
             // 3 = ['http', '', 'domain']
-            if (recursiveSubDirectories && pathComponents.length > 3) {
+            if (config.recursiveSubDirectories && pathComponents.length > 3) {
               const dirName = pathComponents.pop();
               imageName = `${dirName}/${imageName}`;
             }
             imageInfoDiv.innerHTML = imageName;
+          }
+
+          if (config.showProgressBar) {
+            // Restart css animation
+            const oldDiv = document.getElementsByClassName('progress-inner')[0];
+            const newDiv = oldDiv.cloneNode(true);
+            oldDiv.parentNode.replaceChild(newDiv, oldDiv);
+            newDiv.style.display = '';
           }
 
           EXIF.getData(image, function() {
