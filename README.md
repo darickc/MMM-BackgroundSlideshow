@@ -83,6 +83,11 @@ The following notifications can be used:
 			</td>
 		</tr>
 		<tr>
+			<td><code>BACKGROUNDSLIDESHOW_PREVIOUS</code></td>
+			<td>Change to the previous image, restart the timer for image changes only if already running<br>
+			</td>
+		</tr>
+		<tr>
 			<td><code>BACKGROUNDSLIDESHOW_PAUSE</code></td>
 			<td>Pause the timer for image changes<br>
 			</td>
