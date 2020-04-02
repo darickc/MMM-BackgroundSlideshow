@@ -87,7 +87,7 @@ Module.register('MMM-BackgroundSlideshow', {
   // generic notification handler
   notificationReceived: function(notification, payload, sender) {
     if (sender) {
-      Log.log(this.name + " received a module notification: " + notification + " from sender: " + sender.name);
+      // Log.log(this.name + " received a module notification: " + notification + " from sender: " + sender.name);
       if(notification === 'BACKGROUNDSLIDESHOW_IMAGE_UPDATE'){
         Log.log("MMM-BackgroundSlideshow: Changing Background");
         this.suspend();
@@ -99,7 +99,12 @@ Module.register('MMM-BackgroundSlideshow', {
         if(this.timer){   // Restart timer only if timer was already running
           this.resume();
         }
-
+      }
+      else if (notification === 'BACKGROUNDSLIDESHOW_PREVIOUS'){ // Change to previous image
+        this.updateImage(/* skipToPrevious= */true);
+        if(this.timer){   // Restart timer only if timer was already running
+          this.resume();
+        }
       }
       else if (notification === 'BACKGROUNDSLIDESHOW_PLAY'){ // Change to next image and start timer.
         this.updateImage();
@@ -109,7 +114,7 @@ Module.register('MMM-BackgroundSlideshow', {
         this.suspend();
       }
       else {
-        Log.log(this.name + " received a system notification: " + notification);
+        // Log.log(this.name + " received a system notification: " + notification);
       }
     }
   },
@@ -202,55 +207,69 @@ Module.register('MMM-BackgroundSlideshow', {
     wrapper.appendChild(div);
   },
 
-  updateImage: function() {
-    if (this.imageList && this.imageList.length) {
-      if (this.imageIndex < this.imageList.length) {
-        if (this.config.transitionImages) {
-          this.swapDivs();
-        }
+  updateImage: function(backToPreviousImage = false) {
+    if (!this.imageList || !this.imageList.length) {
+      return;
+    }
 
-        const image = new Image();
-        image.onload = () => {
-          this.div1.style.backgroundImage = `url("${image.src}")`;
-          this.div1.style.opacity = '1';
-          this.div1.style.transform="rotate(0deg)";
+    if (backToPreviousImage) {
+      // imageIndex is incremented after displaying an image so -2 is needed to
+      // get to previous image index.
+      this.imageIndex -= 2;
 
-          if (this.config.showmageInfo) {
-            // Heuristic: display last path component as image name.
-            // If recursiveSubDirectories is set, display parent directory as well.
-            const pathComponents = decodeURI(image.src).split('/');
-            let imageName = pathComponents.pop();
-            // 3 = ['http', '', 'domain']
-            if (this.config.recursiveSubDirectories && pathComponents.length > 3) {
-              const dirName = pathComponents.pop();
-              imageName = `${dirName}/${imageName}`;
-            }
-            this.imageInfoDiv.innerHTML = imageName;
-          }
-
-          if (this.config.showProgressBar) {
-            // Restart css animation
-            const oldDiv = document.getElementsByClassName('progress-inner')[0];
-            const newDiv = oldDiv.cloneNode(true);
-            oldDiv.parentNode.replaceChild(newDiv, oldDiv);
-            newDiv.style.display = '';
-          }
-
-          EXIF.getData(image, () => {
-            const exifOrientation = EXIF.getTag(image, "Orientation");
-            this.div1.style.transform = this.getImageTransformCss(exifOrientation);
-          });
-          this.div2.style.opacity = '0';
-        };
-        image.src = encodeURI(this.imageList[this.imageIndex]);
-        this.sendNotification('BACKGROUNDSLIDESHOW_IMAGE_UPDATED', {url:image.src});
-		    // console.info('Updating image, source:' + image.src);
-        this.imageIndex += 1;
-      } else {
+      // Case of first image, do not drop off start of list.
+      if (this.imageIndex < 0) {
         this.imageIndex = 0;
-        this.updateImageList();
       }
     }
+    
+    if (this.imageIndex >= this.imageList.length) {
+      this.imageIndex = 0;
+      this.updateImageList();
+      return;
+    }
+
+    if (this.config.transitionImages) {
+      this.swapDivs();
+    }
+
+    const image = new Image();
+    image.onload = () => {
+      this.div1.style.backgroundImage = `url("${image.src}")`;
+      this.div1.style.opacity = '1';
+      this.div1.style.transform="rotate(0deg)";
+
+      if (this.config.showmageInfo) {
+        // Heuristic: display last path component as image name.
+        // If recursiveSubDirectories is set, display parent directory as well.
+        const pathComponents = decodeURI(image.src).split('/');
+        let imageName = pathComponents.pop();
+        // 3 = ['http', '', 'domain']
+        if (this.config.recursiveSubDirectories && pathComponents.length > 3) {
+          const dirName = pathComponents.pop();
+          imageName = `${dirName}/${imageName}`;
+        }
+        this.imageInfoDiv.innerHTML = imageName;
+      }
+
+      if (this.config.showProgressBar) {
+        // Restart css animation
+        const oldDiv = document.getElementsByClassName('progress-inner')[0];
+        const newDiv = oldDiv.cloneNode(true);
+        oldDiv.parentNode.replaceChild(newDiv, oldDiv);
+        newDiv.style.display = '';
+      }
+
+      EXIF.getData(image, () => {
+        const exifOrientation = EXIF.getTag(image, "Orientation");
+        this.div1.style.transform = this.getImageTransformCss(exifOrientation);
+      });
+      this.div2.style.opacity = '0';
+    };
+    image.src = encodeURI(this.imageList[this.imageIndex]);
+    this.sendNotification('BACKGROUNDSLIDESHOW_IMAGE_UPDATED', {url:image.src});
+    // console.info('Updating image, source:' + image.src);
+    this.imageIndex += 1;
   },
 
   getImageTransformCss: function(exifOrientation) {
