@@ -55,6 +55,7 @@ Module.register('MMM-BackgroundSlideshow', {
     // the direction the gradient goes, vertical or horizontal
     gradientDirection: 'vertical'
   },
+
   // load function
   start: function() {
     // add identifier to the config
@@ -75,15 +76,15 @@ Module.register('MMM-BackgroundSlideshow', {
     }
   },
 
-    getScripts: function() {
+  getScripts: function() {
 		return ["modules/" + this.name + "/node_modules/exif-js/exif.js"];
 	},
-
 
   getStyles: function() {
     // the css contains the make grayscale code
     return ['BackgroundSlideshow.css'];
   },
+
   // generic notification handler
   notificationReceived: function(notification, payload, sender) {
     if (sender) {
@@ -118,6 +119,7 @@ Module.register('MMM-BackgroundSlideshow', {
       }
     }
   },
+
   // the socket handler
   socketNotificationReceived: function(notification, payload) {
     // if an update was received
@@ -136,6 +138,7 @@ Module.register('MMM-BackgroundSlideshow', {
       }
     }
   },
+
   // Override dom generator.
   getDom: function() {
     var wrapper = document.createElement('div');
@@ -240,16 +243,7 @@ Module.register('MMM-BackgroundSlideshow', {
       this.div1.style.transform="rotate(0deg)";
 
       if (this.config.showmageInfo) {
-        // Heuristic: display last path component as image name.
-        // If recursiveSubDirectories is set, display parent directory as well.
-        const pathComponents = decodeURI(image.src).split('/');
-        let imageName = pathComponents.pop();
-        // 3 = ['http', '', 'domain']
-        if (this.config.recursiveSubDirectories && pathComponents.length > 3) {
-          const dirName = pathComponents.pop();
-          imageName = `${dirName}/${imageName}`;
-        }
-        this.imageInfoDiv.innerHTML = imageName;
+        this.updateImageInfo(decodeURI(image.src));
       }
 
       if (this.config.showProgressBar) {
@@ -294,6 +288,28 @@ Module.register('MMM-BackgroundSlideshow', {
     }
   },
 
+  updateImageInfo: function(imageSrc) {
+    // Only display last path component as image name if recurseSubDirectories is not set.
+    let imageName = imageSrc.split('/').pop();
+
+    // Otherwise display path relative to the path in configuration.
+    if (this.config.recursiveSubDirectories) {
+      for (const path of this.config.imagePaths) {
+        if (!imageSrc.includes(path)) {
+          continue;
+        }
+
+        imageName = imageSrc.split(path).pop();
+        if (imageName.startsWith('/')) {
+          imageName = imageName.substr(1);
+        }
+        break;
+      }
+    }
+
+    this.imageInfoDiv.innerHTML = imageName;
+  },
+
   swapDivs: function() {
     var temp = this.div1;
     this.div1 = this.div2;
@@ -306,6 +322,7 @@ Module.register('MMM-BackgroundSlideshow', {
       this.timer = null;
     }
   },
+
   resume: function() {
     //this.updateImage(); //Removed to prevent image change whenever MMM-Carousel changes slides
     this.suspend();
@@ -315,6 +332,7 @@ Module.register('MMM-BackgroundSlideshow', {
       self.updateImage();
     }, self.config.slideshowSpeed);
   },
+
   updateImageList: function() {
     this.suspend();
      // console.info('Getting Images');
