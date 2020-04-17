@@ -20,7 +20,7 @@ var FileSystemImageSlideshow = require('fs');
 module.exports = NodeHelper.create({
   // subclass start method, clears the initial config array
   start: function() {
-    //this.moduleConfigs = [];
+    this.validImageFileExtensions = new Set();
   },
   
   // shuffles an array at random and returns it
@@ -40,20 +40,22 @@ module.exports = NodeHelper.create({
     if (aL > bL) return 1;
     else return -1;
   },
+
   // checks there's a valid image file extension
-  checkValidImageFileExtension: function(filename, extensions) {
-    var extList = extensions.split(',');
-    for (var extIndex = 0; extIndex < extList.length; extIndex++) {
-      if (filename.toLowerCase().endsWith(extList[extIndex])) return true;
+  checkValidImageFileExtension: function(filename) {
+    if (!filename.includes('.')) {
+      // No file extension.
+      return false;
     }
-    return false;
+    const fileExtension = filename.split('.').pop().toLowerCase();
+    return this.validImageFileExtensions.has(fileExtension);
   },
+
   // gathers the image list
   gatherImageList: function(config) {
-    var self = this;
     // create an empty main image list
-    var imageList = [];
-    for (var i = 0; i < config.imagePaths.length; i++) {
+    let imageList = [];
+    for (let i = 0; i < config.imagePaths.length; i++) {
       this.getFiles(config.imagePaths[i], imageList, config);
     }
 
@@ -65,35 +67,38 @@ module.exports = NodeHelper.create({
   },
 
   getFiles(path, imageList, config) {
-    var contents = FileSystemImageSlideshow.readdirSync(path);
+    const contents = FileSystemImageSlideshow.readdirSync(path);
     for (let i = 0; i < contents.length; i++) {
-      var currentItem = path + '/' + contents[i];
-      var stats = FileSystemImageSlideshow.lstatSync(currentItem);
+      const currentItem = path + '/' + contents[i];
+      const stats = FileSystemImageSlideshow.lstatSync(currentItem);
       if (stats.isDirectory() && config.recursiveSubDirectories) {
         this.getFiles(currentItem, imageList, config);
       } else if (stats.isFile()) {
-        var isValidImageFileExtension = this.checkValidImageFileExtension(
-          currentItem,
-          config.validImageFileExtensions
-        );
+        const isValidImageFileExtension =
+          this.checkValidImageFileExtension(currentItem);
         if (isValidImageFileExtension) imageList.push(currentItem);
       }
     }
   },
+
   // subclass socketNotificationReceived, received notification from module
   socketNotificationReceived: function(notification, payload) {
     if (notification === 'BACKGROUNDSLIDESHOW_REGISTER_CONFIG') {
-      // this to self
-      var self = this;
+      const config = payload;
+
+      // Create set of valid image extensions.
+      const validExtensionsList = config.validImageFileExtensions.toLowerCase().split(',');
+      this.validImageFileExtensions = new Set(validExtensionsList);
+
       // get the image list
-      var imageList = this.gatherImageList(payload);
+      const imageList = this.gatherImageList(config);
       // build the return payload
-      var returnPayload = {
-        identifier: payload.identifier,
+      const returnPayload = {
+        identifier: config.identifier,
         imageList: imageList
       };
       // send the image list back
-      self.sendSocketNotification(
+      this.sendSocketNotification(
         'BACKGROUNDSLIDESHOW_FILELIST',
         returnPayload
       );

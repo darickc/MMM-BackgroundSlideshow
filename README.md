@@ -146,9 +146,9 @@ The following properties can be configured:
 		</tr>
         <tr>
 			<td><code>validImageFileExtensions</code></td>
-			<td>String value, a list of image file extensions, seperated by commas, that should be included. Files found without one of the extensions will be ignored.<br>
+			<td>String value, a list of image file extensions, separated by commas, that should be included. Files found without one of the extensions will be ignored.<br>
 				<br><b>Example:</b> <code>'png,jpg'</code>
-				<br><b>Default value:</b> <code>'bmp,jpg,gif,png'</code>
+				<br><b>Default value:</b> <code>'bmp,jpg,jpeg,gif,png'</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
