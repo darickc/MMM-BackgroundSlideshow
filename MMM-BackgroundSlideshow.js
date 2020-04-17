@@ -21,10 +21,10 @@ Module.register('MMM-BackgroundSlideshow', {
     slideshowSpeed: 10 * 1000,
     // if true randomize image order, otherwise do alphabetical
     randomizeImageOrder: false,
-    // if false each path with be viewed seperately in the order listed
+    // if false each path with be viewed separately in the order listed
     recursiveSubDirectories: false,
-    // list of valid file extensions, seperated by commas
-    validImageFileExtensions: 'bmp,jpg,gif,png',
+    // list of valid file extensions, separated by commas
+    validImageFileExtensions: 'bmp,jpg,jpeg,gif,png',
     // show a panel containing information about the image currently displayed.
     showmageInfo: false,
     // transition speed from one image to the other, transitionImages must be true
