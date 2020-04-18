@@ -130,7 +130,23 @@ The following properties can be configured:
 		</tr>
 		<tr>
 			<td><code>randomizeImageOrder</code></td>
-			<td>Boolean value, if true will randomize the order of the images, if false will use an alphabetical sorting by filename.<br>
+			<td>Boolean value, if true will randomize the order of the images, otherwise use sortImagesBy and sortImagesDescending sorting by filename.<br>
+				<br><b>Example:</b> <code>true</code>
+				<br><b>Default value:</b> <code>false</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>sortImagesBy</code></td>
+			<td>String value, how to sort images: name, created, modified. Only used if randomizeImageOrder is set to false.<br>
+				<br><b>Example:</b> <code>created</code>
+				<br><b>Default value:</b> <code>name</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>sortImagesDescending</code></td>
+			<td>Boolean value, if true will sort images in descending order, otherwise in ascending order. Only used if randomizeImageOrder is set to false.<br>
 				<br><b>Example:</b> <code>true</code>
 				<br><b>Default value:</b> <code>false</code>
 				<br>This value is <b>OPTIONAL</b>
@@ -153,15 +169,31 @@ The following properties can be configured:
 			</td>
 		</tr>
 		<tr>
-			<td><code>showmageInfo</code></td>
-			<td>Boolean value, if true a bubble containing the currently displayed image file name will be shown.
+			<td><code>showImageInfo</code></td>
+			<td>Boolean value, if true a div containing the currently displayed image information will be shown.<br>
+				<br><b>Example:</b> <code>true</code>
+				<br><b>Default value:</b> <code>false</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>imageInfoLocation</code></td>
+			<td>String value, determines which corner of the screen the image info div should be displayed in.  Possible values are: bottomRight, bottomLeft, topLeft, topRight<br>
+				<br><b>Example:</b> <code>topLeft</code>
+				<br><b>Default value:</b> <code>bottomRight</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>showImageName</code></td>
+			<td>Boolean value, if true the image name is displayed in the image info div.
 			The relative path from that defined in imagePaths is displayed if the recursiveSubDirectories option is set to true.<br>
 				<br><b>Example:</b> <code>true</code>
 				<br><b>Default value:</b> <code>false</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
-    <tr>
+    	<tr>
 			<td><code>transitionSpeed</code></td>
 			<td>Transition speed from one image to the other, transitionImages must be true. Must be a valid css transition duration.<br>
 				<br><b>Example:</b> <code>'2s'</code>

@@ -19,8 +19,12 @@ Module.register('MMM-BackgroundSlideshow', {
     imagePaths: ['modules/MMM-BackgroundSlideshow/exampleImages'],
     // the speed at which to switch between images, in milliseconds
     slideshowSpeed: 10 * 1000,
-    // if true randomize image order, otherwise do alphabetical
+    // if true randomize image order, otherwise use sortImagesBy and sortImagesDescending
     randomizeImageOrder: false,
+    // how to sort images: name, random, created, modified
+    sortImagesBy: 'name',
+    // whether to sort in ascending (default) or descending order
+    sortImagesDescending: false,
     // if false each path with be viewed separately in the order listed
     recursiveSubDirectories: false,
     // list of valid file extensions, separated by commas
@@ -55,9 +59,7 @@ Module.register('MMM-BackgroundSlideshow', {
       'rgba(0, 0, 0, 0.75) 100%'
     ],
     // the direction the gradient goes, vertical or horizontal
-    gradientDirection: 'vertical',
-    showInfoDiv: true,
-    infoDivLocation: 'bottomRight', // Other possibilities are: bottomLeft, topLeft, topRight
+    gradientDirection: 'vertical'
   },
 
   // load function
@@ -66,6 +68,8 @@ Module.register('MMM-BackgroundSlideshow', {
     this.config.identifier = this.identifier;
     // ensure file extensions are lower case
     this.config.validImageFileExtensions = this.config.validImageFileExtensions.toLowerCase();
+    // ensure image order is in lower case
+    this.config.sortImagesBy = this.config.sortImagesBy.toLowerCase();
     // set no error
     this.errorMessage = null;
     if (this.config.imagePaths.length == 0) {
@@ -153,10 +157,6 @@ Module.register('MMM-BackgroundSlideshow', {
     this.div1 = this.createDiv('big1');
 
     this.div2 = this.createDiv('big2');
-
-    this.div3 = document.createElement('div');
-    this.div3.id = 'exif' + this.identifier;
-    this.div3.className = 'exifBg ' + this.config.infoDivLocation;
 
     wrapper.appendChild(this.div1);
     wrapper.appendChild(this.div2);

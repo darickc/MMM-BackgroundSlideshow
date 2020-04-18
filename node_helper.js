@@ -41,6 +41,47 @@ module.exports = NodeHelper.create({
     else return -1;
   },
 
+  // sort by created attribute
+  sortByCreated: function(a, b) {
+    aL = a.created;
+    bL = b.created;
+    if (aL > bL) return 1;
+    else return -1;
+  },
+
+  // sort by created attribute
+  sortByModified: function(a, b) {
+    aL = a.modified;
+    bL = b.modified;
+    if (aL > bL) return 1;
+    else return -1;
+  },
+
+  sortImageList: function (imageList, sortBy, sortDescending) {
+    var sortedList = imageList;
+    switch (sortBy) {
+      case 'created':
+        // Log.log('Sorting by created date...');
+        sortedList = imageList.sort(this.sortByCreated);;
+        break;
+      case 'modified':
+        // Log.log('Sorting by modified date...');
+        sortedList = imageList.sort(this.sortByModified);;
+        break;
+      default: // sort by name
+        // Log.log('Sorting by name...');
+        sortedList = imageList.sort(this.sortByFilename);
+    }
+
+    // If the user chose to sort in descending order then reverse the array
+    if (sortDescending === true) {
+      // Log.log('Reversing sort order...');
+      sortedList = sortedList.reverse();
+    }
+
+    return sortedList;
+  },
+
   // checks there's a valid image file extension
   checkValidImageFileExtension: function(filename) {
     if (!filename.includes('.')) {
@@ -61,9 +102,18 @@ module.exports = NodeHelper.create({
 
     imageList = config.randomizeImageOrder
       ? this.shuffleArray(imageList)
-      : imageList.sort(this.sortByFilename);
+      : this.sortImageList(imageList, config.sortImagesBy, config.sortImagesDescending);
 
-    return imageList;
+    // build the return payload
+    const returnPayload = {
+      identifier: config.identifier,
+      imageList: imageList.map( item => item.path) // map the array to only extract the paths
+    };
+    // send the image list back
+    this.sendSocketNotification(
+      'BACKGROUNDSLIDESHOW_FILELIST',
+      returnPayload
+    );
   },
 
   getFiles(path, imageList, config) {
@@ -76,7 +126,13 @@ module.exports = NodeHelper.create({
       } else if (stats.isFile()) {
         const isValidImageFileExtension =
           this.checkValidImageFileExtension(currentItem);
-        if (isValidImageFileExtension) imageList.push(currentItem);
+          if (isValidImageFileExtension) {
+            imageList.push({
+              "path": currentItem, 
+              "created": stats.ctimeMs, 
+              "modified": stats.mtimeMs
+            });
+          }
       }
     }
   },
@@ -90,18 +146,9 @@ module.exports = NodeHelper.create({
       const validExtensionsList = config.validImageFileExtensions.toLowerCase().split(',');
       this.validImageFileExtensions = new Set(validExtensionsList);
 
-      // get the image list
-      const imageList = this.gatherImageList(config);
-      // build the return payload
-      const returnPayload = {
-        identifier: config.identifier,
-        imageList: imageList
-      };
-      // send the image list back
-      this.sendSocketNotification(
-        'BACKGROUNDSLIDESHOW_FILELIST',
-        returnPayload
-      );
+      // get the image list in a non-blocking way since large # of images would cause 
+      // the MagicMirror startup banner t oget stuck sometimes
+      setTimeout(() => {this.gatherImageList(config)}, 200);
     }
   }
 });
