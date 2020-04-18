@@ -55,11 +55,13 @@ Module.register('MMM-BackgroundSlideshow', {
       'rgba(0, 0, 0, 0.75) 100%'
     ],
     // the direction the gradient goes, vertical or horizontal
-    gradientDirection: 'vertical'
+    gradientDirection: 'vertical',
+    showInfoDiv: true,
+    infoDivLocation: 'bottomRight', // Other possibilities are: bottomLeft, topLeft, topRight
   },
 
   // load function
-  start: function() {
+  start: function () {
     // add identifier to the config
     this.config.identifier = this.identifier;
     // ensure file extensions are lower case
@@ -86,13 +88,13 @@ Module.register('MMM-BackgroundSlideshow', {
   },
 
 
-  getStyles: function() {
+  getStyles: function () {
     // the css contains the make grayscale code
     return ['BackgroundSlideshow.css'];
   },
 
   // generic notification handler
-  notificationReceived: function(notification, payload, sender) {
+  notificationReceived: function (notification, payload, sender) {
     if (sender) {
       Log.log(this.name + " received a module notification: " + notification + " from sender: " + sender.name);
       if (notification === 'BACKGROUNDSLIDESHOW_IMAGE_UPDATE'){
@@ -101,9 +103,9 @@ Module.register('MMM-BackgroundSlideshow', {
         this.updateImage();
         this.resume();
       }
-      else if (notification === 'BACKGROUNDSLIDESHOW_NEXT'){ // Change to next image
+      else if (notification === 'BACKGROUNDSLIDESHOW_NEXT') { // Change to next image
         this.updateImage();
-        if(this.timer){   // Restart timer only if timer was already running
+        if (this.timer) {   // Restart timer only if timer was already running
           this.resume();
         }
       }
@@ -127,7 +129,7 @@ Module.register('MMM-BackgroundSlideshow', {
   },
 
   // the socket handler
-  socketNotificationReceived: function(notification, payload) {
+  socketNotificationReceived: function (notification, payload) {
     // if an update was received
     if (notification === 'BACKGROUNDSLIDESHOW_FILELIST') {
       // check this is for this module based on the woeid
@@ -146,10 +148,15 @@ Module.register('MMM-BackgroundSlideshow', {
   },
 
   // Override dom generator.
-  getDom: function() {
+  getDom: function () {
     var wrapper = document.createElement('div');
     this.div1 = this.createDiv('big1');
+
     this.div2 = this.createDiv('big2');
+
+    this.div3 = document.createElement('div');
+    this.div3.id = 'exif' + this.identifier;
+    this.div3.className = 'exifBg ' + this.config.infoDivLocation;
 
     wrapper.appendChild(this.div1);
     wrapper.appendChild(this.div2);
@@ -179,7 +186,7 @@ Module.register('MMM-BackgroundSlideshow', {
     return wrapper;
   },
 
-  createGradientDiv: function(direction, gradient, wrapper) {
+  createGradientDiv: function (direction, gradient, wrapper) {
     var div = document.createElement('div');
     div.style.backgroundImage =
       'linear-gradient( to ' + direction + ', ' + gradient.join() + ')';
@@ -187,11 +194,10 @@ Module.register('MMM-BackgroundSlideshow', {
     wrapper.appendChild(div);
   },
 
-  createDiv: function(name) {
+  createDiv: function (name) {
     var div = document.createElement('div');
     div.id = name + this.identifier;
     div.style.backgroundSize = this.config.backgroundSize;
-    div.style.backgroundPosition = this.config.backgroundPosition;
     div.style.transition =
       'opacity ' + this.config.transitionSpeed + ' ease-in-out';
     div.className = 'backgroundSlideShow';
@@ -335,13 +341,13 @@ Module.register('MMM-BackgroundSlideshow', {
       (this.config.showImageName ? imageName + '<br/>' + imageDate : imageDate);
   },
 
-  swapDivs: function() {
+  swapDivs: function () {
     var temp = this.div1;
     this.div1 = this.div2;
     this.div2 = temp;
   },
 
-  suspend: function() {
+  suspend: function () {
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
@@ -352,15 +358,15 @@ Module.register('MMM-BackgroundSlideshow', {
     //this.updateImage(); //Removed to prevent image change whenever MMM-Carousel changes slides
     this.suspend();
     var self = this;
-    this.timer = setInterval(function() {
-		// console.info('MMM-BackgroundSlideshow updating from resume');
+    this.timer = setInterval(function () {
+      // console.info('MMM-BackgroundSlideshow updating from resume');
       self.updateImage();
     }, self.config.slideshowSpeed);
   },
 
   updateImageList: function() {
     this.suspend();
-     // console.info('Getting Images');
+    // console.info('Getting Images');
     // ask helper function to get the image list
     this.sendSocketNotification(
       'BACKGROUNDSLIDESHOW_REGISTER_CONFIG',
