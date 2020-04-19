@@ -43,6 +43,8 @@ Module.register('MMM-BackgroundSlideshow', {
     // cover: Resize the background image to cover the entire container, even if it has to stretch the image or cut a little bit off one of the edges
     // contain: Resize the background image to make sure the image is fully visible
     backgroundSize: 'cover', // cover or contain
+    // if backgroundSize contain, determine where to zoom the picture. Towards top, center or bottom
+    backgroundPosition: 'center', // Most useful options: "top" or "center" or "bottom"
     // transition from one image to the other (may be a bit choppy on slower devices, or if the images are too big)
     transitionImages: false,
     // the gradient to make the text more visible

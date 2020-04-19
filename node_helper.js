@@ -35,8 +35,8 @@ module.exports = NodeHelper.create({
   
   // sort by filename attribute
   sortByFilename: function(a, b) {
-    aL = a.toLowerCase();
-    bL = b.toLowerCase();
+    aL = a.path.toLowerCase();
+    bL = b.path.toLowerCase();
     if (aL > bL) return 1;
     else return -1;
   },
