@@ -185,11 +185,11 @@ The following properties can be configured:
 			</td>
 		</tr>
 		<tr>
-			<td><code>showImageName</code></td>
-			<td>Boolean value, if true the image name is displayed in the image info div.
+			<td><code>imageInfo</code></td>
+			<td>String value, a list of image properties to display in the image info div, separated by commas.  Possible values are : date (EXIF date from image), name (image name)
 			The relative path from that defined in imagePaths is displayed if the recursiveSubDirectories option is set to true.<br>
-				<br><b>Example:</b> <code>true</code>
-				<br><b>Default value:</b> <code>false</code>
+				<br><b>Example:</b> <code>date,name</code>
+				<br><b>Default value:</b> <code>name</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
