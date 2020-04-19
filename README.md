@@ -138,7 +138,8 @@ The following properties can be configured:
 		</tr>
 		<tr>
 			<td><code>sortImagesBy</code></td>
-			<td>String value, how to sort images: name, created, modified. Only used if randomizeImageOrder is set to false.<br>
+			<td>String value, determines how images are sorted.  Possible values are: name (by file name), created (by file created date), modified (by file 
+			modified date). Only used if randomizeImageOrder is set to false.<br>
 				<br><b>Example:</b> <code>created</code>
 				<br><b>Default value:</b> <code>name</code>
 				<br>This value is <b>OPTIONAL</b>
@@ -186,8 +187,8 @@ The following properties can be configured:
 		</tr>
 		<tr>
 			<td><code>imageInfo</code></td>
-			<td>String value, a list of image properties to display in the image info div, separated by commas.  Possible values are : date (EXIF date from image), name (image name)
-			The relative path from that defined in imagePaths is displayed if the recursiveSubDirectories option is set to true.<br>
+			<td>String value, a list of image properties to display in the image info div, separated by commas.  Possible values are : date (EXIF date from image), name (image name).
+			For the iamge name, the relative path from that defined in imagePaths is displayed if the recursiveSubDirectories option is set to true.<br>
 				<br><b>Example:</b> <code>date,name</code>
 				<br><b>Default value:</b> <code>name</code>
 				<br>This value is <b>OPTIONAL</b>
