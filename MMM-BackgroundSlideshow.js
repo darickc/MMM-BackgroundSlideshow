@@ -61,7 +61,17 @@ Module.register('MMM-BackgroundSlideshow', {
       'rgba(0, 0, 0, 0.75) 100%'
     ],
     // the direction the gradient goes, vertical or horizontal
-    gradientDirection: 'vertical'
+    gradientDirection: 'vertical',
+    // Whether to scroll larger pictures rather than cut them off
+    backgroundAnimationEnabled: false,
+    // How long the scrolling animation should take - if this is more than slideshowSpeed, then images do not scroll fully. 
+    // If it is too fast, then the image may apear gittery. For best result, by default we match this to slideshowSpeed.
+    // For now, it is not documented and will default to match slideshowSpeed.
+    backgroundAnimationDuration: '1s', 
+    // How many times to loop the scrolling back and forth.  If the value is set to anything other than infinite, the
+    // scrolling will stop at some point since we reuse the same div1.
+    // For now, it is not documentd and is defaulted to infinite.
+    backgroundAnimationLoopCount: 'infinite'
   },
 
   // load function
@@ -96,6 +106,11 @@ Module.register('MMM-BackgroundSlideshow', {
       this.config.imageInfo = this.config.imageInfo.toLowerCase().replace(/\s/g,',').split(',');
       // now filter the array to only those that have values
       this.config.imageInfo = this.config.imageInfo.filter(n => n);
+    }
+    // Lets make sure the backgroundAnimation duration matches the slideShowSpeed unless it has been
+    // overriden
+    if (this.config.backgroundAnimationDuration === '1s') {
+      this.config.backgroundAnimationDuration = (this.config.slideshowSpeed/1000) + 's';
     }
   },
 
@@ -275,6 +290,26 @@ Module.register('MMM-BackgroundSlideshow', {
         const newDiv = oldDiv.cloneNode(true);
         oldDiv.parentNode.replaceChild(newDiv, oldDiv);
         newDiv.style.display = '';
+      }
+
+      // Check to see if we need to animate the background
+      if (this.config.backgroundAnimationEnabled && this.config.backgroundSize.toLowerCase() === 'cover') {
+        // check to see if the width of the picture is larger or the height
+        var width = image.width;
+        var height = image.height;
+        var adjustedWidth = width*window.innerHeight/height;
+        var adjustedHeight = height*window.innerWidth/width;
+
+        this.div1.style.animationDuration = this.config.backgroundAnimationDuration;
+        this.div1.style.animationIterationCount = this.config.backgroundAnimationLoopCount;
+
+        if (adjustedWidth/innerWidth > adjustedHeight/window.innerHeight) {
+          // Scrolling horizontally...
+          this.div1.className = 'backgroundSlideShowH';
+        } else {
+          // Scrolling vertically...
+          this.div1.className = 'backgroundSlideShowV';
+        }
       }
 
       EXIF.getData(image, () => {

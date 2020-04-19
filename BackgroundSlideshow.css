@@ -1,4 +1,6 @@
 .backgroundSlideShow,
+.backgroundSlideShowH,
+.backgroundSlideShowV,
 .gradient {
   position: absolute;
   top: 0;
@@ -96,4 +98,34 @@
   border-bottom-width: 1pt;
   border-right-width: 1pt;
   border-bottom-right-radius: 20pt;
+}
+
+.backgroundSlideShowH {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: left;
+  opacity: 1;
+  animation-name: backgroundScrollH;
+  animation-timing-function: linear;
+  animation-direction: alternate;
+}
+
+.backgroundSlideShowV {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: top;
+  opacity: 1;
+  animation-name: backgroundScrollV;
+  animation-timing-function: linear;
+  animation-direction: alternate;
+}
+
+@keyframes backgroundScrollH {
+  from {background-position: left;}
+    to {background-position: right;}
+}
+
+@keyframes backgroundScrollV {
+  from {background-position: top;}
+    to {background-position: bottom;}
 }

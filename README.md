@@ -211,7 +211,7 @@ The following properties can be configured:
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
-    <tr>
+    	<tr>
 			<td><code>backgroundSize</code></td>
 			<td>The sizing of the background image. Values can be:<br>
         cover: Resize the background image to cover the entire container, even if it has to stretch the image or cut a little bit off one of the edges.<br>
@@ -221,7 +221,7 @@ The following properties can be configured:
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
-    <tr>
+    	<tr>
 			<td><code>backgroundPosition</code></td>
 			<td>Determines where the background image is placed if it doesn't fill the whole screen (i.e. backgroundSize is 'contain'). Module already defaults to 'center', so the most useful options would be: 'top' 'bottom' 'left' or 'right'. However, any valid value for CSS background-position could be used.<br>
 				<br><b>Example:</b> <code>'top'</code>
@@ -229,7 +229,7 @@ The following properties can be configured:
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
-    <tr>
+    	<tr>
 			<td><code>transitionImages</code></td>
 			<td>Transition from one image to the other (may be a bit choppy on slower devices, or if the images are too big).<br>
 				<br><b>Example:</b> <code>true</code>
@@ -237,19 +237,19 @@ The following properties can be configured:
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
-    <tr>
+    	<tr>
 			<td><code>gradient</code></td>
 			<td>The vertical gradient to make the text more visible.  Enter gradient stops as an array.<br>
 				<br><b>Example:</b> <code>[
-      "rgba(0, 0, 0, 0.75) 0%",
-      "rgba(0, 0, 0, 0) 40%"
-    ]</code>
-				<br><b>Default value:</b> <code>[
-      "rgba(0, 0, 0, 0.75) 0%",
-      "rgba(0, 0, 0, 0) 40%",
-      "rgba(0, 0, 0, 0) 80%",
-      "rgba(0, 0, 0, 0.75) 100%"
-    ]</code>
+				"rgba(0, 0, 0, 0.75) 0%",
+				"rgba(0, 0, 0, 0) 40%"
+				]</code>
+							<br><b>Default value:</b> <code>[
+				"rgba(0, 0, 0, 0.75) 0%",
+				"rgba(0, 0, 0, 0) 40%",
+				"rgba(0, 0, 0, 0) 80%",
+				"rgba(0, 0, 0, 0.75) 100%"
+				]</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
@@ -257,24 +257,33 @@ The following properties can be configured:
 			<td><code>horizontalGradient</code></td>
 			<td>The horizontal gradient to make the text more visible.  Enter gradient stops as an array.<br>
 				<br><b>Example:</b> <code>[
-      "rgba(0, 0, 0, 0.75) 0%",
-      "rgba(0, 0, 0, 0) 40%"
-    ]</code>
-				<br><b>Default value:</b> <code>[
-      "rgba(0, 0, 0, 0.75) 0%",
-      "rgba(0, 0, 0, 0) 40%",
-      "rgba(0, 0, 0, 0) 80%",
-      "rgba(0, 0, 0, 0.75) 100%"
-    ]</code>
+				"rgba(0, 0, 0, 0.75) 0%",
+				"rgba(0, 0, 0, 0) 40%"
+				]</code>
+							<br><b>Default value:</b> <code>[
+				"rgba(0, 0, 0, 0.75) 0%",
+				"rgba(0, 0, 0, 0) 40%",
+				"rgba(0, 0, 0, 0) 80%",
+				"rgba(0, 0, 0, 0.75) 100%"
+				]</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
-    <tr>
+    	<tr>
 			<td><code>gradientDirection</code></td>
 			<td>The direction of the gradient<br>
 				<br><b>Example:</b> <code>'horizontal'</code>
 				<br><b>Default value:</b> <code>'vertical'</code>
 				<br><b>Possible values:</b> <code>'vertical', 'horizontal', 'both'</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>backgroundAnimationEnabled</code></td>
+			<td>Boolean value, if set to true the background will scroll if the picture is larger than the screen size (e.g. for panaramic pictures).  The picture will either scroll vertically or horizontally depending on which dimension extends beyond the screen size.
+			<b>Note:</b> For this to work, backgroundSize must be set to cover.<br>
+				<br><b>Example:</b> <code>true</code>
+				<br><b>Default value:</b> <code>false</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
