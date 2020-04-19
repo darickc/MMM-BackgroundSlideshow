@@ -1,4 +1,6 @@
 .backgroundSlideShow,
+.backgroundSlideShowH,
+.backgroundSlideShowV,
 .gradient {
   position: absolute;
   top: 0;
@@ -13,15 +15,13 @@
 }
 
 .info {
-  position: absolute;
-  right: 5px;
-  bottom: 5px;
+  display: inline-block;
+  padding: 15px;
   background-color: rgba(0,0,0,0.3);
-  border-radius: 20px;
-  font-size: 11px;
-  line-height: 100%;
-  padding: 10px 12px;
-  text-align: left;
+  font-family: "Roboto Condensed", sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 25px;
 }
 
 @keyframes move {
@@ -43,4 +43,89 @@
 .progress-inner {
   height: 100%;
   background-color: white;
+}
+
+.infoDivHeader {
+  text-transform: uppercase;
+  font-size: 15px;
+  font-family: "Roboto Condensed", Arial, Helvetica, sans-serif;
+  font-weight: 400;
+  line-height: 15px;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+  color: #999;
+}
+
+.bottomLeft {
+  position: absolute;
+  bottom: 0pt;
+  left: 0pt;
+  border-bottom-width: 0px;
+  border-left-width: 0px;
+  border-top-width: 1pt;
+  border-right-width: 1pt;
+  border-top-right-radius: 20pt;
+}
+
+.bottomRight {
+  position: absolute;
+  bottom: 0pt;
+  right: 0pt;
+  border-bottom-width: 0px;
+  border-right-width: 0px;
+  border-top-width: 1pt;
+  border-left-width: 1pt;
+  border-top-left-radius: 20pt;
+}
+
+.topRight {
+  position: absolute;
+  top: 0pt;
+  right: 0pt;
+  border-top-width: 0px;
+  border-right-width: 0px;
+  border-bottom-width: 1pt;
+  border-left-width: 1pt;
+  border-bottom-left-radius: 20pt;
+}
+
+.topLeft {
+  position: absolute;
+  top: 0pt;
+  left: 0pt;
+  border-top-width: 0px;
+  border-left-width: 0px;
+  border-bottom-width: 1pt;
+  border-right-width: 1pt;
+  border-bottom-right-radius: 20pt;
+}
+
+.backgroundSlideShowH {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: left;
+  opacity: 1;
+  animation-name: backgroundScrollH;
+  animation-timing-function: linear;
+  animation-direction: alternate;
+}
+
+.backgroundSlideShowV {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: top;
+  opacity: 1;
+  animation-name: backgroundScrollV;
+  animation-timing-function: linear;
+  animation-direction: alternate;
+}
+
+@keyframes backgroundScrollH {
+  from {background-position: left;}
+    to {background-position: right;}
+}
+
+@keyframes backgroundScrollV {
+  from {background-position: top;}
+    to {background-position: bottom;}
 }

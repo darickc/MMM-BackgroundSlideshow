@@ -130,7 +130,24 @@ The following properties can be configured:
 		</tr>
 		<tr>
 			<td><code>randomizeImageOrder</code></td>
-			<td>Boolean value, if true will randomize the order of the images, if false will use an alphabetical sorting by filename.<br>
+			<td>Boolean value, if true will randomize the order of the images, otherwise use sortImagesBy and sortImagesDescending sorting by filename.<br>
+				<br><b>Example:</b> <code>true</code>
+				<br><b>Default value:</b> <code>false</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>sortImagesBy</code></td>
+			<td>String value, determines how images are sorted.  Possible values are: name (by file name), created (by file created date), modified (by file 
+			modified date). Only used if randomizeImageOrder is set to false.<br>
+				<br><b>Example:</b> <code>created</code>
+				<br><b>Default value:</b> <code>name</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>sortImagesDescending</code></td>
+			<td>Boolean value, if true will sort images in descending order, otherwise in ascending order. Only used if randomizeImageOrder is set to false.<br>
 				<br><b>Example:</b> <code>true</code>
 				<br><b>Default value:</b> <code>false</code>
 				<br>This value is <b>OPTIONAL</b>
@@ -153,15 +170,31 @@ The following properties can be configured:
 			</td>
 		</tr>
 		<tr>
-			<td><code>showmageInfo</code></td>
-			<td>Boolean value, if true a bubble containing the currently displayed image file name will be shown.
-			The relative path from that defined in imagePaths is displayed if the recursiveSubDirectories option is set to true.<br>
+			<td><code>showImageInfo</code></td>
+			<td>Boolean value, if true a div containing the currently displayed image information will be shown.<br>
 				<br><b>Example:</b> <code>true</code>
 				<br><b>Default value:</b> <code>false</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
-    <tr>
+		<tr>
+			<td><code>imageInfoLocation</code></td>
+			<td>String value, determines which corner of the screen the image info div should be displayed in.  Possible values are: bottomRight, bottomLeft, topLeft, topRight<br>
+				<br><b>Example:</b> <code>topLeft</code>
+				<br><b>Default value:</b> <code>bottomRight</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>imageInfo</code></td>
+			<td>String value, a list of image properties to display in the image info div, separated by commas.  Possible values are : date (EXIF date from image), name (image name).
+			For the iamge name, the relative path from that defined in imagePaths is displayed if the recursiveSubDirectories option is set to true.<br>
+				<br><b>Example:</b> <code>date,name</code>
+				<br><b>Default value:</b> <code>name</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+    	<tr>
 			<td><code>transitionSpeed</code></td>
 			<td>Transition speed from one image to the other, transitionImages must be true. Must be a valid css transition duration.<br>
 				<br><b>Example:</b> <code>'2s'</code>
@@ -178,7 +211,7 @@ The following properties can be configured:
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
-    <tr>
+    	<tr>
 			<td><code>backgroundSize</code></td>
 			<td>The sizing of the background image. Values can be:<br>
         cover: Resize the background image to cover the entire container, even if it has to stretch the image or cut a little bit off one of the edges.<br>
@@ -188,7 +221,7 @@ The following properties can be configured:
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
-    <tr>
+    	<tr>
 			<td><code>backgroundPosition</code></td>
 			<td>Determines where the background image is placed if it doesn't fill the whole screen (i.e. backgroundSize is 'contain'). Module already defaults to 'center', so the most useful options would be: 'top' 'bottom' 'left' or 'right'. However, any valid value for CSS background-position could be used.<br>
 				<br><b>Example:</b> <code>'top'</code>
@@ -196,7 +229,7 @@ The following properties can be configured:
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
-    <tr>
+    	<tr>
 			<td><code>transitionImages</code></td>
 			<td>Transition from one image to the other (may be a bit choppy on slower devices, or if the images are too big).<br>
 				<br><b>Example:</b> <code>true</code>
@@ -204,19 +237,19 @@ The following properties can be configured:
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
-    <tr>
+    	<tr>
 			<td><code>gradient</code></td>
 			<td>The vertical gradient to make the text more visible.  Enter gradient stops as an array.<br>
 				<br><b>Example:</b> <code>[
-      "rgba(0, 0, 0, 0.75) 0%",
-      "rgba(0, 0, 0, 0) 40%"
-    ]</code>
-				<br><b>Default value:</b> <code>[
-      "rgba(0, 0, 0, 0.75) 0%",
-      "rgba(0, 0, 0, 0) 40%",
-      "rgba(0, 0, 0, 0) 80%",
-      "rgba(0, 0, 0, 0.75) 100%"
-    ]</code>
+				"rgba(0, 0, 0, 0.75) 0%",
+				"rgba(0, 0, 0, 0) 40%"
+				]</code>
+							<br><b>Default value:</b> <code>[
+				"rgba(0, 0, 0, 0.75) 0%",
+				"rgba(0, 0, 0, 0) 40%",
+				"rgba(0, 0, 0, 0) 80%",
+				"rgba(0, 0, 0, 0.75) 100%"
+				]</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
@@ -224,24 +257,33 @@ The following properties can be configured:
 			<td><code>horizontalGradient</code></td>
 			<td>The horizontal gradient to make the text more visible.  Enter gradient stops as an array.<br>
 				<br><b>Example:</b> <code>[
-      "rgba(0, 0, 0, 0.75) 0%",
-      "rgba(0, 0, 0, 0) 40%"
-    ]</code>
-				<br><b>Default value:</b> <code>[
-      "rgba(0, 0, 0, 0.75) 0%",
-      "rgba(0, 0, 0, 0) 40%",
-      "rgba(0, 0, 0, 0) 80%",
-      "rgba(0, 0, 0, 0.75) 100%"
-    ]</code>
+				"rgba(0, 0, 0, 0.75) 0%",
+				"rgba(0, 0, 0, 0) 40%"
+				]</code>
+							<br><b>Default value:</b> <code>[
+				"rgba(0, 0, 0, 0.75) 0%",
+				"rgba(0, 0, 0, 0) 40%",
+				"rgba(0, 0, 0, 0) 80%",
+				"rgba(0, 0, 0, 0.75) 100%"
+				]</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
-    <tr>
+    	<tr>
 			<td><code>gradientDirection</code></td>
 			<td>The direction of the gradient<br>
 				<br><b>Example:</b> <code>'horizontal'</code>
 				<br><b>Default value:</b> <code>'vertical'</code>
 				<br><b>Possible values:</b> <code>'vertical', 'horizontal', 'both'</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>backgroundAnimationEnabled</code></td>
+			<td>Boolean value, if set to true the background will scroll if the picture is larger than the screen size (e.g. for panaramic pictures).  The picture will either scroll vertically or horizontally depending on which dimension extends beyond the screen size.
+			<b>Note:</b> For this to work, backgroundSize must be set to cover.<br>
+				<br><b>Example:</b> <code>true</code>
+				<br><b>Default value:</b> <code>false</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>

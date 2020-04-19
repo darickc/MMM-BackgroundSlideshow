@@ -19,14 +19,22 @@ Module.register('MMM-BackgroundSlideshow', {
     imagePaths: ['modules/MMM-BackgroundSlideshow/exampleImages'],
     // the speed at which to switch between images, in milliseconds
     slideshowSpeed: 10 * 1000,
-    // if true randomize image order, otherwise do alphabetical
+    // if true randomize image order, otherwise use sortImagesBy and sortImagesDescending
     randomizeImageOrder: false,
+    // how to sort images: name, random, created, modified
+    sortImagesBy: 'created',
+    // whether to sort in ascending (default) or descending order
+    sortImagesDescending: false,
     // if false each path with be viewed separately in the order listed
     recursiveSubDirectories: false,
     // list of valid file extensions, separated by commas
     validImageFileExtensions: 'bmp,jpg,jpeg,gif,png',
     // show a panel containing information about the image currently displayed.
-    showmageInfo: false,
+    showImageInfo: false,
+    // a comma separated list of values to display: name, date, geo (TODO)
+    imageInfo: 'name, date',
+    // location of the info div
+    imageInfoLocation: 'bottomRight', // Other possibilities are: bottomLeft, topLeft, topRight
     // transition speed from one image to the other, transitionImages must be true
     transitionSpeed: '1s',
     // show a progress bar indicating how long till the next image is displayed.
@@ -53,7 +61,17 @@ Module.register('MMM-BackgroundSlideshow', {
       'rgba(0, 0, 0, 0.75) 100%'
     ],
     // the direction the gradient goes, vertical or horizontal
-    gradientDirection: 'vertical'
+    gradientDirection: 'vertical',
+    // Whether to scroll larger pictures rather than cut them off
+    backgroundAnimationEnabled: false,
+    // How long the scrolling animation should take - if this is more than slideshowSpeed, then images do not scroll fully. 
+    // If it is too fast, then the image may apear gittery. For best result, by default we match this to slideshowSpeed.
+    // For now, it is not documented and will default to match slideshowSpeed.
+    backgroundAnimationDuration: '1s', 
+    // How many times to loop the scrolling back and forth.  If the value is set to anything other than infinite, the
+    // scrolling will stop at some point since we reuse the same div1.
+    // For now, it is not documentd and is defaulted to infinite.
+    backgroundAnimationLoopCount: 'infinite'
   },
 
   // load function
@@ -62,11 +80,13 @@ Module.register('MMM-BackgroundSlideshow', {
     this.config.identifier = this.identifier;
     // ensure file extensions are lower case
     this.config.validImageFileExtensions = this.config.validImageFileExtensions.toLowerCase();
-    // set no error
-    this.errorMessage = null;
+    // ensure image order is in lower case
+    this.config.sortImagesBy = this.config.sortImagesBy.toLowerCase();
+    // commented out since this was not doing anything
+    // set no error 
+    // this.errorMessage = null;
     if (this.config.imagePaths.length == 0) {
-      this.errorMessage =
-        'MMM-BackgroundSlideshow: Missing required parameter.';
+      Log.error('MMM-BackgroundSlideshow: Missing required parameter imagePaths.');
     } else {
       // create an empty image list
       this.imageList = [];
@@ -74,11 +94,32 @@ Module.register('MMM-BackgroundSlideshow', {
       this.imageIndex = 0;
       this.updateImageList();
     }
+    //validate imageinfo property.  This will make sure we have at least 1 valid value
+    const imageInfoRegex = /\bname\b|\bdate\b/gi;
+    if (this.config.showImageInfo && !imageInfoRegex.test(this.config.imageInfo)) {
+      Log.warn('MMM-BackgroundSlideshow: showImageInfo is set, but imageInfo does not have a valid value.');
+      // Use name as the default
+      this.config.imageInfo = ['name'];
+    } else {
+      // convert to lower case and replace any spaces with , to make sure we get an array back
+      // even if the user provided space separated values
+      this.config.imageInfo = this.config.imageInfo.toLowerCase().replace(/\s/g,',').split(',');
+      // now filter the array to only those that have values
+      this.config.imageInfo = this.config.imageInfo.filter(n => n);
+    }
+    // Lets make sure the backgroundAnimation duration matches the slideShowSpeed unless it has been
+    // overriden
+    if (this.config.backgroundAnimationDuration === '1s') {
+      this.config.backgroundAnimationDuration = (this.config.slideshowSpeed/1000) + 's';
+    }
   },
 
   getScripts: function() {
-		return ["modules/" + this.name + "/node_modules/exif-js/exif.js"];
-	},
+    return [
+      "modules/" + this.name + "/node_modules/exif-js/exif.js",
+      "modules/" + this.name + "/node_modules/moment/moment.js"
+    ];
+  },
 
   getStyles: function() {
     // the css contains the make grayscale code
@@ -88,16 +129,16 @@ Module.register('MMM-BackgroundSlideshow', {
   // generic notification handler
   notificationReceived: function(notification, payload, sender) {
     if (sender) {
-      // Log.log(this.name + " received a module notification: " + notification + " from sender: " + sender.name);
-      if(notification === 'BACKGROUNDSLIDESHOW_IMAGE_UPDATE'){
+      Log.log(this.name + " received a module notification: " + notification + " from sender: " + sender.name);
+      if (notification === 'BACKGROUNDSLIDESHOW_IMAGE_UPDATE'){
         Log.log("MMM-BackgroundSlideshow: Changing Background");
         this.suspend();
         this.updateImage();
         this.resume();
       }
-      else if (notification === 'BACKGROUNDSLIDESHOW_NEXT'){ // Change to next image
+      else if (notification === 'BACKGROUNDSLIDESHOW_NEXT') { // Change to next image
         this.updateImage();
-        if(this.timer){   // Restart timer only if timer was already running
+        if (this.timer) {   // Restart timer only if timer was already running
           this.resume();
         }
       }
@@ -107,11 +148,11 @@ Module.register('MMM-BackgroundSlideshow', {
           this.resume();
         }
       }
-      else if (notification === 'BACKGROUNDSLIDESHOW_PLAY'){ // Change to next image and start timer.
+      else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') { // Change to next image and start timer.
         this.updateImage();
         this.resume();
       }
-      else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE'){ // Stop timer.
+      else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') { // Stop timer.
         this.suspend();
       }
       else {
@@ -143,6 +184,7 @@ Module.register('MMM-BackgroundSlideshow', {
   getDom: function() {
     var wrapper = document.createElement('div');
     this.div1 = this.createDiv('big1');
+
     this.div2 = this.createDiv('big2');
 
     wrapper.appendChild(this.div1);
@@ -162,12 +204,12 @@ Module.register('MMM-BackgroundSlideshow', {
       this.createGradientDiv('right', this.config.gradient, wrapper);
     }
 
-    if (this.config.showmageInfo) {
-      this.imageInfoDiv = this.createImageInfoDiv(wrapper);
+    if (this.config.showImageInfo) {
+        this.imageInfoDiv = this.createImageInfoDiv(wrapper);
     }
-
+                
     if (this.config.showProgressBar) {
-      this.createProgressbarDiv(wrapper, this.config.slideshowSpeed);
+        this.createProgressbarDiv(wrapper, this.config.slideshowSpeed);
     }
 
     return wrapper;
@@ -194,7 +236,7 @@ Module.register('MMM-BackgroundSlideshow', {
 
   createImageInfoDiv: function(wrapper) {
     const div = document.createElement('div');
-    div.className = 'info';
+    div.className = 'info ' + this.config.imageInfoLocation;
     wrapper.appendChild(div);
     return div;
   },
@@ -242,10 +284,6 @@ Module.register('MMM-BackgroundSlideshow', {
       this.div1.style.opacity = '1';
       this.div1.style.transform="rotate(0deg)";
 
-      if (this.config.showmageInfo) {
-        this.updateImageInfo(decodeURI(image.src));
-      }
-
       if (this.config.showProgressBar) {
         // Restart css animation
         const oldDiv = document.getElementsByClassName('progress-inner')[0];
@@ -254,7 +292,49 @@ Module.register('MMM-BackgroundSlideshow', {
         newDiv.style.display = '';
       }
 
+      // Check to see if we need to animate the background
+      if (this.config.backgroundAnimationEnabled && this.config.backgroundSize.toLowerCase() === 'cover') {
+        // check to see if the width of the picture is larger or the height
+        var width = image.width;
+        var height = image.height;
+        var adjustedWidth = width*window.innerHeight/height;
+        var adjustedHeight = height*window.innerWidth/width;
+
+        this.div1.style.animationDuration = this.config.backgroundAnimationDuration;
+        this.div1.style.animationIterationCount = this.config.backgroundAnimationLoopCount;
+
+        if (adjustedWidth/innerWidth > adjustedHeight/window.innerHeight) {
+          // Scrolling horizontally...
+          this.div1.className = 'backgroundSlideShowH';
+        } else {
+          // Scrolling vertically...
+          this.div1.className = 'backgroundSlideShowV';
+        }
+      }
+
       EXIF.getData(image, () => {
+        if (this.config.showImageInfo) {
+          let dateTime = EXIF.getTag(image, "DateTimeOriginal");
+          // attempt to parse the date if possible
+          if (dateTime !== null) {
+            try {
+              dateTime = moment(dateTime, 'YYYY:MM:DD HH:mm:ss');
+              dateTime = dateTime.format("dddd MMMM D, YYYY HH:mm");
+            } catch (e) {
+              console.log('Failed to parse dateTime: ' + dateTime + ' to format YYYY:MM:DD HH:mm:ss');
+              dateTime = '';
+            }
+          }
+          // TODO: allow for location lookup via openMaps
+          // let lat = EXIF.getTag(this, "GPSLatitude");
+          // let lon = EXIF.getTag(this, "GPSLongitude");
+          // // Only display the location if we have both longitute and lattitude
+          // if (lat && lon) {
+          //   // Get small map of location
+          // }
+          this.updateImageInfo(decodeURI(image.src), dateTime);
+          
+        }
         const exifOrientation = EXIF.getTag(image, "Orientation");
         this.div1.style.transform = this.getImageTransformCss(exifOrientation);
       });
@@ -288,26 +368,45 @@ Module.register('MMM-BackgroundSlideshow', {
     }
   },
 
-  updateImageInfo: function(imageSrc) {
-    // Only display last path component as image name if recurseSubDirectories is not set.
-    let imageName = imageSrc.split('/').pop();
+  updateImageInfo: function(imageSrc, imageDate) {
+    let imageProps = [];
+    this.config.imageInfo.forEach((prop, idx) => {
+      switch (prop) {
+        case 'date':
+          imageProps.push(imageDate);
+          break;
+          
+        case 'name': // default is name
+          // Only display last path component as image name if recurseSubDirectories is not set.
+          let imageName = imageSrc.split('/').pop();
 
-    // Otherwise display path relative to the path in configuration.
-    if (this.config.recursiveSubDirectories) {
-      for (const path of this.config.imagePaths) {
-        if (!imageSrc.includes(path)) {
-          continue;
-        }
+          // Otherwise display path relative to the path in configuration.
+          if (this.config.recursiveSubDirectories) {
+            for (const path of this.config.imagePaths) {
+              if (!imageSrc.includes(path)) {
+                continue;
+              }
 
-        imageName = imageSrc.split(path).pop();
-        if (imageName.startsWith('/')) {
-          imageName = imageName.substr(1);
-        }
-        break;
+              imageName = imageSrc.split(path).pop();
+              if (imageName.startsWith('/')) {
+                imageName = imageName.substr(1);
+              }
+              break;
+            }
+          }
+          imageProps.push(imageName);
+          break;
+        default:
+          Log.warn(prop + ' is not a valid value for imageInfo.  Please check your configuration');
       }
-    }
+    });
 
-    this.imageInfoDiv.innerHTML = imageName;
+    let innerHTML = '<header class="infoDivHeader">Picture Info</header>';
+    imageProps.forEach( (val, idx) => {
+      innerHTML += val + '<br/>';
+    });
+    
+    this.imageInfoDiv.innerHTML = innerHTML;
   },
 
   swapDivs: function() {
@@ -335,7 +434,7 @@ Module.register('MMM-BackgroundSlideshow', {
 
   updateImageList: function() {
     this.suspend();
-     // console.info('Getting Images');
+    // console.info('Getting Images');
     // ask helper function to get the image list
     this.sendSocketNotification(
       'BACKGROUNDSLIDESHOW_REGISTER_CONFIG',
