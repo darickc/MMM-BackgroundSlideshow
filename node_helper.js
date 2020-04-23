@@ -58,7 +58,7 @@ module.exports = NodeHelper.create({
   },
 
   sortImageList: function (imageList, sortBy, sortDescending) {
-    var sortedList = imageList;
+    let sortedList = imageList;
     switch (sortBy) {
       case 'created':
         // Log.log('Sorting by created date...');
@@ -146,8 +146,8 @@ module.exports = NodeHelper.create({
       const validExtensionsList = config.validImageFileExtensions.toLowerCase().split(',');
       this.validImageFileExtensions = new Set(validExtensionsList);
 
-      // get the image list in a non-blocking way since large # of images would cause 
-      // the MagicMirror startup banner t oget stuck sometimes
+      // Get the image list in a non-blocking way since large # of images would cause 
+      // the MagicMirror startup banner to get stuck sometimes.
       setTimeout(() => {this.gatherImageList(config)}, 200);
     }
   }
