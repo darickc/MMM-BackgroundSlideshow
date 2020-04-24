@@ -112,6 +112,10 @@ Module.register('MMM-BackgroundSlideshow', {
     if (this.config.backgroundAnimationDuration === '1s') {
       this.config.backgroundAnimationDuration = (this.config.slideshowSpeed/1000) + 's';
     }
+
+    // Chrome versions < 81 do not support EXIF orientation natively. A CSS transformation
+    // needs to be applied for the image to display correctly - see http://crbug.com/158753 .
+    this.browserSupportsExifOrientationNatively = CSS.supports('image-orientation: from-image');
   },
 
   getScripts: function() {
@@ -335,8 +339,11 @@ Module.register('MMM-BackgroundSlideshow', {
           this.updateImageInfo(decodeURI(image.src), dateTime);
           
         }
-        const exifOrientation = EXIF.getTag(image, "Orientation");
-        this.div1.style.transform = this.getImageTransformCss(exifOrientation);
+
+        if (!this.browserSupportsExifOrientationNatively) {
+          const exifOrientation = EXIF.getTag(image, "Orientation");
+          this.div1.style.transform = this.getImageTransformCss(exifOrientation);
+        }
       });
       this.div2.style.opacity = '0';
     };
