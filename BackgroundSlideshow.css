@@ -1,27 +1,139 @@
-.backgroundSlideShow,
-.backgroundSlideShowH,
-.backgroundSlideShowV,
-.gradient {
+.MMM-BackgroundSlideshow .images,
+.MMM-BackgroundSlideshow .image,
+.MMM-BackgroundSlideshow .transition,
+.MMM-BackgroundSlideshow .gradient {
   position: absolute;
   top: 0;
-  right: 0;
-  bottom: 0;
   left: 0;
+  height: 100%;
+  width: 100%;
 }
-
-.backgroundSlideShow {
+.MMM-BackgroundSlideshow .image {
   background-repeat: no-repeat;
-  opacity: 0;
+  animation-timing-function: linear;
+  animation-direction: alternate;
+  animation-iteration-count: infinite;
+}
+.MMM-BackgroundSlideshow .transition {
+  animation-timing-function: ease-out;
 }
 
-.info {
+@keyframes opacity {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes slideFromRight {
+  0% {
+    left: 100%;
+  }
+  100% {
+    left: 0%;
+  }
+}
+
+@keyframes slideFromLeft {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 0%;
+  }
+}
+
+@keyframes slideFromTop {
+  0% {
+    top: -100%;
+  }
+  100% {
+    top: 0%;
+  }
+}
+
+@keyframes slideFromBottom {
+  0% {
+    top: 100%;
+  }
+  100% {
+    top: 0%;
+  }
+}
+
+@keyframes slideFromTopLeft {
+  0% {
+    top: 100%;
+    left: -100%;
+  }
+  100% {
+    top: 0%;
+    left: 0%;
+  }
+}
+
+@keyframes slideFromTopRight {
+  0% {
+    top: 100%;
+    left: -100%;
+  }
+  100% {
+    top: 0%;
+    left: 0%;
+  }
+}
+
+@keyframes slideFromBottomLeft {
+  0% {
+    top: -100%;
+    left: -100%;
+  }
+  100% {
+    top: 0%;
+    left: 0%;
+  }
+}
+
+@keyframes slideFromBottomRight {
+  0% {
+    top: -100%;
+    left: -100%;
+  }
+  100% {
+    top: 0%;
+    left: 0%;
+  }
+}
+
+@keyframes flipX {
+  0% {
+    transform: rotateY(90deg);
+  }
+  100% {
+    transform: rotateY(0deg);
+  }
+}
+
+@keyframes flipY {
+  0% {
+    transform: rotateX(90deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+.MMM-BackgroundSlideshow .info {
   display: inline-block;
   padding: 15px;
-  background-color: rgba(0,0,0,0.3);
-  font-family: "Roboto Condensed", sans-serif;
+  background-color: rgba(0, 0, 0, 0.3);
+  font-family: 'Roboto Condensed', sans-serif;
   font-weight: 400;
   font-size: 20px;
   line-height: 25px;
+  position: absolute;
 }
 
 @keyframes move {
@@ -33,22 +145,22 @@
   }
 }
 
-.progress {
+.MMM-BackgroundSlideshow .progress {
   position: absolute;
   bottom: 0px;
   height: 2px;
   width: 100%;
 }
 
-.progress-inner {
+.MMM-BackgroundSlideshow .progress-inner {
   height: 100%;
   background-color: white;
 }
 
-.infoDivHeader {
+.MMM-BackgroundSlideshow .infoDivHeader {
   text-transform: uppercase;
   font-size: 15px;
-  font-family: "Roboto Condensed", Arial, Helvetica, sans-serif;
+  font-family: 'Roboto Condensed', Arial, Helvetica, sans-serif;
   font-weight: 400;
   line-height: 15px;
   padding-bottom: 5px;
@@ -56,76 +168,76 @@
   color: #999;
 }
 
-.bottomLeft {
-  position: absolute;
+.MMM-BackgroundSlideshow .bottomLeft {
   bottom: 0pt;
   left: 0pt;
-  border-bottom-width: 0px;
-  border-left-width: 0px;
-  border-top-width: 1pt;
-  border-right-width: 1pt;
+  border-width: 1pt 1pt 0 0;
   border-top-right-radius: 20pt;
 }
 
-.bottomRight {
-  position: absolute;
+.MMM-BackgroundSlideshow .bottomRight {
   bottom: 0pt;
   right: 0pt;
-  border-bottom-width: 0px;
-  border-right-width: 0px;
-  border-top-width: 1pt;
-  border-left-width: 1pt;
+  border-width: 1pt 0 0 1pt;
   border-top-left-radius: 20pt;
 }
 
-.topRight {
-  position: absolute;
+.MMM-BackgroundSlideshow .topRight {
   top: 0pt;
   right: 0pt;
-  border-top-width: 0px;
-  border-right-width: 0px;
-  border-bottom-width: 1pt;
-  border-left-width: 1pt;
+  border-width: 0 0 1pt 1pt;
   border-bottom-left-radius: 20pt;
 }
 
-.topLeft {
-  position: absolute;
+.MMM-BackgroundSlideshow .topLeft {
   top: 0pt;
   left: 0pt;
-  border-top-width: 0px;
-  border-left-width: 0px;
-  border-bottom-width: 1pt;
-  border-right-width: 1pt;
+  border-width: 0 1pt 1pt 0;
   border-bottom-right-radius: 20pt;
 }
 
-.backgroundSlideShowH {
-  background-repeat: no-repeat;
+.MMM-BackgroundSlideshow .slideH {
   background-size: cover;
   background-position: left;
-  opacity: 1;
-  animation-name: backgroundScrollH;
-  animation-timing-function: linear;
-  animation-direction: alternate;
+  animation-name: slideH;
 }
 
-.backgroundSlideShowV {
-  background-repeat: no-repeat;
+.MMM-BackgroundSlideshow .slideV {
   background-size: cover;
   background-position: top;
-  opacity: 1;
-  animation-name: backgroundScrollV;
-  animation-timing-function: linear;
-  animation-direction: alternate;
+  animation-name: slideV;
 }
 
-@keyframes backgroundScrollH {
-  from {background-position: left;}
-    to {background-position: right;}
+.MMM-BackgroundSlideshow .zoomIn {
+  animation-name: zoomIn;
+  transform: scale(1);
 }
 
-@keyframes backgroundScrollV {
-  from {background-position: top;}
-    to {background-position: bottom;}
+.MMM-BackgroundSlideshow .zoomOut {
+  animation-name: zoomOut;
+  transform: scale(1.1);
+}
+
+@keyframes slideH {
+  to {
+    background-position: right;
+  }
+}
+
+@keyframes slideV {
+  to {
+    background-position: bottom;
+  }
+}
+
+@keyframes zoomIn {
+  to {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes zoomOut {
+  to {
+    transform: scale(1);
+  }
 }

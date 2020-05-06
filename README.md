@@ -1,4 +1,3 @@
-
 # Module: Background Slideshow
 
 Show a slideshow of images in the background. Great for a photo frame from instead of a mirror.
@@ -29,13 +28,14 @@ Or
 Download the zip file https://github.com/darickc/MMM-BackgroundSlideshow/archive/master.zip. Unzip contents into the modules directory of your Magic Mirror install. Rename the 'MMM-BackgroundSlideshow-master' folder to 'MMM-BackgroundSlideshow'.
 
 Once downloaded, install dependencies:
-````
-cd ~/MagicMirror/modules/MMM-BackgroundSlideshow
-````
 
-````
+```
+cd ~/MagicMirror/modules/MMM-BackgroundSlideshow
+```
+
+```
 npm install
-````
+```
 
 Add the module to the modules array in the `config/config.js` file:
 
@@ -47,9 +47,9 @@ modules: [
     config: {
       imagePaths: ['modules/MMM-BackgroundSlideshow/exampleImages/'],
       transitionImages: true,
-      randomizeImageOrder: true
-    }
-  }
+      randomizeImageOrder: true,
+    },
+  },
 ];
 ```
 
@@ -97,8 +97,13 @@ The following notifications can be used:
 			<td>Change to the next image and start the timer for image changes<br>
 			</td>
 		</tr>
+		<tr>
+			<td><code>BACKGROUNDSLIDESHOW_URL</code></td>
+			<td>Show an image by passing an object with a URL. Include resume=true to continue slideshow after displaying image, otherwise the image will display until another notification such as BACKGROUNDSLIDESHOW_PLAY.
+			 <br>Example payload: {url:'url_to_image', resume: true}
+			</td>
+		</tr>
 </table>
-
 
 ## Configuration options
 
@@ -284,6 +289,36 @@ The following properties can be configured:
 			<b>Note:</b> For this to work, backgroundSize must be set to cover.<br>
 				<br><b>Example:</b> <code>true</code>
 				<br><b>Default value:</b> <code>false</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>transitions</code></td>
+			<td>Array value containing strings defining what transitions to perform. 
+			<b>Note:</b> transitionImages must be set to true.<br>
+				<br><b>Example:</b> <code>['opacity', 'slideFromLeft']</code>
+				<br><b>Default value:</b> <code>['opacity', 'slideFromRight', 'slideFromLeft', 'slideFromTop', 'slideFromBottom', 'slideFromTopLeft', 'slideFromTopRight', 'slideFromBottomLeft', 'slideFromBottomRight', 'flipX', 'flipY']</code>
+				<br><b>Possible values:</b> <code>'opacity', 'slideFromRight', 'slideFromLeft', 'slideFromTop', 'slideFromBottom', 'slideFromTopLeft', 'slideFromTopRight', 'slideFromBottomLeft', 'slideFromBottomRight', 'flipX', 'flipY'</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>transitionTimingFunction</code></td>
+			<td>CSS timing function used with transitions. 
+			<b>Note:</b> transitionImages must be set to true.<br>
+				<br><b>Example:</b> <code>'ease-in</code>
+				<br><b>Default value:</b> <code>'cubic-bezier(.17,.67,.35,.96)'</code>
+				<br><b>Possible values:</b> <code>'ease', 'linear', 'ease-in', 'ease-out', 'ease-in-out', 'cubic-bezier(n,n,n,n)'</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>animations</code></td>
+			<td>Array value containing strings defining what animations to perform.
+			<b>Note:</b> backgroundAnimationEnabled must be set to true.<br>
+				<br><b>Example:</b> <code>'ease-in</code>
+				<br><b>Default value:</b> <code>['slide', 'zoomOut', 'zoomIn']</code>
+				<br><b>Possible values:</b> <code>'slide', 'zoomOut', 'zoomIn'</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
