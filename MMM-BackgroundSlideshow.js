@@ -130,7 +130,7 @@ Module.register('MMM-BackgroundSlideshow', {
   },
 
   getScripts: function () {
-    return ['modules/' + this.name + '/node_modules/exif-js/exif.js', 'moment.js'];
+    return ['modules/' + this.name + '/node_modules/exif-js/exif.js', 'modules/' + this.name + '/node_modules/lodash/lodash.js', 'moment.js'];
   },
 
   getStyles: function () {
@@ -181,9 +181,48 @@ Module.register('MMM-BackgroundSlideshow', {
           }
           this.updateImage(false, payload.url);
         }
+      } else if (notification === 'BACKGROUNDSLIDESHOW_URLS') {
+        console.log(`Notification Recieved: BACKGROUNDSLIDESHOW_URLS. Payload: ${JSON.stringify(payload)}`);
+        if (payload && payload.urls && payload.urls.length) {
+          // check if image list has been saved. If not, this is the first time the notification is received
+          // save the image list and index.
+          if (!this.savedImages) {
+            this.savedImages = this.imageList;
+            this.savedIndex = this.imageIndex;
+            this.updateImageListWithArray(payload.urls);
+          } else {
+            // check if there the sent urls are the same, or different.
+            let temp = _.union(payload.urls, this.imageList);
+            // if they are the same length, then they haven't changed, so don't do anything.
+            if (temp.length !== payload.urls.length) {
+              this.updateImageListWithArray(payload.urls);
+            }
+          }
+          // no urls sent, see if there is saved data.
+        } else if (this.savedImages) {
+          this.imageList = this.savedImages;
+          this.imageIndex = this.savedIndex;
+          this.savedImages = null;
+          this.savedIndex = null;
+          this.updateImage();
+          if (this.timer) {
+            // Restart timer only if timer was already running
+            this.resume();
+          }
+        }
       } else {
         // Log.log(this.name + " received a system notification: " + notification);
       }
+    }
+  },
+
+  updateImageListWithArray: function (urls) {
+    this.imageList = urls;
+    this.imageIndex = 0;
+    this.updateImage();
+    if (this.timer || (this.savedImages && this.savedImages.length == 0)) {
+      // Restart timer only if timer was already running
+      this.resume();
     }
   },
 
@@ -195,12 +234,17 @@ Module.register('MMM-BackgroundSlideshow', {
       if (payload.identifier === this.identifier) {
         // console.info('Returning Images, payload:' + JSON.stringify(payload));
         // set the image list
-        this.imageList = payload.imageList;
-        // if image list actually contains images
-        // set loaded flag to true and update dom
-        if (this.imageList.length > 0) {
-          this.updateImage(); //Added to show the image at least once, but not change it within this.resume()
-          this.resume();
+        if (this.savedImages) {
+          this.savedImages = payload.imageList;
+          this.savedIndex = 0;
+        } else {
+          this.imageList = payload.imageList;
+          // if image list actually contains images
+          // set loaded flag to true and update dom
+          if (this.imageList.length > 0) {
+            this.updateImage(); //Added to show the image at least once, but not change it within this.resume()
+            this.resume();
+          }
         }
       }
     }
@@ -270,7 +314,6 @@ Module.register('MMM-BackgroundSlideshow', {
       if (!this.imageList || !this.imageList.length) {
         return;
       }
-
       if (backToPreviousImage) {
         // imageIndex is incremented after displaying an image so -2 is needed to
         // get to previous image index.
@@ -284,8 +327,11 @@ Module.register('MMM-BackgroundSlideshow', {
 
       if (this.imageIndex >= this.imageList.length) {
         this.imageIndex = 0;
-        this.updateImageList();
-        return;
+        // only update the image list if one wasn't sent through notifications
+        if (!this.savedImages) {
+          this.updateImageList();
+          return;
+        }
       }
     }
 

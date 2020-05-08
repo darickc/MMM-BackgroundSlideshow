@@ -103,6 +103,12 @@ The following notifications can be used:
 			 <br>Example payload: {url:'url_to_image', resume: true}
 			</td>
 		</tr>
+		<tr>
+			<td><code>BACKGROUNDSLIDESHOW_URLS</code></td>
+			<td>Pass in a list of URLs to display in the background.  To continue showing photos, pass in an empty array or no payload.
+			 <br>Example payload: {urls:['url_to_image', 'url_to_image']}
+			</td>
+		</tr>
 </table>
 
 ## Configuration options
