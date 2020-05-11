@@ -32,7 +32,7 @@ Module.register('MMM-BackgroundSlideshow', {
     // show a panel containing information about the image currently displayed.
     showImageInfo: false,
     // a comma separated list of values to display: name, date, geo (TODO)
-    imageInfo: 'name, date, imagecount',
+    imageInfo: 'name, date',
     // location of the info div
     imageInfoLocation: 'bottomRight', // Other possibilities are: bottomLeft, topLeft, topRight
     // transition speed from one image to the other, transitionImages must be true
@@ -76,20 +76,30 @@ Module.register('MMM-BackgroundSlideshow', {
       'flipX',
       'flipY',
     ],
-    transitionTimingFunction: 'cubic-bezier(.07,.71,.24,.97)',
+    transitionTimingFunction: 'cubic-bezier(.17,.67,.35,.96)',
     animations: ['slide', 'zoomOut', 'zoomIn'],
   },
 
   // load function
   start: function () {
-    this.play = true;
     // add identifier to the config
     this.config.identifier = this.identifier;
     // ensure file extensions are lower case
     this.config.validImageFileExtensions = this.config.validImageFileExtensions.toLowerCase();
     // ensure image order is in lower case
     this.config.sortImagesBy = this.config.sortImagesBy.toLowerCase();
-
+    // commented out since this was not doing anything
+    // set no error
+    // this.errorMessage = null;
+    if (this.config.imagePaths.length == 0) {
+      Log.error('MMM-BackgroundSlideshow: Missing required parameter imagePaths.');
+    } else {
+      // create an empty image list
+      this.imageList = [];
+      // set beginning image index to 0, as it will auto increment on start
+      this.imageIndex = 0;
+      this.updateImageList();
+    }
     //validate imageinfo property.  This will make sure we have at least 1 valid value
     const imageInfoRegex = /\bname\b|\bdate\b/gi;
     if (this.config.showImageInfo && !imageInfoRegex.test(this.config.imageInfo)) {
@@ -108,12 +118,6 @@ Module.register('MMM-BackgroundSlideshow', {
       this.config.transitionSpeed = '0';
     }
 
-    if (this.config.transitionSpeed.includes('ms')) {
-      this.transitionSpeed = this.config.transitionSpeed.replace('ms', '') * 1;
-    } else if (this.config.transitionSpeed.includes('s')) {
-      this.transitionSpeed = this.config.transitionSpeed.replace('s', '') * 1000;
-    }
-
     // Lets make sure the backgroundAnimation duration matches the slideShowSpeed unless it has been
     // overriden
     if (this.config.backgroundAnimationDuration === '1s') {
@@ -123,25 +127,10 @@ Module.register('MMM-BackgroundSlideshow', {
     // Chrome versions < 81 do not support EXIF orientation natively. A CSS transformation
     // needs to be applied for the image to display correctly - see http://crbug.com/158753 .
     this.browserSupportsExifOrientationNatively = CSS.supports('image-orientation: from-image');
-
-    if (this.config.imagePaths.length == 0) {
-      Log.error('MMM-BackgroundSlideshow: Missing required parameter imagePaths.');
-    } else {
-      // create an empty image list
-      this.imageList = [];
-      // set beginning image index to 0, as it will auto increment on start
-      this.imageIndex = 0;
-      this.updateImageList();
-    }
   },
 
   getScripts: function () {
-    return [
-      // 'modules/' + this.name + '/BackgroundSlideshow-webworker.js',
-      'modules/' + this.name + '/node_modules/exif-js/exif.js',
-      'modules/' + this.name + '/node_modules/lodash/lodash.js',
-      'moment.js',
-    ];
+    return ['modules/' + this.name + '/node_modules/exif-js/exif.js', 'modules/' + this.name + '/node_modules/lodash/lodash.js', 'moment.js'];
   },
 
   getStyles: function () {
@@ -156,24 +145,25 @@ Module.register('MMM-BackgroundSlideshow', {
       if (notification === 'BACKGROUNDSLIDESHOW_IMAGE_UPDATE') {
         Log.log('MMM-BackgroundSlideshow: Changing Background');
         this.suspend();
+        this.updateImage();
         this.resume();
       } else if (notification === 'BACKGROUNDSLIDESHOW_NEXT') {
         // Change to next image
-        if (!this.updateTimer) {
-          this.imageIndex--;
+        this.updateImage();
+        if (this.timer) {
+          // Restart timer only if timer was already running
+          this.resume();
         }
-        this.clearTimer();
-        this.imagePromise = null;
-        this.nextImage();
       } else if (notification === 'BACKGROUNDSLIDESHOW_PREVIOUS') {
         // Change to previous image
-        if (!this.updateTimer) {
-          this.imageIndex--;
+        this.updateImage(/* skipToPrevious= */ true);
+        if (this.timer) {
+          // Restart timer only if timer was already running
+          this.resume();
         }
-        this.clearTimer();
-        this.nextImage(true);
       } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') {
         // Change to next image and start timer.
+        this.updateImage();
         this.resume();
       } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') {
         // Stop timer.
@@ -181,13 +171,18 @@ Module.register('MMM-BackgroundSlideshow', {
       } else if (notification === 'BACKGROUNDSLIDESHOW_URL') {
         if (payload && payload.url) {
           // Stop timer.
-          this.suspend();
           if (payload.resume) {
-            this.play = true;
+            if (this.timer) {
+              // Restart timer only if timer was already running
+              this.resume();
+            }
+          } else {
+            this.suspend();
           }
-          this.nextImage(false, payload.url);
+          this.updateImage(false, payload.url);
         }
       } else if (notification === 'BACKGROUNDSLIDESHOW_URLS') {
+        console.log(`Notification Recieved: BACKGROUNDSLIDESHOW_URLS. Payload: ${JSON.stringify(payload)}`);
         if (payload && payload.urls && payload.urls.length) {
           // check if image list has been saved. If not, this is the first time the notification is received
           // save the image list and index.
@@ -199,7 +194,7 @@ Module.register('MMM-BackgroundSlideshow', {
             // check if there the sent urls are the same, or different.
             let temp = _.union(payload.urls, this.imageList);
             // if they are the same length, then they haven't changed, so don't do anything.
-            if (temp.length !== this.imageList.length) {
+            if (temp.length !== payload.urls.length) {
               this.updateImageListWithArray(payload.urls);
             }
           }
@@ -209,8 +204,11 @@ Module.register('MMM-BackgroundSlideshow', {
           this.imageIndex = this.savedIndex;
           this.savedImages = null;
           this.savedIndex = null;
-          this.clearTimer();
-          this.nextImage();
+          this.updateImage();
+          if (this.timer) {
+            // Restart timer only if timer was already running
+            this.resume();
+          }
         }
       } else {
         // Log.log(this.name + " received a system notification: " + notification);
@@ -221,8 +219,11 @@ Module.register('MMM-BackgroundSlideshow', {
   updateImageListWithArray: function (urls) {
     this.imageList = urls;
     this.imageIndex = 0;
-    this.clearTimer();
-    this.nextImage();
+    this.updateImage();
+    if (this.timer || (this.savedImages && this.savedImages.length == 0)) {
+      // Restart timer only if timer was already running
+      this.resume();
+    }
   },
 
   // the socket handler
@@ -241,7 +242,7 @@ Module.register('MMM-BackgroundSlideshow', {
           // if image list actually contains images
           // set loaded flag to true and update dom
           if (this.imageList.length > 0) {
-            //this.updateImage(); //Added to show the image at least once, but not change it within this.resume()
+            this.updateImage(); //Added to show the image at least once, but not change it within this.resume()
             this.resume();
           }
         }
@@ -308,191 +309,137 @@ Module.register('MMM-BackgroundSlideshow', {
     wrapper.appendChild(div);
   },
 
-  nextImage: function (backToPreviousImage = false, imageToDisplay = null) {
-    let self = this;
-    if (backToPreviousImage || imageToDisplay) {
-      self.imagePromise = null;
-    }
-
-    if (!self.imagePromise) {
-      self.updateImage(backToPreviousImage, imageToDisplay);
-    }
-
-    self.imagePromise.then(
-      (imageData) => {
-        if (self.imagesDiv.childNodes.length > 1) {
-          self.imagesDiv.removeChild(this.imagesDiv.childNodes[0]);
-        }
-        if (self.imagesDiv.childNodes.length > 0) {
-          self.imagesDiv.childNodes[0].style.opacity = '0';
-        }
-        if (self.config.showProgressBar) {
-          // Restart css animation
-          const oldDiv = document.getElementsByClassName('progress-inner')[0];
-          const newDiv = oldDiv.cloneNode(true);
-          oldDiv.parentNode.replaceChild(newDiv, oldDiv);
-          newDiv.style.display = '';
-        }
-        if (self.config.showImageInfo) {
-          self.updateImageInfo(imageData.url, imageData.dateTime);
-        }
-        self.imagesDiv.appendChild(imageData.div);
-        URL.revokeObjectURL(imageData.objectURL);
-
-        // don't try pre-loading a new image until the transition is done. It can make it jerky.
-        self.updateTimer = setTimeout(() => {
-          self.updateTimer = null;
-          self.updateImage();
-        }, this.transitionSpeed);
-        if (self.play) {
-          self.timer = setTimeout(() => {
-            self.nextImage();
-          }, self.config.slideshowSpeed);
-        }
-      },
-      (error) => console.log(error.message)
-    );
-  },
-
   updateImage: function (backToPreviousImage = false, imageToDisplay = null) {
-    let self = this;
-    this.imagePromise = new Promise(function (resolve, reject) {
-      let imageUrl = self.getNextImageUrl(backToPreviousImage, imageToDisplay);
-      if (!imageUrl) {
-        reject(new Error('No image to display'));
+    if (!imageToDisplay) {
+      if (!this.imageList || !this.imageList.length) {
         return;
       }
+      if (backToPreviousImage) {
+        // imageIndex is incremented after displaying an image so -2 is needed to
+        // get to previous image index.
+        this.imageIndex -= 2;
 
-      self.toDataURL(imageUrl, (image, objectUrl) => {
-        var imageData = self.createImageDiv(imageUrl, image);
-        imageData.objectUrl = objectUrl;
-        imageData.image = image;
-        resolve(imageData);
-      });
-    });
-  },
-
-  createImageDiv: function (url, image) {
-    let imageData = { url };
-    const transitionDiv = document.createElement('div');
-    transitionDiv.className = 'transition';
-    if (this.config.transitionImages && this.config.transitions.length > 0) {
-      let randomNumber = Math.floor(Math.random() * this.config.transitions.length);
-      transitionDiv.style.animationDuration = this.config.transitionSpeed;
-      transitionDiv.style.transition = `opacity ${this.config.transitionSpeed} ease-in-out`;
-      transitionDiv.style.animationName = this.config.transitions[randomNumber];
-      transitionDiv.style.animationTimingFunction = this.config.transitionTimingFunction;
-    }
-
-    const imageDiv = this.createDiv();
-    imageDiv.style.backgroundImage = `url("${image.src}")`;
-
-    // Check to see if we need to animate the background
-    if (this.config.backgroundAnimationEnabled && this.config.animations.length) {
-      randomNumber = Math.floor(Math.random() * this.config.animations.length);
-      const animation = this.config.animations[randomNumber];
-      imageDiv.style.animationDuration = this.config.backgroundAnimationDuration;
-      imageDiv.style.animationDelay = this.config.transitionSpeed;
-
-      if (animation === 'slide') {
-        // check to see if the width of the picture is larger or the height
-        var width = image.width;
-        var height = image.height;
-        var adjustedWidth = (width * window.innerHeight) / height;
-        var adjustedHeight = (height * window.innerWidth) / width;
-
-        imageDiv.style.backgroundPosition = '';
-        imageDiv.style.animationIterationCount = this.config.backgroundAnimationLoopCount;
-        imageDiv.style.backgroundSize = 'cover';
-
-        if (adjustedWidth / window.innerWidth > adjustedHeight / window.innerHeight) {
-          // Scrolling horizontally...
-          imageDiv.className += ' slideH';
-        } else {
-          // Scrolling vertically...
-          imageDiv.className += ' slideV';
+        // Case of first image, go to end of array.
+        if (this.imageIndex < 0) {
+          this.imageList.length + this.imageIndex;
         }
-      } else {
-        imageDiv.className += ` ${animation}`;
-      }
-    }
-    EXIF.getData(image, () => {
-      if (this.config.showImageInfo) {
-        let dateTime = EXIF.getTag(image, 'DateTimeOriginal');
-        // attempt to parse the date if possible
-        if (dateTime !== null) {
-          try {
-            dateTime = moment(dateTime, 'YYYY:MM:DD HH:mm:ss');
-            dateTime = dateTime.format('dddd MMMM D, YYYY HH:mm');
-            imageData.dateTime = dateTime;
-          } catch (e) {
-            console.log('Failed to parse dateTime: ' + dateTime + ' to format YYYY:MM:DD HH:mm:ss');
-            dateTime = '';
-          }
-        }
-        // TODO: allow for location lookup via openMaps
-        // let lat = EXIF.getTag(this, "GPSLatitude");
-        // let lon = EXIF.getTag(this, "GPSLongitude");
-        // // Only display the location if we have both longitute and lattitude
-        // if (lat && lon) {
-        //   // Get small map of location
-        // }
       }
 
-      if (!this.browserSupportsExifOrientationNatively) {
-        const exifOrientation = EXIF.getTag(image, 'Orientation');
-        imageDiv.style.transform = this.getImageTransformCss(exifOrientation);
-      }
-    });
-    transitionDiv.appendChild(imageDiv);
-    imageData.div = transitionDiv;
-    return imageData;
-  },
-
-  getNextImageUrl(backToPreviousImage = false, imageToDisplay = null) {
-    if (imageToDisplay) {
-      return imageToDisplay;
-    }
-    if (!this.imageList || !this.imageList.length) {
-      return null;
-    }
-
-    if (backToPreviousImage) {
-      this.imageIndex -= 2;
-      if (this.imageIndex < 0) {
+      if (this.imageIndex >= this.imageList.length) {
         this.imageIndex = 0;
+        // only update the image list if one wasn't sent through notifications
+        if (!this.savedImages) {
+          this.updateImageList();
+          return;
+        }
       }
     }
 
-    if (this.imageIndex >= this.imageList.length) {
-      this.imageIndex = 0;
-      // only update the image list if one wasn't sent through notifications
-      if (!this.savedImages && backToPreviousImage) {
-        this.suspend();
-        this.updateImageList();
-        return null;
+    const image = new Image();
+    image.onload = () => {
+      // check if there are more than 2 elements and remove the first one
+      if (this.imagesDiv.childNodes.length > 1) {
+        this.imagesDiv.removeChild(this.imagesDiv.childNodes[0]);
       }
-    }
-    return this.imageList[this.imageIndex++];
-  },
+      if (this.imagesDiv.childNodes.length > 0) {
+        this.imagesDiv.childNodes[0].style.opacity = '0';
+      }
 
-  // preload image and convert to base64 encoded image for better performance
-  toDataURL: function (url, callback) {
-    const ImageLoaderWorker = new Worker('modules/' + this.name + '/BackgroundSlideshow-webworker.js');
-    ImageLoaderWorker.addEventListener('message', (event) => {
-      const imageData = event.data;
-      const objectURL = URL.createObjectURL(imageData.blob);
-      const image = new Image();
-      image.onload = () => {
-        callback(image, objectURL);
-      };
-      image.src = objectURL;
-      ImageLoaderWorker.terminate();
-    });
-    if (!url.startsWith('http') && !url.startsWith('/')) {
-      url = '/' + url;
+      const transitionDiv = document.createElement('div');
+      transitionDiv.className = 'transition';
+      if (this.config.transitionImages && this.config.transitions.length > 0) {
+        let randomNumber = Math.floor(Math.random() * this.config.transitions.length);
+        transitionDiv.style.animationDuration = this.config.transitionSpeed;
+        transitionDiv.style.transition = `opacity ${this.config.transitionSpeed} ease-in-out`;
+        transitionDiv.style.animationName = this.config.transitions[randomNumber];
+        transitionDiv.style.animationTimingFunction = this.config.transitionTimingFunction;
+      }
+
+      const imageDiv = this.createDiv();
+      imageDiv.style.backgroundImage = `url("${image.src}")`;
+      // imageDiv.style.transform = 'rotate(0deg)';
+
+      // this.div1.style.backgroundImage = `url("${image.src}")`;
+      // this.div1.style.opacity = '1';
+
+      if (this.config.showProgressBar) {
+        // Restart css animation
+        const oldDiv = document.getElementsByClassName('progress-inner')[0];
+        const newDiv = oldDiv.cloneNode(true);
+        oldDiv.parentNode.replaceChild(newDiv, oldDiv);
+        newDiv.style.display = '';
+      }
+
+      // Check to see if we need to animate the background
+      if (this.config.backgroundAnimationEnabled && this.config.animations.length) {
+        randomNumber = Math.floor(Math.random() * this.config.animations.length);
+        const animation = this.config.animations[randomNumber];
+        imageDiv.style.animationDuration = this.config.backgroundAnimationDuration;
+        imageDiv.style.animationDelay = this.config.transitionSpeed;
+
+        if (animation === 'slide') {
+          // check to see if the width of the picture is larger or the height
+          var width = image.width;
+          var height = image.height;
+          var adjustedWidth = (width * window.innerHeight) / height;
+          var adjustedHeight = (height * window.innerWidth) / width;
+
+          imageDiv.style.backgroundPosition = '';
+          imageDiv.style.animationIterationCount = this.config.backgroundAnimationLoopCount;
+          imageDiv.style.backgroundSize = 'cover';
+
+          if (adjustedWidth / window.innerWidth > adjustedHeight / window.innerHeight) {
+            // Scrolling horizontally...
+            imageDiv.className += ' slideH';
+          } else {
+            // Scrolling vertically...
+            imageDiv.className += ' slideV';
+          }
+        } else {
+          imageDiv.className += ` ${animation}`;
+        }
+      }
+
+      EXIF.getData(image, () => {
+        if (this.config.showImageInfo) {
+          let dateTime = EXIF.getTag(image, 'DateTimeOriginal');
+          // attempt to parse the date if possible
+          if (dateTime !== null) {
+            try {
+              dateTime = moment(dateTime, 'YYYY:MM:DD HH:mm:ss');
+              dateTime = dateTime.format('dddd MMMM D, YYYY HH:mm');
+            } catch (e) {
+              console.log('Failed to parse dateTime: ' + dateTime + ' to format YYYY:MM:DD HH:mm:ss');
+              dateTime = '';
+            }
+          }
+          // TODO: allow for location lookup via openMaps
+          // let lat = EXIF.getTag(this, "GPSLatitude");
+          // let lon = EXIF.getTag(this, "GPSLongitude");
+          // // Only display the location if we have both longitute and lattitude
+          // if (lat && lon) {
+          //   // Get small map of location
+          // }
+          this.updateImageInfo(decodeURI(image.src), dateTime);
+        }
+
+        if (!this.browserSupportsExifOrientationNatively) {
+          const exifOrientation = EXIF.getTag(image, 'Orientation');
+          imageDiv.style.transform = this.getImageTransformCss(exifOrientation);
+        }
+      });
+      transitionDiv.appendChild(imageDiv);
+      this.imagesDiv.appendChild(transitionDiv);
+    };
+    if (imageToDisplay) {
+      image.src = encodeURI(imageToDisplay);
+    } else {
+      image.src = encodeURI(this.imageList[this.imageIndex]);
+      this.imageIndex += 1;
     }
-    ImageLoaderWorker.postMessage(encodeURI(url));
+
+    this.sendNotification('BACKGROUNDSLIDESHOW_IMAGE_UPDATED', { url: image.src });
+    // console.info('Updating image, source:' + image.src);
   },
 
   getImageTransformCss: function (exifOrientation) {
@@ -522,9 +469,7 @@ Module.register('MMM-BackgroundSlideshow', {
     this.config.imageInfo.forEach((prop, idx) => {
       switch (prop) {
         case 'date':
-          if (imageDate && imageDate != 'Invalid date') {
-            imageProps.push(imageDate);
-          }
+          imageProps.push(imageDate);
           break;
 
         case 'name': // default is name
@@ -547,9 +492,6 @@ Module.register('MMM-BackgroundSlideshow', {
           }
           imageProps.push(imageName);
           break;
-        case 'imagecount':
-          imageProps.push(`${this.imageIndex} of ${this.imageList.length}`);
-          break;
         default:
           Log.warn(prop + ' is not a valid value for imageInfo.  Please check your configuration');
       }
@@ -564,27 +506,24 @@ Module.register('MMM-BackgroundSlideshow', {
   },
 
   suspend: function () {
-    this.clearTimer();
-    this.play = false;
-  },
-
-  resume: function () {
-    this.play = true;
-    this.nextImage();
-  },
-
-  clearTimer: function () {
-    if (this.updateTimer) {
-      clearTimeout(this.updateTimer);
-      this.updateTimer = null;
-    }
     if (this.timer) {
-      clearTimeout(this.timer);
+      clearInterval(this.timer);
       this.timer = null;
     }
   },
 
+  resume: function () {
+    //this.updateImage(); //Removed to prevent image change whenever MMM-Carousel changes slides
+    this.suspend();
+    var self = this;
+    this.timer = setInterval(function () {
+      // console.info('MMM-BackgroundSlideshow updating from resume');
+      self.updateImage();
+    }, self.config.slideshowSpeed);
+  },
+
   updateImageList: function () {
+    this.suspend();
     // console.info('Getting Images');
     // ask helper function to get the image list
     this.sendSocketNotification('BACKGROUNDSLIDESHOW_REGISTER_CONFIG', this.config);

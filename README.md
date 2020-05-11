@@ -200,7 +200,7 @@ The following properties can be configured:
 			<td><code>imageInfo</code></td>
 			<td>String value, a list of image properties to display in the image info div, separated by commas.  Possible values are : date (EXIF date from image), name (image name).
 			For the iamge name, the relative path from that defined in imagePaths is displayed if the recursiveSubDirectories option is set to true.<br>
-				<br><b>Example:</b> <code>date,name, imagecount</code>
+				<br><b>Example:</b> <code>date,name</code>
 				<br><b>Default value:</b> <code>name</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
@@ -313,7 +313,7 @@ The following properties can be configured:
 			<td>CSS timing function used with transitions. 
 			<b>Note:</b> transitionImages must be set to true.<br>
 				<br><b>Example:</b> <code>'ease-in</code>
-				<br><b>Default value:</b> <code>'cubic-bezier(.07,.71,.24,.97)'</code>
+				<br><b>Default value:</b> <code>'cubic-bezier(.17,.67,.35,.96)'</code>
 				<br><b>Possible values:</b> <code>'ease', 'linear', 'ease-in', 'ease-out', 'ease-in-out', 'cubic-bezier(n,n,n,n)'</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
