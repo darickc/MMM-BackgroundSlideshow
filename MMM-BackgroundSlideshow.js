@@ -32,7 +32,7 @@ Module.register('MMM-BackgroundSlideshow', {
     // show a panel containing information about the image currently displayed.
     showImageInfo: false,
     // a comma separated list of values to display: name, date, geo (TODO)
-    imageInfo: 'name, date',
+    imageInfo: 'name, date, imagecount',
     // location of the info div
     imageInfoLocation: 'bottomRight', // Other possibilities are: bottomLeft, topLeft, topRight
     // transition speed from one image to the other, transitionImages must be true
@@ -91,15 +91,7 @@ Module.register('MMM-BackgroundSlideshow', {
     // commented out since this was not doing anything
     // set no error
     // this.errorMessage = null;
-    if (this.config.imagePaths.length == 0) {
-      Log.error('MMM-BackgroundSlideshow: Missing required parameter imagePaths.');
-    } else {
-      // create an empty image list
-      this.imageList = [];
-      // set beginning image index to 0, as it will auto increment on start
-      this.imageIndex = 0;
-      this.updateImageList();
-    }
+
     //validate imageinfo property.  This will make sure we have at least 1 valid value
     const imageInfoRegex = /\bname\b|\bdate\b/gi;
     if (this.config.showImageInfo && !imageInfoRegex.test(this.config.imageInfo)) {
@@ -273,6 +265,16 @@ Module.register('MMM-BackgroundSlideshow', {
       this.createProgressbarDiv(wrapper, this.config.slideshowSpeed);
     }
 
+    if (this.config.imagePaths.length == 0) {
+      Log.error('MMM-BackgroundSlideshow: Missing required parameter imagePaths.');
+    } else {
+      // create an empty image list
+      this.imageList = [];
+      // set beginning image index to 0, as it will auto increment on start
+      this.imageIndex = 0;
+      this.updateImageList();
+    }
+
     return wrapper;
   },
 
@@ -321,7 +323,7 @@ Module.register('MMM-BackgroundSlideshow', {
 
         // Case of first image, go to end of array.
         if (this.imageIndex < 0) {
-          this.imageList.length + this.imageIndex;
+          this.imageIndex = 0;
         }
       }
 
@@ -469,7 +471,9 @@ Module.register('MMM-BackgroundSlideshow', {
     this.config.imageInfo.forEach((prop, idx) => {
       switch (prop) {
         case 'date':
-          imageProps.push(imageDate);
+          if (imageDate && imageDate != 'Invalid date') {
+            imageProps.push(imageDate);
+          }
           break;
 
         case 'name': // default is name
@@ -491,6 +495,9 @@ Module.register('MMM-BackgroundSlideshow', {
             }
           }
           imageProps.push(imageName);
+          break;
+        case 'imagecount':
+          imageProps.push(`${this.imageIndex} of ${this.imageList.length}`);
           break;
         default:
           Log.warn(prop + ' is not a valid value for imageInfo.  Please check your configuration');
