@@ -17,6 +17,8 @@ Module.register('MMM-BackgroundSlideshow', {
   defaults: {
     // an array of strings, each is a path to a directory with images
     imagePaths: ['modules/MMM-BackgroundSlideshow/exampleImages'],
+    // do not recurse into these subdirectory names when scanning.
+    excludePaths: ['@eaDir'],
     // the speed at which to switch between images, in milliseconds
     slideshowSpeed: 10 * 1000,
     // if true randomize image order, otherwise use sortImagesBy and sortImagesDescending
@@ -174,7 +176,7 @@ Module.register('MMM-BackgroundSlideshow', {
           this.updateImage(false, payload.url);
         }
       } else if (notification === 'BACKGROUNDSLIDESHOW_URLS') {
-        console.log(`Notification Recieved: BACKGROUNDSLIDESHOW_URLS. Payload: ${JSON.stringify(payload)}`);
+        console.log(`Notification Received: BACKGROUNDSLIDESHOW_URLS. Payload: ${JSON.stringify(payload)}`);
         if (payload && payload.urls && payload.urls.length) {
           // check if image list has been saved. If not, this is the first time the notification is received
           // save the image list and index.

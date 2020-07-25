@@ -20,6 +20,7 @@ var FileSystemImageSlideshow = require('fs');
 module.exports = NodeHelper.create({
   // subclass start method, clears the initial config array
   start: function() {
+    this.excludePaths = new Set();
     this.validImageFileExtensions = new Set();
   },
   
@@ -119,6 +120,9 @@ module.exports = NodeHelper.create({
   getFiles(path, imageList, config) {
     const contents = FileSystemImageSlideshow.readdirSync(path);
     for (let i = 0; i < contents.length; i++) {
+      if (this.excludePaths.has(contents[i])) {
+        continue;
+      }
       const currentItem = path + '/' + contents[i];
       const stats = FileSystemImageSlideshow.lstatSync(currentItem);
       if (stats.isDirectory() && config.recursiveSubDirectories) {
@@ -141,6 +145,9 @@ module.exports = NodeHelper.create({
   socketNotificationReceived: function(notification, payload) {
     if (notification === 'BACKGROUNDSLIDESHOW_REGISTER_CONFIG') {
       const config = payload;
+
+      // Create set of excluded subdirectories.
+      this.excludePaths = new Set(config.excludePaths);
 
       // Create set of valid image extensions.
       const validExtensionsList = config.validImageFileExtensions.toLowerCase().split(',');

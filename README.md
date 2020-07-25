@@ -132,6 +132,15 @@ The following properties can be configured:
 			</td>
 		</tr>
 		<tr>
+			<td><code>excludePaths</code></td>
+			<td>Array value containing strings. When scanning subdirectories for
+			images, directories with these names will be ignored.<br>
+				<br><b>Example:</b> <code>['@eaDir']</code>
+				<br><b>Default value:</b> <code>['@eaDir']</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
 			<td><code>slideshowSpeed</code></td>
 			<td>Integer value, the length of time to show one image before switching to the next, in milliseconds.<br>
 				<br><b>Example:</b> <code>6000</code> for 6 seconds
