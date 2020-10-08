@@ -13,8 +13,10 @@
  */
 
 // call in the required classes
+const Log = require("../../js/logger.js");
 var NodeHelper = require('node_helper');
 var FileSystemImageSlideshow = require('fs');
+const { exec } = require('child_process');
 
 // the main module helper create
 module.exports = NodeHelper.create({
@@ -156,6 +158,14 @@ module.exports = NodeHelper.create({
       // Get the image list in a non-blocking way since large # of images would cause 
       // the MagicMirror startup banner to get stuck sometimes.
       setTimeout(() => {this.gatherImageList(config)}, 200);
+    }
+    else if (notification === 'BACKGROUNDSLIDESHOW_PLAY_VIDEO') { // XXXXX
+      Log.info('mw got BACKGROUNDSLIDESHOW_PLAY_VIDEO');
+      Log.info('cmd line:' + 'omxplayer --win 0,0,1920,1080 --alpha 180 ' + payload[0]);
+      exec('omxplayer --win 0,0,1920,1080 --alpha 180 ' + payload[0], (e, stdout, stderr) => {
+        this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY', null);
+        Log.info('mw video done');
+      });
     }
   }
 });

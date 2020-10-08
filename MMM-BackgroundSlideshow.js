@@ -122,6 +122,8 @@ Module.register('MMM-BackgroundSlideshow', {
     // Chrome versions < 81 do not support EXIF orientation natively. A CSS transformation
     // needs to be applied for the image to display correctly - see http://crbug.com/158753 .
     this.browserSupportsExifOrientationNatively = CSS.supports('image-orientation: from-image');
+
+    this.playingVideo = false;
   },
 
   getScripts: function () {
@@ -141,25 +143,29 @@ Module.register('MMM-BackgroundSlideshow', {
         Log.log('MMM-BackgroundSlideshow: Changing Background');
         this.suspend();
         this.updateImage();
-        this.resume();
+        if (!this.playingVideo) {
+          this.resume();
+        }
       } else if (notification === 'BACKGROUNDSLIDESHOW_NEXT') {
         // Change to next image
         this.updateImage();
-        if (this.timer) {
+        if (this.timer && !this.playingVideo) {
           // Restart timer only if timer was already running
           this.resume();
         }
       } else if (notification === 'BACKGROUNDSLIDESHOW_PREVIOUS') {
         // Change to previous image
         this.updateImage(/* skipToPrevious= */ true);
-        if (this.timer) {
+        if (this.timer && !this.playingVideo) {
           // Restart timer only if timer was already running
           this.resume();
         }
       } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') {
         // Change to next image and start timer.
         this.updateImage();
-        this.resume();
+        if (!this.playingVideo) {
+          this.resume();
+        }
       } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') {
         // Stop timer.
         this.suspend();
@@ -200,7 +206,7 @@ Module.register('MMM-BackgroundSlideshow', {
           this.savedImages = null;
           this.savedIndex = null;
           this.updateImage();
-          if (this.timer) {
+          if (this.timer && !this.playingVideo) {
             // Restart timer only if timer was already running
             this.resume();
           }
@@ -215,7 +221,7 @@ Module.register('MMM-BackgroundSlideshow', {
     this.imageList = urls;
     this.imageIndex = 0;
     this.updateImage();
-    if (this.timer || (this.savedImages && this.savedImages.length == 0)) {
+    if (!this.playingVideo && (this.timer || (this.savedImages && this.savedImages.length == 0))) {
       // Restart timer only if timer was already running
       this.resume();
     }
@@ -238,9 +244,18 @@ Module.register('MMM-BackgroundSlideshow', {
           // set loaded flag to true and update dom
           if (this.imageList.length > 0) {
             this.updateImage(); //Added to show the image at least once, but not change it within this.resume()
-            this.resume();
+            if (!this.playingVideo) {
+              this.resume();
+            }
           }
         }
+      }
+    }
+    else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') {
+      // Change to next image and start timer.
+      this.updateImage();
+      if (!this.playingVideo) {
+        this.resume();
       }
     }
   },
@@ -340,6 +355,27 @@ Module.register('MMM-BackgroundSlideshow', {
       }
     }
 
+    let mw_image_src = null;
+    if (imageToDisplay) {
+      mw_image_src = imageToDisplay;
+    }
+    else {
+      mw_image_src = encodeURI(this.imageList[this.imageIndex]);
+      this.imageIndex += 1;
+    }
+
+    const mw_lc = mw_image_src.toLowerCase();
+    if (mw_lc.endsWith('.mp4') || mw_lc.endsWith('.m4v')) {
+      payload = [ mw_image_src, 'PLAY' ];
+      mw_image_src = "modules/MMM-BackgroundSlideshow/transparent1080p.png";
+      this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY_VIDEO', payload);
+      this.playingVideo = true;
+      this.suspend();
+    }
+    else {
+      this.playingVideo = false;
+    }
+
     const image = new Image();
     image.onload = () => {
       // check if there are more than 2 elements and remove the first one
@@ -436,12 +472,8 @@ Module.register('MMM-BackgroundSlideshow', {
       transitionDiv.appendChild(imageDiv);
       this.imagesDiv.appendChild(transitionDiv);
     };
-    if (imageToDisplay) {
-      image.src = encodeURI(imageToDisplay);
-    } else {
-      image.src = encodeURI(this.imageList[this.imageIndex]);
-      this.imageIndex += 1;
-    }
+
+    image.src = encodeURI(mw_image_src);
 
     this.sendNotification('BACKGROUNDSLIDESHOW_IMAGE_UPDATED', { url: image.src });
     // console.info('Updating image, source:' + image.src);
