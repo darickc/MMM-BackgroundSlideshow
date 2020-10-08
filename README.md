@@ -337,5 +337,13 @@ The following properties can be configured:
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
+		<tr>
+			<td><code>changeImageOnResume</code></td>
+			<td>Should the image be changed in the moment the module resumes after it got hidden?
+				<br><b>Example:</b> <code>true</code>
+				<br><b>Default value:</b> <code>false</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
     </tbody>
 </table>
