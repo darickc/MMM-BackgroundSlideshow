@@ -80,6 +80,7 @@ Module.register('MMM-BackgroundSlideshow', {
     ],
     transitionTimingFunction: 'cubic-bezier(.17,.67,.35,.96)',
     animations: ['slide', 'zoomOut', 'zoomIn'],
+    changeImageOnResume: false,
   },
 
   // load function
@@ -525,6 +526,11 @@ Module.register('MMM-BackgroundSlideshow', {
     //this.updateImage(); //Removed to prevent image change whenever MMM-Carousel changes slides
     this.suspend();
     var self = this;
+
+    if (self.config.changeImageOnResume) {
+      self.updateImage();
+    }
+
     this.timer = setInterval(function () {
       // console.info('MMM-BackgroundSlideshow updating from resume');
       self.updateImage();
