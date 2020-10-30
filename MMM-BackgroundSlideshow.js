@@ -360,7 +360,8 @@ Module.register('MMM-BackgroundSlideshow', {
       mw_image_src = imageToDisplay;
     }
     else {
-      mw_image_src = encodeURI(this.imageList[this.imageIndex]);
+      // mw_image_src = encodeURI(this.imageList[this.imageIndex]);
+      mw_image_src = this.imageList[this.imageIndex];
       this.imageIndex += 1;
     }
 
