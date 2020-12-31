@@ -139,7 +139,11 @@ Module.register('MMM-BackgroundSlideshow', {
   notificationReceived: function (notification, payload, sender) {
     if (sender) {
       // Log.log(this.name + " received a module notification: " + notification + " from sender: " + sender.name);
-      if (notification === 'BACKGROUNDSLIDESHOW_IMAGE_UPDATE') {
+      if (notification === 'BACKGROUNDSLIDESHOW_UPDATE_IMAGE_LIST') {
+        this.imageIndex = -1;
+        this.updateImageList();
+        this.updateImage();
+      } else if (notification === 'BACKGROUNDSLIDESHOW_IMAGE_UPDATE') {
         Log.log('MMM-BackgroundSlideshow: Changing Background');
         this.suspend();
         this.updateImage();

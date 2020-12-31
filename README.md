@@ -78,6 +78,11 @@ The following notifications can be used:
 	<thead>
 	<tbody>
 		<tr>
+			<td><code>BACKGROUNDSLIDESHOW_UPDATE_IMAGE_LIST</code></td>
+			<td>Reload images list and start slideshow from first image. Works best when sorted by modified date descending.<br>
+			</td>
+		</tr>
+		<tr>
 			<td><code>BACKGROUNDSLIDESHOW_NEXT</code></td>
 			<td>Change to the next image, restart the timer for image changes only if already running<br>
 			</td>
