@@ -13,21 +13,26 @@
  */
 
 // call in the required classes
-const Log = require("../../js/logger.js");
+const Log = require('../../js/logger.js');
 var NodeHelper = require('node_helper');
 var FileSystemImageSlideshow = require('fs');
+
 const { exec } = require('child_process');
+var express = require('express');
+const basePath = '/images/';
 
 // the main module helper create
 module.exports = NodeHelper.create({
+  expressInstance: undefined,
   // subclass start method, clears the initial config array
-  start: function() {
+  start: function () {
     this.excludePaths = new Set();
     this.validImageFileExtensions = new Set();
+    this.expressInstance = this.expressApp;
   },
-  
+
   // shuffles an array at random and returns it
-  shuffleArray: function(array) {
+  shuffleArray: function (array) {
     for (let i = array.length - 1; i > 0; i--) {
       // j is a random index in [0, i].
       const j = Math.floor(Math.random() * (i + 1));
@@ -35,9 +40,9 @@ module.exports = NodeHelper.create({
     }
     return array;
   },
-  
+
   // sort by filename attribute
-  sortByFilename: function(a, b) {
+  sortByFilename: function (a, b) {
     aL = a.path.toLowerCase();
     bL = b.path.toLowerCase();
     if (aL > bL) return 1;
@@ -45,7 +50,7 @@ module.exports = NodeHelper.create({
   },
 
   // sort by created attribute
-  sortByCreated: function(a, b) {
+  sortByCreated: function (a, b) {
     aL = a.created;
     bL = b.created;
     if (aL > bL) return 1;
@@ -53,7 +58,7 @@ module.exports = NodeHelper.create({
   },
 
   // sort by created attribute
-  sortByModified: function(a, b) {
+  sortByModified: function (a, b) {
     aL = a.modified;
     bL = b.modified;
     if (aL > bL) return 1;
@@ -65,13 +70,14 @@ module.exports = NodeHelper.create({
     switch (sortBy) {
       case 'created':
         // Log.log('Sorting by created date...');
-        sortedList = imageList.sort(this.sortByCreated);;
+        sortedList = imageList.sort(this.sortByCreated);
         break;
       case 'modified':
         // Log.log('Sorting by modified date...');
-        sortedList = imageList.sort(this.sortByModified);;
+        sortedList = imageList.sort(this.sortByModified);
         break;
-      default: // sort by name
+      default:
+        // sort by name
         // Log.log('Sorting by name...');
         sortedList = imageList.sort(this.sortByFilename);
     }
@@ -86,7 +92,7 @@ module.exports = NodeHelper.create({
   },
 
   // checks there's a valid image file extension
-  checkValidImageFileExtension: function(filename) {
+  checkValidImageFileExtension: function (filename) {
     if (!filename.includes('.')) {
       // No file extension.
       return false;
@@ -96,7 +102,7 @@ module.exports = NodeHelper.create({
   },
 
   // gathers the image list
-  gatherImageList: function(config) {
+  gatherImageList: function (config) {
     // create an empty main image list
     let imageList = [];
     for (let i = 0; i < config.imagePaths.length; i++) {
@@ -105,18 +111,19 @@ module.exports = NodeHelper.create({
 
     imageList = config.randomizeImageOrder
       ? this.shuffleArray(imageList)
-      : this.sortImageList(imageList, config.sortImagesBy, config.sortImagesDescending);
+      : this.sortImageList(
+          imageList,
+          config.sortImagesBy,
+          config.sortImagesDescending
+        );
 
     // build the return payload
     const returnPayload = {
       identifier: config.identifier,
-      imageList: imageList.map( item => item.path) // map the array to only extract the paths
+      imageList: imageList.map((item) => basePath + item.path) // map the array to only extract the paths
     };
     // send the image list back
-    this.sendSocketNotification(
-      'BACKGROUNDSLIDESHOW_FILELIST',
-      returnPayload
-    );
+    this.sendSocketNotification('BACKGROUNDSLIDESHOW_FILELIST', returnPayload);
   },
 
   getFiles(path, imageList, config) {
@@ -130,42 +137,55 @@ module.exports = NodeHelper.create({
       if (stats.isDirectory() && config.recursiveSubDirectories) {
         this.getFiles(currentItem, imageList, config);
       } else if (stats.isFile()) {
-        const isValidImageFileExtension =
-          this.checkValidImageFileExtension(currentItem);
-          if (isValidImageFileExtension) {
-            imageList.push({
-              "path": currentItem, 
-              "created": stats.ctimeMs, 
-              "modified": stats.mtimeMs
-            });
-          }
+        const isValidImageFileExtension = this.checkValidImageFileExtension(
+          currentItem
+        );
+        if (isValidImageFileExtension) {
+          imageList.push({
+            path: currentItem,
+            created: stats.ctimeMs,
+            modified: stats.mtimeMs
+          });
+        }
       }
     }
   },
 
   // subclass socketNotificationReceived, received notification from module
-  socketNotificationReceived: function(notification, payload) {
+  socketNotificationReceived: function (notification, payload) {
     if (notification === 'BACKGROUNDSLIDESHOW_REGISTER_CONFIG') {
       const config = payload;
+      this.expressInstance.use(
+        basePath + config.imagePaths[0],
+        express.static(config.imagePaths[0], { maxAge: 3600000 })
+      );
 
       // Create set of excluded subdirectories.
       this.excludePaths = new Set(config.excludePaths);
 
       // Create set of valid image extensions.
-      const validExtensionsList = config.validImageFileExtensions.toLowerCase().split(',');
+      const validExtensionsList = config.validImageFileExtensions
+        .toLowerCase()
+        .split(',');
       this.validImageFileExtensions = new Set(validExtensionsList);
 
-      // Get the image list in a non-blocking way since large # of images would cause 
+      // Get the image list in a non-blocking way since large # of images would cause
       // the MagicMirror startup banner to get stuck sometimes.
-      setTimeout(() => {this.gatherImageList(config)}, 200);
-    }
-    else if (notification === 'BACKGROUNDSLIDESHOW_PLAY_VIDEO') { // XXXXX
+      setTimeout(() => {
+        this.gatherImageList(config);
+      }, 200);
+    } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY_VIDEO') {
       Log.info('mw got BACKGROUNDSLIDESHOW_PLAY_VIDEO');
-      Log.info('cmd line:' + 'omxplayer --win 0,0,1920,1080 --alpha 180 ' + payload[0]);
-      exec('omxplayer --win 0,0,1920,1080 --alpha 180 ' + payload[0], (e, stdout, stderr) => {
-        this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY', null);
-        Log.info('mw video done');
-      });
+      Log.info(
+        'cmd line:' + 'omxplayer --win 0,0,1920,1080 --alpha 180 ' + payload[0]
+      );
+      exec(
+        'omxplayer --win 0,0,1920,1080 --alpha 180 ' + payload[0],
+        (e, stdout, stderr) => {
+          this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY', null);
+          Log.info('mw video done');
+        }
+      );
     }
   }
 });
