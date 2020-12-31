@@ -208,6 +208,17 @@
   animation-name: slideV;
 }
 
+.MMM-BackgroundSlideshow .slideHInv {
+  background-size: cover;
+  background-position: right;
+  animation-name: slideHInv;
+}
+
+.MMM-BackgroundSlideshow .slideVInv {
+  background-size: cover;
+  background-position: bottom;
+  animation-name: slideVInv;
+}
 .MMM-BackgroundSlideshow .zoomIn {
   animation-name: zoomIn;
   transform: scale(1);
@@ -227,6 +238,18 @@
 @keyframes slideV {
   to {
     background-position: bottom;
+  }
+}
+
+@keyframes slideHInv {
+  to {
+    background-position: left;
+  }
+}
+
+@keyframes slideVInv {
+  to {
+    background-position: top;
   }
 }
 
