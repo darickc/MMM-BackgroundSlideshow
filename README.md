@@ -21,7 +21,7 @@ Extra configurations include setting the amount of time an image is shown for, s
 
 ## Using the module
 
-Use Git to download. Make sure Git is installed on your system. In the command line/terminal, go to the modules directory of the your Magic Mirror install. run: 'git clone https://github.com/darickc/MMM-BackgroundSlideshow.git'. The advantage of using Git is when there is an update, you can run 'git pull' and it will pull down all the updates. Magic Mirror can even let you know when there are updates.
+Use Git to download. Make sure Git is installed on your system. In the command line/terminal, go to the modules directory of the your Magic Mirror install. run: `git clone https://github.com/darickc/MMM-BackgroundSlideshow.git`. The advantage of using Git is when there is an update, you can run `git pull` and it will pull down all the updates. Magic Mirror can even let you know when there are updates.
 
 Or
 
