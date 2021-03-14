@@ -540,7 +540,8 @@ Module.register('MMM-BackgroundSlideshow', {
       this.imagesDiv.appendChild(transitionDiv);
     };
 
-    image.src = encodeURI(mw_image_src);
+    // image.src = encodeURI(mw_image_src);
+    image.src = mw_image_src;
 
     this.sendNotification('BACKGROUNDSLIDESHOW_IMAGE_UPDATED', {
       url: image.src
