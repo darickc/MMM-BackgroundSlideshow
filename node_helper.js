@@ -16,6 +16,7 @@
 const Log = require('../../js/logger.js');
 var NodeHelper = require('node_helper');
 var FileSystemImageSlideshow = require('fs');
+const sharp = require('sharp');
 
 const { exec } = require('child_process');
 var express = require('express');
@@ -29,6 +30,9 @@ module.exports = NodeHelper.create({
     this.excludePaths = new Set();
     this.validImageFileExtensions = new Set();
     this.expressInstance = this.expressApp;
+    this.imageList = [];
+    this.index = 0;
+    this.config;
   },
 
   // shuffles an array at random and returns it
@@ -102,31 +106,104 @@ module.exports = NodeHelper.create({
   },
 
   // gathers the image list
-  gatherImageList: function (config) {
+  gatherImageList: function (config, sendNotification) {
     // create an empty main image list
-    let imageList = [];
+    this.imageList = [];
     for (let i = 0; i < config.imagePaths.length; i++) {
-      this.getFiles(config.imagePaths[i], imageList, config);
+      this.getFiles(config.imagePaths[i], this.imageList, config);
     }
 
-    imageList = config.randomizeImageOrder
-      ? this.shuffleArray(imageList)
+    this.imageList = config.randomizeImageOrder
+      ? this.shuffleArray(this.imageList)
       : this.sortImageList(
-          imageList,
+          this.imageList,
           config.sortImagesBy,
           config.sortImagesDescending
         );
-
+    Log.info('BACKGROUNDSLIDESHOW: ' + this.imageList.length + ' files found');
+    this.index = 0;
     // build the return payload
     const returnPayload = {
-      identifier: config.identifier,
-      imageList: imageList.map((item) => basePath + item.path) // map the array to only extract the paths
+      identifier: config.identifier
+      //imageList: imageList.map((item) => basePath + item.path) // map the array to only extract the paths
     };
-    // send the image list back
-    this.sendSocketNotification('BACKGROUNDSLIDESHOW_FILELIST', returnPayload);
+    // signal ready
+    if (sendNotification) {
+      this.sendSocketNotification('BACKGROUNDSLIDESHOW_READY', returnPayload);
+    }
+  },
+
+  getNextImage: function () {
+    if (!this.imageList.length || this.index >= this.imageList.length) {
+      // if there are no images or all the images have been displayed, try loading the images again
+      this.gatherImageList(this.config);
+    }
+    //
+    if (!this.imageList.length) {
+      // still no images, search again after 10 mins
+      setTimeout(() => {
+        this.getNextImage(config);
+      }, 600000);
+      return;
+    }
+
+    var image = this.imageList[this.index++];
+    Log.info('BACKGROUNDSLIDESHOW: reading path "' + image.path + '"');
+    self = this;
+    this.readFile(image.path, function (data) {
+      const returnPayload = {
+        identifier: self.config.identifier,
+        path: image.path,
+        data: data,
+        index: self.index,
+        total: self.imageList.length
+      };
+      self.sendSocketNotification(
+        'BACKGROUNDSLIDESHOW_DISPLAY_IMAGE',
+        returnPayload
+      );
+    });
+  },
+
+  getPrevImage: function () {
+    // imageIndex is incremented after displaying an image so -2 is needed to
+    // get to previous image index.
+    this.index -= 2;
+
+    // Case of first image, go to end of array.
+    if (this.index < 0) {
+      this.index = 0;
+    }
+    this.getNextImage();
+  },
+
+  readFile: function (filepath, callback) {
+    if (this.config.resizeImages) {
+      sharp(filepath)
+        .withMetadata()
+        .resize(this.config.maxWidth, this.config.maxHeight, {
+          fit: sharp.fit.inside,
+          withoutEnlargement: true
+        })
+        .jpeg()
+        .toBuffer()
+        .then((data) => {
+          let buff = Buffer.from(data);
+          callback('data:image/jpg;base64, ' + buff.toString('base64'));
+        });
+    } else {
+      var ext = filepath.split('.').pop();
+      var data = FileSystemImageSlideshow.readFileSync(filepath, {
+        encoding: 'base64'
+      });
+      callback('data:image/' + ext + ';base64, ' + data);
+    }
   },
 
   getFiles(path, imageList, config) {
+    Log.info(
+      'BACKGROUNDSLIDESHOW: Reading directory "' + path + '" for images.'
+    );
     const contents = FileSystemImageSlideshow.readdirSync(path);
     for (let i = 0; i < contents.length; i++) {
       if (this.excludePaths.has(contents[i])) {
@@ -171,8 +248,9 @@ module.exports = NodeHelper.create({
 
       // Get the image list in a non-blocking way since large # of images would cause
       // the MagicMirror startup banner to get stuck sometimes.
+      this.config = config;
       setTimeout(() => {
-        this.gatherImageList(config);
+        this.gatherImageList(config, true);
       }, 200);
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY_VIDEO') {
       Log.info('mw got BACKGROUNDSLIDESHOW_PLAY_VIDEO');
@@ -186,6 +264,12 @@ module.exports = NodeHelper.create({
           Log.info('mw video done');
         }
       );
+    } else if (notification === 'BACKGROUNDSLIDESHOW_NEXT_IMAGE') {
+      Log.info('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
+      this.getNextImage();
+    } else if (notification === 'BACKGROUNDSLIDESHOW_PREV_IMAGE') {
+      Log.info('BACKGROUNDSLIDESHOW_PREV_IMAGE');
+      this.getPrevImage();
     }
   }
 });
