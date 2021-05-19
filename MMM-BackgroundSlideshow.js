@@ -62,6 +62,11 @@ Module.register('MMM-BackgroundSlideshow', {
       'rgba(0, 0, 0, 0) 80%',
       'rgba(0, 0, 0, 0.75) 100%'
     ],
+    radialGradient:  [
+        'rgba(0,0,0,0) 0%', 
+        'rgba(0,0,0,0) 75%', 
+        'rgba(0,0,0,0.25) 100%'
+    ],
     // the direction the gradient goes, vertical or horizontal
     gradientDirection: 'vertical',
     // Whether to scroll larger pictures rather than cut them off
@@ -315,6 +320,12 @@ Module.register('MMM-BackgroundSlideshow', {
     ) {
       this.createGradientDiv('right', this.config.horizontalGradient, wrapper);
     }
+    
+    if (
+      this.config.gradientDirection === 'radial'
+    ) {
+      this.createRadialGradientDiv('ellipse at center', this.config.radialGradient, wrapper);
+    }
 
     if (this.config.showImageInfo) {
       this.imageInfoDiv = this.createImageInfoDiv(wrapper);
@@ -343,6 +354,14 @@ Module.register('MMM-BackgroundSlideshow', {
     var div = document.createElement('div');
     div.style.backgroundImage =
       'linear-gradient( to ' + direction + ', ' + gradient.join() + ')';
+    div.className = 'gradient';
+    wrapper.appendChild(div);
+  },
+  
+  createRadialGradientDiv: function (type, gradient, wrapper) {
+    var div = document.createElement('div');
+    div.style.backgroundImage =
+      'radial-gradient( ' + type + ', ' + gradient.join() + ')';
     div.className = 'gradient';
     wrapper.appendChild(div);
   },
