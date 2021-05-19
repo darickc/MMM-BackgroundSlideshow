@@ -319,12 +319,27 @@ The following properties can be configured:
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
+        <tr>
+			<td><code>radialGradient</code></td>
+			<td>A radial gradient to make the text more visible.  Enter gradient stops as an array.<br>
+				<br><b>Example:</b> <code>[
+				"rgba(0, 0, 0, 0.75) 0%",
+				"rgba(0, 0, 0, 0) 40%"
+				]</code>
+					<br><b>Default value:</b> <code>[
+                    "rgba(0,0,0,0) 0%", 
+                    "rgba(0,0,0,0) 75%", 
+                    "rgba(0,0,0,0.25) 100%""
+				]</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
     	<tr>
 			<td><code>gradientDirection</code></td>
 			<td>The direction of the gradient<br>
 				<br><b>Example:</b> <code>'horizontal'</code>
 				<br><b>Default value:</b> <code>'vertical'</code>
-				<br><b>Possible values:</b> <code>'vertical', 'horizontal', 'both'</code>
+				<br><b>Possible values:</b> <code>'vertical', 'horizontal', 'both', 'radial'</code>
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
