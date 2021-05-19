@@ -67,7 +67,7 @@ Module.register('MMM-BackgroundSlideshow', {
         'rgba(0,0,0,0) 75%', 
         'rgba(0,0,0,0.25) 100%'
     ],
-    // the direction the gradient goes, vertical or horizontal
+    // the direction the gradient goes, vertical, horizontal, both or radial
     gradientDirection: 'vertical',
     // Whether to scroll larger pictures rather than cut them off
     backgroundAnimationEnabled: false,
