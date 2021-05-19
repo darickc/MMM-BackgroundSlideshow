@@ -47,9 +47,9 @@ modules: [
     config: {
       imagePaths: ['modules/MMM-BackgroundSlideshow/exampleImages/'],
       transitionImages: true,
-      randomizeImageOrder: true,
-    },
-  },
+      randomizeImageOrder: true
+    }
+  }
 ];
 ```
 
@@ -96,7 +96,7 @@ The following notifications can be used:
 			<td><code>BACKGROUNDSLIDESHOW_PAUSE</code></td>
 			<td>Pause the timer for image changes<br>
 			</td>
-		</tr>		
+		</tr>
 		<tr>
 			<td><code>BACKGROUNDSLIDESHOW_PLAY</code></td>
 			<td>Change to the next image and start the timer for image changes<br>
@@ -131,8 +131,9 @@ The following properties can be configured:
 	<tbody>
 		<tr>
 			<td><code>imagePaths</code></td>
-			<td>Array value containing strings. Each string should be a path to a directory where image files can be found.<br>
+			<td>Array value containing strings. Each string should be a path to a directory where image files can be found.  Can be relative or absolute<br>
 				<br><b>Example:</b> <code>['modules/MMM-BackgroundSlideshow/exampleImages/']</code>
+        <br><b>Example:</b> <code>['/images/']</code>
 				<br>This value is <b>REQUIRED</b>
 			</td>
 		</tr>
@@ -153,6 +154,30 @@ The following properties can be configured:
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
+    <tr>
+			<td><code>resizeImages</code></td>
+			<td>Boolean value, if images should be resized or not.  For better performance, this should be true and the height and width set to the resolution of the monitor being used<br>
+				<br><b>Example:</b> <code>true</code>
+				<br><b>Default value:</b> <code>false</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+    <tr>
+			<td><code>maxWidth</code></td>
+			<td>Integer value, the width the image should be resized to.<br>
+				<br><b>Example:</b> <code>3840</code>
+				<br><b>Default value:</b> <code>1920</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+    <tr>
+			<td><code>maxHeight</code></td>
+			<td>Integer value, the height the image should be resized to.<br>
+				<br><b>Example:</b> <code>2160</code>
+				<br><b>Default value:</b> <code>1080</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
 		<tr>
 			<td><code>randomizeImageOrder</code></td>
 			<td>Boolean value, if true will randomize the order of the images, otherwise use sortImagesBy and sortImagesDescending sorting by filename.<br>
@@ -163,7 +188,7 @@ The following properties can be configured:
 		</tr>
 		<tr>
 			<td><code>sortImagesBy</code></td>
-			<td>String value, determines how images are sorted.  Possible values are: name (by file name), created (by file created date), modified (by file 
+			<td>String value, determines how images are sorted.  Possible values are: name (by file name), created (by file created date), modified (by file
 			modified date). Only used if randomizeImageOrder is set to false.<br>
 				<br><b>Example:</b> <code>created</code>
 				<br><b>Default value:</b> <code>name</code>
@@ -314,7 +339,7 @@ The following properties can be configured:
 		</tr>
 		<tr>
 			<td><code>transitions</code></td>
-			<td>Array value containing strings defining what transitions to perform. 
+			<td>Array value containing strings defining what transitions to perform.
 			<b>Note:</b> transitionImages must be set to true.<br>
 				<br><b>Example:</b> <code>['opacity', 'slideFromLeft']</code>
 				<br><b>Default value:</b> <code>['opacity', 'slideFromRight', 'slideFromLeft', 'slideFromTop', 'slideFromBottom', 'slideFromTopLeft', 'slideFromTopRight', 'slideFromBottomLeft', 'slideFromBottomRight', 'flipX', 'flipY']</code>
@@ -324,7 +349,7 @@ The following properties can be configured:
 		</tr>
 		<tr>
 			<td><code>transitionTimingFunction</code></td>
-			<td>CSS timing function used with transitions. 
+			<td>CSS timing function used with transitions.
 			<b>Note:</b> transitionImages must be set to true.<br>
 				<br><b>Example:</b> <code>'ease-in</code>
 				<br><b>Default value:</b> <code>'cubic-bezier(.17,.67,.35,.96)'</code>

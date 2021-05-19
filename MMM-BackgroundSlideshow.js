@@ -95,7 +95,10 @@ Module.register('MMM-BackgroundSlideshow', {
     ],
     transitionTimingFunction: 'cubic-bezier(.17,.67,.35,.96)',
     animations: ['slide', 'zoomOut', 'zoomIn'],
-    changeImageOnResume: false
+    changeImageOnResume: false,
+    resizeImages: false,
+    maxWidth: 1920,
+    maxHeight: 1080
   },
 
   // load function
@@ -271,24 +274,28 @@ Module.register('MMM-BackgroundSlideshow', {
   // the socket handler
   socketNotificationReceived: function (notification, payload) {
     // if an update was received
-    if (notification === 'BACKGROUNDSLIDESHOW_FILELIST') {
+    if (notification === 'BACKGROUNDSLIDESHOW_READY') {
       // check this is for this module based on the woeid
       if (payload.identifier === this.identifier) {
-        // console.info('Returning Images, payload:' + JSON.stringify(payload));
-        // set the image list
-        if (this.savedImages) {
-          this.savedImages = payload.imageList;
-          this.savedIndex = 0;
-        } else {
-          this.imageList = payload.imageList;
-          // if image list actually contains images
-          // set loaded flag to true and update dom
-          if (this.imageList.length > 0) {
-            this.updateImage(); //Added to show the image at least once, but not change it within this.resume()
-            if (!this.playingVideo) {
-              this.resume();
-            }
-          }
+        // // console.info('Returning Images, payload:' + JSON.stringify(payload));
+        // // set the image list
+        // if (this.savedImages) {
+        //   this.savedImages = payload.imageList;
+        //   this.savedIndex = 0;
+        // } else {
+        //   this.imageList = payload.imageList;
+        //   // if image list actually contains images
+        //   // set loaded flag to true and update dom
+        //   if (this.imageList.length > 0) {
+        //     this.updateImage(); //Added to show the image at least once, but not change it within this.resume()
+        //     if (!this.playingVideo) {
+        //       this.resume();
+        //     }
+        //   }
+        // }
+        this.sendSocketNotification('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
+        if (!this.playingVideo) {
+          this.resume();
         }
       }
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') {
@@ -296,6 +303,11 @@ Module.register('MMM-BackgroundSlideshow', {
       this.updateImage();
       if (!this.playingVideo) {
         this.resume();
+      }
+    } else if (notification === 'BACKGROUNDSLIDESHOW_DISPLAY_IMAGE') {
+      // check this is for this module based on the woeid
+      if (payload.identifier === this.identifier) {
+        this.displayImage(payload);
       }
     }
   },
@@ -391,46 +403,11 @@ Module.register('MMM-BackgroundSlideshow', {
     div.appendChild(inner);
     wrapper.appendChild(div);
   },
-
-  updateImage: function (backToPreviousImage = false, imageToDisplay = null) {
-    if (!imageToDisplay) {
-      if (!this.imageList || !this.imageList.length) {
-        return;
-      }
-      if (backToPreviousImage) {
-        // imageIndex is incremented after displaying an image so -2 is needed to
-        // get to previous image index.
-        this.imageIndex -= 2;
-
-        // Case of first image, go to end of array.
-        if (this.imageIndex < 0) {
-          this.imageIndex = 0;
-        }
-      }
-
-      if (this.imageIndex >= this.imageList.length) {
-        this.imageIndex = 0;
-        // only update the image list if one wasn't sent through notifications
-        if (!this.savedImages) {
-          this.updateImageList();
-          return;
-        }
-      }
-    }
-
-    let mw_image_src = null;
-    if (imageToDisplay) {
-      mw_image_src = imageToDisplay;
-    } else {
-      // mw_image_src = encodeURI(this.imageList[this.imageIndex]);
-      mw_image_src = this.imageList[this.imageIndex];
-      this.imageIndex += 1;
-    }
-
-    const mw_lc = mw_image_src.toLowerCase();
+  displayImage: function (imageinfo) {
+    const mw_lc = imageinfo.path.toLowerCase();
     if (mw_lc.endsWith('.mp4') || mw_lc.endsWith('.m4v')) {
-      payload = [mw_image_src, 'PLAY'];
-      mw_image_src = 'modules/MMM-BackgroundSlideshow/transparent1080p.png';
+      payload = [imageinfo.path, 'PLAY'];
+      imageinfo.data = 'modules/MMM-BackgroundSlideshow/transparent1080p.png';
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY_VIDEO', payload);
       this.playingVideo = true;
       this.suspend();
@@ -547,7 +524,7 @@ Module.register('MMM-BackgroundSlideshow', {
           // if (lat && lon) {
           //   // Get small map of location
           // }
-          this.updateImageInfo(decodeURI(image.src), dateTime);
+          this.updateImageInfo(imageinfo, dateTime);
         }
 
         if (!this.browserSupportsExifOrientationNatively) {
@@ -559,12 +536,28 @@ Module.register('MMM-BackgroundSlideshow', {
       this.imagesDiv.appendChild(transitionDiv);
     };
 
-    image.src = encodeURI(mw_image_src);
-
+    image.src = imageinfo.data;
     this.sendNotification('BACKGROUNDSLIDESHOW_IMAGE_UPDATED', {
-      url: image.src
+      url: imageinfo.path
     });
-    // console.info('Updating image, source:' + image.src);
+  },
+
+  updateImage: function (backToPreviousImage = false, imageToDisplay = null) {
+    if (imageToDisplay) {
+      this.displayImage({
+        path: imageToDisplay,
+        data: imageToDisplay,
+        index: 1,
+        total: 1
+      });
+      return;
+    }
+
+    if (backToPreviousImage) {
+      this.sendSocketNotification('BACKGROUNDSLIDESHOW_PREV_IMAGE');
+    } else {
+      this.sendSocketNotification('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
+    }
   },
 
   getImageTransformCss: function (exifOrientation) {
@@ -589,7 +582,7 @@ Module.register('MMM-BackgroundSlideshow', {
     }
   },
 
-  updateImageInfo: function (imageSrc, imageDate) {
+  updateImageInfo: function (imageinfo, imageDate) {
     let imageProps = [];
     this.config.imageInfo.forEach((prop, idx) => {
       switch (prop) {
@@ -601,16 +594,16 @@ Module.register('MMM-BackgroundSlideshow', {
 
         case 'name': // default is name
           // Only display last path component as image name if recurseSubDirectories is not set.
-          let imageName = imageSrc.split('/').pop();
+          let imageName = imageinfo.path.split('/').pop();
 
           // Otherwise display path relative to the path in configuration.
           if (this.config.recursiveSubDirectories) {
             for (const path of this.config.imagePaths) {
-              if (!imageSrc.includes(path)) {
+              if (!imageinfo.path.includes(path)) {
                 continue;
               }
 
-              imageName = imageSrc.split(path).pop();
+              imageName = imageinfo.path.split(path).pop();
               if (imageName.startsWith('/')) {
                 imageName = imageName.substr(1);
               }
@@ -620,7 +613,7 @@ Module.register('MMM-BackgroundSlideshow', {
           imageProps.push(imageName);
           break;
         case 'imagecount':
-          imageProps.push(`${this.imageIndex} of ${this.imageList.length}`);
+          imageProps.push(`${imageinfo.index} of ${imageinfo.total}`);
           break;
         default:
           Log.warn(
