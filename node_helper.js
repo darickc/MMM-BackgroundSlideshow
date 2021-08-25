@@ -122,11 +122,17 @@ module.exports = NodeHelper.create({
         );
     Log.info('BACKGROUNDSLIDESHOW: ' + this.imageList.length + ' files found');
     this.index = 0;
+
+    // let other modules know about slideshow images
+    this.sendSocketNotification("BACKGROUNDSLIDESHOW_FILELIST", {
+      imageList: this.imageList
+    });
+
     // build the return payload
     const returnPayload = {
       identifier: config.identifier
-      //imageList: imageList.map((item) => basePath + item.path) // map the array to only extract the paths
     };
+
     // signal ready
     if (sendNotification) {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_READY', returnPayload);
