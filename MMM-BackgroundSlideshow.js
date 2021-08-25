@@ -309,6 +309,9 @@ Module.register('MMM-BackgroundSlideshow', {
       if (payload.identifier === this.identifier) {
         this.displayImage(payload);
       }
+    } else if (notification === 'BACKGROUNDSLIDESHOW_FILELIST') {
+      //bubble up filelist notifications
+      this.sendNotification('BACKGROUNDSLIDESHOW_FILELIST', payload);
     }
   },
 
