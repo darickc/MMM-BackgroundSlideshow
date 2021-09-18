@@ -259,7 +259,7 @@ Module.register('MMM-BackgroundSlideshow', {
   },
 
   updateImageListWithArray: function (urls) {
-    this.imageList = urls;
+    this.imageList = urls.splice(0);
     this.imageIndex = 0;
     this.updateImage();
     if (
