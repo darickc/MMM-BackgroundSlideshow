@@ -556,6 +556,23 @@ Module.register('MMM-BackgroundSlideshow', {
       return;
     }
 
+    if (this.imageList.length > 0 ){
+      this.imageIndex = this.imageIndex + 1;
+
+      if (this.config.randomizeImageOrder){
+        this.imageIndex  = Math.floor(Math.random() * (this.imageList.length));
+      }
+
+      imageToDisplay = this.imageList.splice(this.imageIndex,1);
+      this.displayImage({
+        path: imageToDisplay[0],
+        data: imageToDisplay[0],
+        index: 1,
+        total: 1
+      });
+      return;
+    } 
+
     if (backToPreviousImage) {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PREV_IMAGE');
     } else {
