@@ -17,7 +17,7 @@ const Log = require('../../js/logger.js');
 var NodeHelper = require('node_helper');
 var FileSystemImageSlideshow = require('fs');
 const Jimp = require('jimp');
-
+const jo = require('jpeg-autorotate');
 const { exec } = require('child_process');
 var express = require('express');
 const basePath = '/images/';
@@ -183,22 +183,44 @@ module.exports = NodeHelper.create({
     this.getNextImage();
   },
 
+  resizeImage: function (input, callback) {
+    Jimp.read(input)
+      .then((image) => {
+        image
+          .scaleToFit(
+            parseInt(this.config.maxWidth),
+            parseInt(this.config.maxHeight)
+          )
+          .getBuffer(Jimp.MIME_JPEG, (err, buffer) => {
+            callback('data:image/jpg;base64, ' + buffer.toString('base64'));
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  },
+
   readFile: function (filepath, callback) {
     if (this.config.resizeImages) {
-      Jimp.read(filepath)
-        .then((image) => {
-          image
-            .scaleToFit(
-              parseInt(this.config.maxWidth),
-              parseInt(this.config.maxHeight)
-            )
-            .getBuffer(Jimp.MIME_JPEG, (err, buffer) => {
-              callback('data:image/jpg;base64, ' + buffer.toString('base64'));
-            });
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+      let ext = filepath.split('.').pop();
+      if (ext === 'jpg' || ext === 'jpeg') {
+        jo.rotate(
+          filepath,
+          { quality: 30 },
+          (error, buffer, orientation, dimensions, quality) => {
+            if (error) {
+              // console.log(
+              //   'An error occurred when rotating the file: ' + error.message
+              // );
+              this.resizeImage(filepath, callback);
+            } else {
+              this.resizeImage(buffer, callback);
+            }
+          }
+        );
+      } else {
+        this.resizeImage(filepath, callback);
+      }
     } else {
       var ext = filepath.split('.').pop();
       var data = FileSystemImageSlideshow.readFileSync(filepath, {
