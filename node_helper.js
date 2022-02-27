@@ -183,7 +183,24 @@ module.exports = NodeHelper.create({
     this.getNextImage();
   },
 
-  readFile: async function (filepath, callback) {
+  resizeImage: function (input, callback) {
+    Jimp.read(input)
+      .then((image) => {
+        image
+          .scaleToFit(
+            parseInt(this.config.maxWidth),
+            parseInt(this.config.maxHeight)
+          )
+          .getBuffer(Jimp.MIME_JPEG, (err, buffer) => {
+            callback('data:image/jpg;base64, ' + buffer.toString('base64'));
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  },
+
+  readFile: function (filepath, callback) {
     if (this.config.resizeImages) {
       let ext = filepath.split('.').pop();
       if (ext === 'jpg' || ext === 'jpeg') {
@@ -192,66 +209,17 @@ module.exports = NodeHelper.create({
           { quality: 30 },
           (error, buffer, orientation, dimensions, quality) => {
             if (error) {
-              console.log(
-                'An error occurred when rotating the file: ' + error.message
-              );
-              Jimp.read(filepath)
-                .then((image) => {
-                  image
-                    .scaleToFit(
-                      parseInt(this.config.maxWidth),
-                      parseInt(this.config.maxHeight)
-                    )
-                    .getBuffer(Jimp.MIME_JPEG, (err, buffer) => {
-                      callback(
-                        'data:image/jpg;base64, ' + buffer.toString('base64')
-                      );
-                    });
-                })
-                .catch((err) => {
-                  console.log(err);
-                });
+              // console.log(
+              //   'An error occurred when rotating the file: ' + error.message
+              // );
+              this.resizeImage(filepath, callback);
             } else {
-              Jimp.read(buffer)
-                .then((image) => {
-                  image
-                    .scaleToFit(
-                      parseInt(this.config.maxWidth),
-                      parseInt(this.config.maxHeight)
-                    )
-                    .getBuffer(Jimp.MIME_JPEG, (err, buffer) => {
-                      callback(
-                        'data:image/jpg;base64, ' + buffer.toString('base64')
-                      );
-                    });
-                })
-                .catch((err) => {
-                  console.log(err);
-                });
+              this.resizeImage(buffer, callback);
             }
-            console.log(`Orientation was ${orientation}`);
-            console.log(
-              `Dimensions after rotation: ${dimensions.width}x${dimensions.height}`
-            );
-            console.log(`Quality: ${quality}`);
-            // ...Do whatever you need with the resulting buffer...
           }
         );
       } else {
-        Jimp.read(filepath)
-          .then((image) => {
-            image
-              .scaleToFit(
-                parseInt(this.config.maxWidth),
-                parseInt(this.config.maxHeight)
-              )
-              .getBuffer(Jimp.MIME_JPEG, (err, buffer) => {
-                callback('data:image/jpg;base64, ' + buffer.toString('base64'));
-              });
-          })
-          .catch((err) => {
-            console.log(err);
-          });
+        this.resizeImage(filepath, callback);
       }
     } else {
       var ext = filepath.split('.').pop();
