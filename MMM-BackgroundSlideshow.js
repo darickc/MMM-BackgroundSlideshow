@@ -98,7 +98,9 @@ Module.register('MMM-BackgroundSlideshow', {
     changeImageOnResume: false,
     resizeImages: false,
     maxWidth: 1920,
-    maxHeight: 1080
+    maxHeight: 1080,
+    // remove the file extension from image name
+    imageInfoNoFileExt: false,
   },
 
   // load function
@@ -629,6 +631,10 @@ Module.register('MMM-BackgroundSlideshow', {
               }
               break;
             }
+          }
+          // Remove file extension from image name.
+          if (this.config.imageInfoNoFileExt) {
+              imageName = imageName.split('.')[0];
           }
           imageProps.push(imageName);
           break;
