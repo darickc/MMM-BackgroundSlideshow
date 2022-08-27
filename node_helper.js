@@ -107,6 +107,11 @@ module.exports = NodeHelper.create({
 
   // gathers the image list
   gatherImageList: function (config, sendNotification) {
+    // Invalid config. retrieve it again
+    if (config === undefined || !Object(config).hasOwnProperty('imagePaths')) {
+      this.sendSocketNotification('BACKGROUNDSLIDESHOW_REGISTER_CONFIG');
+      return;
+    }
     // create an empty main image list
     this.imageList = [];
     for (let i = 0; i < config.imagePaths.length; i++) {
@@ -116,10 +121,10 @@ module.exports = NodeHelper.create({
     this.imageList = config.randomizeImageOrder
       ? this.shuffleArray(this.imageList)
       : this.sortImageList(
-          this.imageList,
-          config.sortImagesBy,
-          config.sortImagesDescending
-        );
+        this.imageList,
+        config.sortImagesBy,
+        config.sortImagesDescending
+      );
     Log.info('BACKGROUNDSLIDESHOW: ' + this.imageList.length + ' files found');
     this.index = 0;
 

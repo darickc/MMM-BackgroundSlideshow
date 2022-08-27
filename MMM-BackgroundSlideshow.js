@@ -62,10 +62,10 @@ Module.register('MMM-BackgroundSlideshow', {
       'rgba(0, 0, 0, 0) 80%',
       'rgba(0, 0, 0, 0.75) 100%'
     ],
-    radialGradient:  [
-        'rgba(0,0,0,0) 0%', 
-        'rgba(0,0,0,0) 75%', 
-        'rgba(0,0,0,0.25) 100%'
+    radialGradient: [
+      'rgba(0,0,0,0) 0%',
+      'rgba(0,0,0,0) 75%',
+      'rgba(0,0,0,0.25) 100%'
     ],
     // the direction the gradient goes, vertical, horizontal, both or radial
     gradientDirection: 'vertical',
@@ -172,92 +172,7 @@ Module.register('MMM-BackgroundSlideshow', {
 
   // generic notification handler
   notificationReceived: function (notification, payload, sender) {
-    if (sender) {
-      // Log.log(this.name + " received a module notification: " + notification + " from sender: " + sender.name);
-      if (notification === 'BACKGROUNDSLIDESHOW_UPDATE_IMAGE_LIST') {
-        this.imageIndex = -1;
-        this.updateImageList();
-        this.updateImage();
-      } else if (notification === 'BACKGROUNDSLIDESHOW_IMAGE_UPDATE') {
-        Log.log('MMM-BackgroundSlideshow: Changing Background');
-        this.suspend();
-        this.updateImage();
-        if (!this.playingVideo) {
-          this.resume();
-        }
-      } else if (notification === 'BACKGROUNDSLIDESHOW_NEXT') {
-        // Change to next image
-        this.updateImage();
-        if (this.timer && !this.playingVideo) {
-          // Restart timer only if timer was already running
-          this.resume();
-        }
-      } else if (notification === 'BACKGROUNDSLIDESHOW_PREVIOUS') {
-        // Change to previous image
-        this.updateImage(/* skipToPrevious= */ true);
-        if (this.timer && !this.playingVideo) {
-          // Restart timer only if timer was already running
-          this.resume();
-        }
-      } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') {
-        // Change to next image and start timer.
-        this.updateImage();
-        if (!this.playingVideo) {
-          this.resume();
-        }
-      } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') {
-        // Stop timer.
-        this.suspend();
-      } else if (notification === 'BACKGROUNDSLIDESHOW_URL') {
-        if (payload && payload.url) {
-          // Stop timer.
-          if (payload.resume) {
-            if (this.timer) {
-              // Restart timer only if timer was already running
-              this.resume();
-            }
-          } else {
-            this.suspend();
-          }
-          this.updateImage(false, payload.url);
-        }
-      } else if (notification === 'BACKGROUNDSLIDESHOW_URLS') {
-        console.log(
-          `Notification Received: BACKGROUNDSLIDESHOW_URLS. Payload: ${JSON.stringify(
-            payload
-          )}`
-        );
-        if (payload && payload.urls && payload.urls.length) {
-          // check if image list has been saved. If not, this is the first time the notification is received
-          // save the image list and index.
-          if (!this.savedImages) {
-            this.savedImages = this.imageList;
-            this.savedIndex = this.imageIndex;
-            this.updateImageListWithArray(payload.urls);
-          } else {
-            // check if there the sent urls are the same, or different.
-            let temp = _.union(payload.urls, this.imageList);
-            // if they are the same length, then they haven't changed, so don't do anything.
-            if (temp.length !== payload.urls.length) {
-              this.updateImageListWithArray(payload.urls);
-            }
-          }
-          // no urls sent, see if there is saved data.
-        } else if (this.savedImages) {
-          this.imageList = this.savedImages;
-          this.imageIndex = this.savedIndex;
-          this.savedImages = null;
-          this.savedIndex = null;
-          this.updateImage();
-          if (this.timer && !this.playingVideo) {
-            // Restart timer only if timer was already running
-            this.resume();
-          }
-        }
-      } else {
-        // Log.log(this.name + " received a system notification: " + notification);
-      }
-    }
+
   },
 
   updateImageListWithArray: function (urls) {
@@ -276,30 +191,34 @@ Module.register('MMM-BackgroundSlideshow', {
   // the socket handler
   socketNotificationReceived: function (notification, payload) {
     // if an update was received
+
+    // check this is for this module based on the woeid
     if (notification === 'BACKGROUNDSLIDESHOW_READY') {
-      // check this is for this module based on the woeid
+      // // console.info('Returning Images, payload:' + JSON.stringify(payload));
+      // // set the image list
+      // if (this.savedImages) {
+      //   this.savedImages = payload.imageList;
+      //   this.savedIndex = 0;
+      // } else {
+      //   this.imageList = payload.imageList;
+      //   // if image list actually contains images
+      //   // set loaded flag to true and update dom
+      //   if (this.imageList.length > 0) {
+      //     this.updateImage(); //Added to show the image at least once, but not change it within this.resume()
+      //     if (!this.playingVideo) {
+      //       this.resume();
+      //     }
+      //   }
+      // }
       if (payload.identifier === this.identifier) {
-        // // console.info('Returning Images, payload:' + JSON.stringify(payload));
-        // // set the image list
-        // if (this.savedImages) {
-        //   this.savedImages = payload.imageList;
-        //   this.savedIndex = 0;
-        // } else {
-        //   this.imageList = payload.imageList;
-        //   // if image list actually contains images
-        //   // set loaded flag to true and update dom
-        //   if (this.imageList.length > 0) {
-        //     this.updateImage(); //Added to show the image at least once, but not change it within this.resume()
-        //     if (!this.playingVideo) {
-        //       this.resume();
-        //     }
-        //   }
-        // }
         this.sendSocketNotification('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
         if (!this.playingVideo) {
           this.resume();
         }
       }
+    } else if (notification === 'BACKGROUNDSLIDESHOW_REGISTER_CONFIG') {
+      // Update config in backend
+      this.updateImageList();
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') {
       // Change to next image and start timer.
       this.updateImage();
@@ -313,7 +232,83 @@ Module.register('MMM-BackgroundSlideshow', {
       }
     } else if (notification === 'BACKGROUNDSLIDESHOW_FILELIST') {
       //bubble up filelist notifications
-      this.sendNotification('BACKGROUNDSLIDESHOW_FILELIST', payload);
+      this.sendSocketNotification('BACKGROUNDSLIDESHOW_FILELIST', payload);
+    } else if (notification === 'BACKGROUNDSLIDESHOW_UPDATE_IMAGE_LIST') {
+      this.imageIndex = -1;
+      this.updateImageList();
+      this.updateImage();
+    } else if (notification === 'BACKGROUNDSLIDESHOW_IMAGE_UPDATE') {
+      Log.log('MMM-BackgroundSlideshow: Changing Background');
+      this.suspend();
+      this.updateImage();
+      if (!this.playingVideo) {
+        this.resume();
+      }
+    } else if (notification === 'BACKGROUNDSLIDESHOW_NEXT') {
+      // Change to next image
+      this.updateImage();
+      if (this.timer && !this.playingVideo) {
+        // Restart timer only if timer was already running
+        this.resume();
+      }
+    } else if (notification === 'BACKGROUNDSLIDESHOW_PREVIOUS') {
+      // Change to previous image
+      this.updateImage(/* skipToPrevious= */ true);
+      if (this.timer && !this.playingVideo) {
+        // Restart timer only if timer was already running
+        this.resume();
+      }
+    } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') {
+      // Stop timer.
+      this.suspend();
+    } else if (notification === 'BACKGROUNDSLIDESHOW_URL') {
+      if (payload && payload.url) {
+        // Stop timer.
+        if (payload.resume) {
+          if (this.timer) {
+            // Restart timer only if timer was already running
+            this.resume();
+          }
+        } else {
+          this.suspend();
+        }
+        this.updateImage(false, payload.url);
+      }
+    } else if (notification === 'BACKGROUNDSLIDESHOW_URLS') {
+      console.log(
+        `Notification Received: BACKGROUNDSLIDESHOW_URLS. Payload: ${JSON.stringify(
+          payload
+        )}`
+      );
+      if (payload && payload.urls && payload.urls.length) {
+        // check if image list has been saved. If not, this is the first time the notification is received
+        // save the image list and index.
+        if (!this.savedImages) {
+          this.savedImages = this.imageList;
+          this.savedIndex = this.imageIndex;
+          this.updateImageListWithArray(payload.urls);
+        } else {
+          // check if there the sent urls are the same, or different.
+          let temp = _.union(payload.urls, this.imageList);
+          // if they are the same length, then they haven't changed, so don't do anything.
+          if (temp.length !== payload.urls.length) {
+            this.updateImageListWithArray(payload.urls);
+          }
+        }
+        // no urls sent, see if there is saved data.
+      } else if (this.savedImages) {
+        this.imageList = this.savedImages;
+        this.imageIndex = this.savedIndex;
+        this.savedImages = null;
+        this.savedIndex = null;
+        this.updateImage();
+        if (this.timer && !this.playingVideo) {
+          // Restart timer only if timer was already running
+          this.resume();
+        }
+      }
+    } else {
+      // Log.log(this.name + " received a system notification: " + notification);
     }
   },
 
@@ -337,7 +332,7 @@ Module.register('MMM-BackgroundSlideshow', {
     ) {
       this.createGradientDiv('right', this.config.horizontalGradient, wrapper);
     }
-    
+
     if (
       this.config.gradientDirection === 'radial'
     ) {
@@ -374,7 +369,7 @@ Module.register('MMM-BackgroundSlideshow', {
     div.className = 'gradient';
     wrapper.appendChild(div);
   },
-  
+
   createRadialGradientDiv: function (type, gradient, wrapper) {
     var div = document.createElement('div');
     div.style.backgroundImage =
@@ -516,8 +511,8 @@ Module.register('MMM-BackgroundSlideshow', {
             } catch (e) {
               console.log(
                 'Failed to parse dateTime: ' +
-                  dateTime +
-                  ' to format YYYY:MM:DD HH:mm:ss'
+                dateTime +
+                ' to format YYYY:MM:DD HH:mm:ss'
               );
               dateTime = '';
             }
@@ -542,7 +537,7 @@ Module.register('MMM-BackgroundSlideshow', {
     };
 
     image.src = imageinfo.data;
-    this.sendNotification('BACKGROUNDSLIDESHOW_IMAGE_UPDATED', {
+    this.sendSocketNotification('BACKGROUNDSLIDESHOW_IMAGE_UPDATED', {
       url: imageinfo.path
     });
   },
@@ -558,14 +553,14 @@ Module.register('MMM-BackgroundSlideshow', {
       return;
     }
 
-    if (this.imageList.length > 0 ){
+    if (this.imageList.length > 0) {
       this.imageIndex = this.imageIndex + 1;
 
-      if (this.config.randomizeImageOrder){
-        this.imageIndex  = Math.floor(Math.random() * (this.imageList.length));
+      if (this.config.randomizeImageOrder) {
+        this.imageIndex = Math.floor(Math.random() * (this.imageList.length));
       }
 
-      imageToDisplay = this.imageList.splice(this.imageIndex,1);
+      imageToDisplay = this.imageList.splice(this.imageIndex, 1);
       this.displayImage({
         path: imageToDisplay[0],
         data: imageToDisplay[0],
@@ -573,7 +568,7 @@ Module.register('MMM-BackgroundSlideshow', {
         total: 1
       });
       return;
-    } 
+    }
 
     if (backToPreviousImage) {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PREV_IMAGE');
@@ -634,7 +629,7 @@ Module.register('MMM-BackgroundSlideshow', {
           }
           // Remove file extension from image name.
           if (this.config.imageInfoNoFileExt) {
-              imageName = imageName.split('.')[0];
+            imageName = imageName.split('.')[0];
           }
           imageProps.push(imageName);
           break;
@@ -644,7 +639,7 @@ Module.register('MMM-BackgroundSlideshow', {
         default:
           Log.warn(
             prop +
-              ' is not a valid value for imageInfo.  Please check your configuration'
+            ' is not a valid value for imageInfo.  Please check your configuration'
           );
       }
     });
