@@ -629,7 +629,7 @@ Module.register('MMM-BackgroundSlideshow', {
           }
           // Remove file extension from image name.
           if (this.config.imageInfoNoFileExt) {
-            imageName = imageName.split('.')[0];
+            imageName = imageName.substring(0, imageName.lastIndexOf('.'));
           }
           imageProps.push(imageName);
           break;
