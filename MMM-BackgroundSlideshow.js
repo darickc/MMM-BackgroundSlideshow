@@ -172,7 +172,8 @@ Module.register('MMM-BackgroundSlideshow', {
 
   // generic notification handler
   notificationReceived: function (notification, payload, sender) {
-
+    //Quick and dirty fix to redirect the notification
+    this.socketNotificationReceived(notification,payload);
   },
 
   updateImageListWithArray: function (urls) {
@@ -261,6 +262,15 @@ Module.register('MMM-BackgroundSlideshow', {
     } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') {
       // Stop timer.
       this.suspend();
+    } else if (notification === 'BACKGROUNDSLIDESHOW_CHANGE_FOLDER') {
+        if (payload && payload.folder){
+          Log.log("MMM-Backgroundslideshow: Changing folder to: "+ payload.folder);
+          this.config.imagePaths[0] = payload.folder;
+          //this.imageIndex = -1;
+          this.updateImageList();
+        } else {
+          Log.log("MMM-Backgroundslideshow: Missing folder");
+        }
     } else if (notification === 'BACKGROUNDSLIDESHOW_URL') {
       if (payload && payload.url) {
         // Stop timer.
