@@ -114,6 +114,12 @@ The following notifications can be used:
 			 <br>Example payload: {urls:['url_to_image', 'url_to_image']}
 			</td>
 		</tr>
+		<tr>
+			<td><code>BACKGROUNDSLIDESHOW_CHANGE_FOLDER</code></td>
+			<td>Pass the new folder path via notification.
+			 <br>Example payload: {folder:modules/MMM-BackgroundSlideshow/exampleImages/subfolder}
+			</td>
+		</tr>
 </table>
 
 ## Configuration options
