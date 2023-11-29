@@ -634,26 +634,14 @@ Module.register('MMM-BackgroundSlideshow', {
     this.imageInfoDiv.innerHTML = innerHTML;
   },
 
-  suspend () {
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
-    }
-  },
-
   resume () {
-    // this.updateImage(); //Removed to prevent image change whenever MMM-Carousel changes slides
+    //this.updateImage(); //Removed to prevent image change whenever MMM-Carousel changes slides
     this.suspend();
     const self = this;
 
     if (self.config.changeImageOnResume) {
       self.updateImage();
     }
-
-    this.timer = setInterval(() => {
-      // Log.info('MMM-BackgroundSlideshow updating from resume');
-      //self.updateImage(); // This is now done in node_helper.js
-    }, self.config.slideshowSpeed);
   },
 
   updateImageList () {
