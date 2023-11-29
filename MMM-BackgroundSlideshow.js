@@ -217,6 +217,7 @@ Module.register('MMM-BackgroundSlideshow', {
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') {
       // Change to next image and start timer.
       this.updateImage();
+      this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY');
       if (!this.playingVideo) {
         this.resume();
       }
@@ -255,7 +256,7 @@ Module.register('MMM-BackgroundSlideshow', {
       }
     } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') {
       // Stop timer.
-      this.suspend();
+      this.sendSocketNotification('BACKGROUNDSLIDESHOW_PAUSE');
     } else if (notification === 'BACKGROUNDSLIDESHOW_URL') {
       if (payload && payload.url) {
         // Stop timer.
