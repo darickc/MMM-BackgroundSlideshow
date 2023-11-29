@@ -170,6 +170,14 @@ Module.register('MMM-BackgroundSlideshow', {
     return ['BackgroundSlideshow.css'];
   },
 
+	getTranslations: function() {
+		return {
+      en: "translations/en.json",
+      fr: "translations/fr.json",
+      de: "translations/de.json",
+		};
+  },
+
   // generic notification handler
   notificationReceived: function (notification, payload, sender) {
 
@@ -644,7 +652,7 @@ Module.register('MMM-BackgroundSlideshow', {
       }
     });
 
-    let innerHTML = '<header class="infoDivHeader">Picture Info</header>';
+    let innerHTML = '<header class="infoDivHeader">' + this.translate('PICTURE_INFO') + '</header>';
     imageProps.forEach((val, idx) => {
       innerHTML += val + '<br/>';
     });
