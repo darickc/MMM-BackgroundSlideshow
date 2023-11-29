@@ -31,6 +31,8 @@ module.exports = NodeHelper.create({
     this.expressInstance = this.expressApp;
     this.imageList = [];
     this.index = 0;
+    this.timer = null;
+    self = this;
   },
 
   // shuffles an array at random and returns it
@@ -173,6 +175,17 @@ module.exports = NodeHelper.create({
         returnPayload
       );
     });
+
+    // (re)set the update timer
+    if (this.timer) {
+      Log.debug('BACKGROUNDSLIDESHOW: recreating update timer');
+      var it = this.timer;
+      this.timer = null;
+      clearTimeout(it);
+    }
+    this.timer = setTimeout(function () {
+      self.getNextImage();
+    }, self.config.slideshowSpeed);
   },
 
   getPrevImage () {

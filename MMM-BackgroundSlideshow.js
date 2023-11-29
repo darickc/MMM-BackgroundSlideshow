@@ -652,7 +652,7 @@ Module.register('MMM-BackgroundSlideshow', {
 
     this.timer = setInterval(() => {
       // Log.info('MMM-BackgroundSlideshow updating from resume');
-      self.updateImage();
+      //self.updateImage(); // This is now done in node_helper.js
     }, self.config.slideshowSpeed);
   },
 
