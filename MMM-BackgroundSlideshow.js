@@ -207,7 +207,6 @@ Module.register('MMM-BackgroundSlideshow', {
       //   }
       // }
       if (payload.identifier === this.identifier) {
-        this.sendSocketNotification('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
         if (!this.playingVideo) {
           this.resume();
         }

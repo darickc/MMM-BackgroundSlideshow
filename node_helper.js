@@ -143,6 +143,7 @@ module.exports = NodeHelper.create({
     if (sendNotification) {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_READY', returnPayload);
     }
+    this.getNextImage();
   },
 
   getNextImage () {
