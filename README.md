@@ -11,7 +11,7 @@ Based on <a href="https://github.com/AdamMoses-GitHub/MMM-ImageSlideshow/blob/ma
 
 ## Dependencies / Requirements
 
-This module requires no special dependencies. The only requirement is that the image directories you path to are fixed paths accessible to the Magic Mirror instance.
+This module requires no special dependencies. The only requirement is that the image directories you path to are fixed paths accessible to the MagicMirror instance.
 
 ## Operation
 
@@ -21,11 +21,11 @@ Extra configurations include setting the amount of time an image is shown for, s
 
 ## Using the module
 
-Use Git to download. Make sure Git is installed on your system. In the command line/terminal, go to the modules directory of the your Magic Mirror install. run: `git clone https://github.com/darickc/MMM-BackgroundSlideshow.git`. The advantage of using Git is when there is an update, you can run `git pull` and it will pull down all the updates. Magic Mirror can even let you know when there are updates.
+Use Git to download. Make sure Git is installed on your system. In the command line/terminal, go to the modules directory of the your MagicMirror install. run: `git clone https://github.com/darickc/MMM-BackgroundSlideshow.git`. The advantage of using Git is when there is an update, you can run `git pull` and it will pull down all the updates. MagicMirror can even let you know when there are updates.
 
 Or
 
-Download the zip file https://github.com/darickc/MMM-BackgroundSlideshow/archive/master.zip. Unzip contents into the modules directory of your Magic Mirror install. Rename the 'MMM-BackgroundSlideshow-master' folder to 'MMM-BackgroundSlideshow'.
+Download the zip file https://github.com/darickc/MMM-BackgroundSlideshow/archive/master.zip. Unzip contents into the modules directory of your MagicMirror install. Rename the 'MMM-BackgroundSlideshow-master' folder to 'MMM-BackgroundSlideshow'.
 
 Once downloaded, install dependencies:
 

@@ -2,10 +2,10 @@
 
 /* MMM-BackgroundSlideshow.js
  *
- * Magic Mirror
+ * MagicMirror²
  * Module: MMM-BackgroundSlideshow
  *
- * Magic Mirror By Michael Teeuw http://michaelteeuw.nl
+ * MagicMirror² By Michael Teeuw https://michaelteeuw.nl
  * MIT Licensed.
  *
  * Module MMM-Slideshow By Darick Carpenter
