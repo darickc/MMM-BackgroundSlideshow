@@ -60,7 +60,7 @@ I also recommend adding the following to the custom.css to make the text a littl
 .dimmed,
 header,
 body {
-    color: #fff;
+  color: #fff;
 }
 ```
 
@@ -400,3 +400,8 @@ The following properties can be configured:
 		</tr>
     </tbody>
 </table>
+
+## Developer commands
+
+- `npm run lint` - Run linting and formatter checks.
+- `npm run lint:fix` - Fix linting and formatter issues.

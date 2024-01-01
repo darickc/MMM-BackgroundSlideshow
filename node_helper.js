@@ -1,6 +1,5 @@
-/* global Module */
-
-/* node_helper.js
+/*
+ * node_helper.js
  *
  * MagicMirror²
  * Module: MMM-BackgroundSlideshow
@@ -13,30 +12,29 @@
  */
 
 // call in the required classes
-const Log = require('../../js/logger.js');
-var NodeHelper = require('node_helper');
-var FileSystemImageSlideshow = require('fs');
+const NodeHelper = require('node_helper');
+const FileSystemImageSlideshow = require('fs');
 const Jimp = require('jimp');
 const jo = require('jpeg-autorotate');
-const { exec } = require('child_process');
-var express = require('express');
+const {exec} = require('child_process');
+const express = require('express');
+const Log = require('../../js/logger.js');
 const basePath = '/images/';
 
 // the main module helper create
 module.exports = NodeHelper.create({
-  expressInstance: undefined,
+
   // subclass start method, clears the initial config array
-  start: function () {
+  start () {
     this.excludePaths = new Set();
     this.validImageFileExtensions = new Set();
     this.expressInstance = this.expressApp;
     this.imageList = [];
     this.index = 0;
-    this.config;
   },
 
   // shuffles an array at random and returns it
-  shuffleArray: function (array) {
+  shuffleArray (array) {
     for (let i = array.length - 1; i > 0; i--) {
       // j is a random index in [0, i].
       const j = Math.floor(Math.random() * (i + 1));
@@ -46,30 +44,30 @@ module.exports = NodeHelper.create({
   },
 
   // sort by filename attribute
-  sortByFilename: function (a, b) {
-    aL = a.path.toLowerCase();
-    bL = b.path.toLowerCase();
+  sortByFilename (a, b) {
+    const aL = a.path.toLowerCase();
+    const bL = b.path.toLowerCase();
     if (aL > bL) return 1;
-    else return -1;
+    return -1;
   },
 
   // sort by created attribute
-  sortByCreated: function (a, b) {
-    aL = a.created;
-    bL = b.created;
+  sortByCreated (a, b) {
+    const aL = a.created;
+    const bL = b.created;
     if (aL > bL) return 1;
-    else return -1;
+    return -1;
   },
 
   // sort by created attribute
-  sortByModified: function (a, b) {
-    aL = a.modified;
-    bL = b.modified;
+  sortByModified (a, b) {
+    const aL = a.modified;
+    const bL = b.modified;
     if (aL > bL) return 1;
-    else return -1;
+    return -1;
   },
 
-  sortImageList: function (imageList, sortBy, sortDescending) {
+  sortImageList (imageList, sortBy, sortDescending) {
     let sortedList = imageList;
     switch (sortBy) {
       case 'created':
@@ -96,19 +94,20 @@ module.exports = NodeHelper.create({
   },
 
   // checks there's a valid image file extension
-  checkValidImageFileExtension: function (filename) {
+  checkValidImageFileExtension (filename) {
     if (!filename.includes('.')) {
       // No file extension.
       return false;
     }
-    const fileExtension = filename.split('.').pop().toLowerCase();
+    const fileExtension = filename.split('.').pop()
+      .toLowerCase();
     return this.validImageFileExtensions.has(fileExtension);
   },
 
   // gathers the image list
-  gatherImageList: function (config, sendNotification) {
+  gatherImageList (config, sendNotification) {
     // Invalid config. retrieve it again
-    if (config === undefined || !Object(config).hasOwnProperty('imagePaths')) {
+    if (typeof config === 'undefined' || !Object.hasOwn(Object(config), 'imagePaths')) {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_REGISTER_CONFIG');
       return;
     }
@@ -125,7 +124,7 @@ module.exports = NodeHelper.create({
         config.sortImagesBy,
         config.sortImagesDescending
       );
-    Log.info('BACKGROUNDSLIDESHOW: ' + this.imageList.length + ' files found');
+    Log.info(`BACKGROUNDSLIDESHOW: ${this.imageList.length} files found`);
     this.index = 0;
 
     // let other modules know about slideshow images
@@ -144,7 +143,7 @@ module.exports = NodeHelper.create({
     }
   },
 
-  getNextImage: function () {
+  getNextImage () {
     if (!this.imageList.length || this.index >= this.imageList.length) {
       // if there are no images or all the images have been displayed, try loading the images again
       this.gatherImageList(this.config);
@@ -153,19 +152,19 @@ module.exports = NodeHelper.create({
     if (!this.imageList.length) {
       // still no images, search again after 10 mins
       setTimeout(() => {
-        this.getNextImage(config);
+        this.getNextImage(this.config);
       }, 600000);
       return;
     }
 
-    var image = this.imageList[this.index++];
-    Log.info('BACKGROUNDSLIDESHOW: reading path "' + image.path + '"');
+    const image = this.imageList[this.index++];
+    Log.info(`BACKGROUNDSLIDESHOW: reading path "${image.path}"`);
     self = this;
-    this.readFile(image.path, function (data) {
+    this.readFile(image.path, (data) => {
       const returnPayload = {
         identifier: self.config.identifier,
         path: image.path,
-        data: data,
+        data,
         index: self.index,
         total: self.imageList.length
       };
@@ -176,7 +175,7 @@ module.exports = NodeHelper.create({
     });
   },
 
-  getPrevImage: function () {
+  getPrevImage () {
     // imageIndex is incremented after displaying an image so -2 is needed to
     // get to previous image index.
     this.index -= 2;
@@ -188,33 +187,33 @@ module.exports = NodeHelper.create({
     this.getNextImage();
   },
 
-  resizeImage: function (input, callback) {
+  resizeImage (input, callback) {
     Jimp.read(input)
       .then((image) => {
         image
           .scaleToFit(
-            parseInt(this.config.maxWidth),
-            parseInt(this.config.maxHeight)
+            parseInt(this.config.maxWidth, 10),
+            parseInt(this.config.maxHeight, 10)
           )
           .getBuffer(Jimp.MIME_JPEG, (err, buffer) => {
-            callback('data:image/jpg;base64, ' + buffer.toString('base64'));
+            callback(`data:image/jpg;base64, ${buffer.toString('base64')}`);
           });
       })
       .catch((err) => {
-        console.log(err);
+        Log.log(err);
       });
   },
 
-  readFile: function (filepath, callback) {
+  readFile (filepath, callback) {
     if (this.config.resizeImages) {
-      let ext = filepath.split('.').pop();
+      const ext = filepath.split('.').pop();
       if (ext === 'jpg' || ext === 'jpeg') {
         jo.rotate(
           filepath,
-          { quality: 30 },
+          {quality: 30},
           (error, buffer, orientation, dimensions, quality) => {
             if (error) {
-              // console.log(
+              // Log.log(
               //   'An error occurred when rotating the file: ' + error.message
               // );
               this.resizeImage(filepath, callback);
@@ -227,24 +226,22 @@ module.exports = NodeHelper.create({
         this.resizeImage(filepath, callback);
       }
     } else {
-      var ext = filepath.split('.').pop();
-      var data = FileSystemImageSlideshow.readFileSync(filepath, {
+      const ext = filepath.split('.').pop();
+      const data = FileSystemImageSlideshow.readFileSync(filepath, {
         encoding: 'base64'
       });
-      callback('data:image/' + ext + ';base64, ' + data);
+      callback(`data:image/${ext};base64, ${data}`);
     }
   },
 
-  getFiles(path, imageList, config) {
-    Log.info(
-      'BACKGROUNDSLIDESHOW: Reading directory "' + path + '" for images.'
-    );
+  getFiles (path, imageList, config) {
+    Log.info(`BACKGROUNDSLIDESHOW: Reading directory "${path}" for images.`);
     const contents = FileSystemImageSlideshow.readdirSync(path);
     for (let i = 0; i < contents.length; i++) {
       if (this.excludePaths.has(contents[i])) {
         continue;
       }
-      const currentItem = path + '/' + contents[i];
+      const currentItem = `${path}/${contents[i]}`;
       const stats = FileSystemImageSlideshow.lstatSync(currentItem);
       if (stats.isDirectory() && config.recursiveSubDirectories) {
         this.getFiles(currentItem, imageList, config);
@@ -263,12 +260,12 @@ module.exports = NodeHelper.create({
   },
 
   // subclass socketNotificationReceived, received notification from module
-  socketNotificationReceived: function (notification, payload) {
+  socketNotificationReceived (notification, payload) {
     if (notification === 'BACKGROUNDSLIDESHOW_REGISTER_CONFIG') {
       const config = payload;
       this.expressInstance.use(
         basePath + config.imagePaths[0],
-        express.static(config.imagePaths[0], { maxAge: 3600000 })
+        express.static(config.imagePaths[0], {maxAge: 3600000})
       );
 
       // Create set of excluded subdirectories.
@@ -288,11 +285,9 @@ module.exports = NodeHelper.create({
       }, 200);
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY_VIDEO') {
       Log.info('mw got BACKGROUNDSLIDESHOW_PLAY_VIDEO');
-      Log.info(
-        'cmd line:' + 'omxplayer --win 0,0,1920,1080 --alpha 180 ' + payload[0]
-      );
+      Log.info(`cmd line: omxplayer --win 0,0,1920,1080 --alpha 180 ${payload[0]}`);
       exec(
-        'omxplayer --win 0,0,1920,1080 --alpha 180 ' + payload[0],
+        `omxplayer --win 0,0,1920,1080 --alpha 180 ${payload[0]}`,
         (e, stdout, stderr) => {
           this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY', null);
           Log.info('mw video done');
@@ -307,5 +302,3 @@ module.exports = NodeHelper.create({
     }
   }
 });
-
-//------------ end -------------
