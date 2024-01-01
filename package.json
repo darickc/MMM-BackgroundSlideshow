@@ -1,8 +1,20 @@
 {
   "name": "mmm-backgroundslideshow",
   "version": "1.0.1",
-  "description": "",
-  "author": "",
+  "description": "Show on MagicMirror² fullscreen slideshow in background from images in a local folder. Great for a photo frame.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/darickc/MMM-BackgroundSlideshow"
+  },
+  "keywords": [
+    "magicmirror",
+    "background",
+    "slideshow"
+  ],
+  "author": {
+    "name": "darickc",
+    "url": "https://github.com/darickc"
+  },
   "license": "MIT",
   "dependencies": {
     "exif-js": "^2.3.0",
