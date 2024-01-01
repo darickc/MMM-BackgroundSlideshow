@@ -1,10 +1,10 @@
 # Module: Background Slideshow
 
-Show a slideshow of images in the background. Great for a photo frame from instead of a mirror.
+Show a slideshow of images in the background of [MagicMirror²](https://magicmirror.builders/). Great for a photo frame from instead of a mirror.
 
 The `MMM-BackgroundSlideshow` module is designed to display images fullscreen, one at a time on a fixed interval, from one or many directories. These images can be shown in order or at random, one directory at a time or all at time. The images can transition from one to the other and be shown with no edge (cover) or the enter image(contain).
 
-Based on <a href="https://github.com/AdamMoses-GitHub/MMM-ImageSlideshow/blob/master/MMM-ImageSlideshow.js">MMM-ImageSlideshow</a>.
+Based on [MMM-ImageSlideshow](https://github.com/AdamMoses-GitHub/MMM-ImageSlideshow/).
 
 <img src="https://github.com/darickc/MMM-BackgroundSlideshow/blob/master/screenshots/landscape.jpg" style="width: 300px;" />
 <img src="https://github.com/darickc/MMM-BackgroundSlideshow/blob/master/screenshots/portait.jpg" style="width: 300px;" />
@@ -21,19 +21,19 @@ Extra configurations include setting the amount of time an image is shown for, s
 
 ## Using the module
 
-Use Git to download. Make sure Git is installed on your system. In the command line/terminal, go to the modules directory of the your MagicMirror install. run: `git clone https://github.com/darickc/MMM-BackgroundSlideshow.git`. The advantage of using Git is when there is an update, you can run `git pull` and it will pull down all the updates. MagicMirror can even let you know when there are updates.
+Use Git to download. Make sure Git is installed on your system. In the command line/terminal, go to the modules directory of the your MagicMirror install. run: `git clone https://github.com/darickc/MMM-BackgroundSlideshow`. The advantage of using Git is when there is an update, you can run `git pull` and it will pull down all the updates. MagicMirror can even let you know when there are updates.
 
 Or
 
-Download the zip file https://github.com/darickc/MMM-BackgroundSlideshow/archive/master.zip. Unzip contents into the modules directory of your MagicMirror install. Rename the 'MMM-BackgroundSlideshow-master' folder to 'MMM-BackgroundSlideshow'.
+Download the zip file <https://github.com/darickc/MMM-BackgroundSlideshow/archive/master.zip>. Unzip contents into the modules directory of your MagicMirror install. Rename the 'MMM-BackgroundSlideshow-master' folder to 'MMM-BackgroundSlideshow'.
 
 Once downloaded, install dependencies:
 
-```
+```sh
 cd ~/MagicMirror/modules/MMM-BackgroundSlideshow
 ```
 
-```
+```sh
 npm install
 ```
 
@@ -55,7 +55,7 @@ modules: [
 
 I also recommend adding the following to the custom.css to make the text a little brighter:
 
-```
+```css
 .normal,
 .dimmed,
 header,
