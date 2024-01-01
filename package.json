@@ -1,13 +1,37 @@
 {
   "name": "mmm-backgroundslideshow",
-  "version": "1.0.1",
-  "description": "",
-  "author": "",
+  "version": "1.0.2",
+  "description": "Show on MagicMirror² fullscreen slideshow in background from images in a local folder. Great for a photo frame.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/darickc/MMM-BackgroundSlideshow"
+  },
+  "keywords": [
+    "magicmirror",
+    "background",
+    "slideshow"
+  ],
+  "author": {
+    "name": "darickc",
+    "url": "https://github.com/darickc"
+  },
   "license": "MIT",
   "dependencies": {
     "exif-js": "^2.3.0",
-    "lodash": "^4.17.21",
-    "jimp": "^0.16.1",
-    "jpeg-autorotate": "^8.0.1"
+    "jimp": "^0.22.10",
+    "jpeg-autorotate": "^9.0.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@eslint/js": "latest",
+    "@stylistic/eslint-plugin": "latest",
+    "eslint": "^8.56.0",
+    "eslint-plugin-import": "latest",
+    "globals": "latest",
+    "prettier": "^3.1.1"
+  },
+  "scripts": {
+    "lint": "prettier --check . && eslint .",
+    "lint:fix": "prettier --write . && eslint . --fix"
   }
 }
