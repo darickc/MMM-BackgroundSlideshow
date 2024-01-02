@@ -31,6 +31,8 @@ module.exports = NodeHelper.create({
     this.expressInstance = this.expressApp;
     this.imageList = [];
     this.index = 0;
+    this.timer = null;
+    self = this;
   },
 
   // shuffles an array at random and returns it
@@ -141,6 +143,7 @@ module.exports = NodeHelper.create({
     if (sendNotification) {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_READY', returnPayload);
     }
+    this.getNextImage();
   },
 
   getNextImage () {
@@ -173,6 +176,27 @@ module.exports = NodeHelper.create({
         returnPayload
       );
     });
+
+    // (re)set the update timer
+    this.startOrRestartTimer();
+  },
+
+    // stop timer if it's running
+    stopTimer: function () {
+    if (this.timer) {
+      Log.debug('BACKGROUNDSLIDESHOW: stopping update timer');
+      var it = this.timer;
+      this.timer = null;
+      clearTimeout(it);
+    }
+  },
+  // resume timer if it's not running; reset if it is
+  startOrRestartTimer: function () {
+    this.stopTimer();
+    Log.debug('BACKGROUNDSLIDESHOW: restarting update timer');
+    this.timer = setTimeout(function () {
+      self.getNextImage();
+    }, self.config?.slideshowSpeed || 10000);
   },
 
   getPrevImage () {
@@ -299,6 +323,10 @@ module.exports = NodeHelper.create({
     } else if (notification === 'BACKGROUNDSLIDESHOW_PREV_IMAGE') {
       Log.info('BACKGROUNDSLIDESHOW_PREV_IMAGE');
       this.getPrevImage();
+    } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') {
+      this.stopTimer();
+    } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') {
+      this.startOrRestartTimer();
     }
   }
 });

@@ -207,7 +207,6 @@ Module.register('MMM-BackgroundSlideshow', {
       //   }
       // }
       if (payload.identifier === this.identifier) {
-        this.sendSocketNotification('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
         if (!this.playingVideo) {
           this.resume();
         }
@@ -218,6 +217,7 @@ Module.register('MMM-BackgroundSlideshow', {
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') {
       // Change to next image and start timer.
       this.updateImage();
+      this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY');
       if (!this.playingVideo) {
         this.resume();
       }
@@ -256,7 +256,7 @@ Module.register('MMM-BackgroundSlideshow', {
       }
     } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') {
       // Stop timer.
-      this.suspend();
+      this.sendSocketNotification('BACKGROUNDSLIDESHOW_PAUSE');
     } else if (notification === 'BACKGROUNDSLIDESHOW_URL') {
       if (payload && payload.url) {
         // Stop timer.
@@ -634,26 +634,14 @@ Module.register('MMM-BackgroundSlideshow', {
     this.imageInfoDiv.innerHTML = innerHTML;
   },
 
-  suspend () {
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
-    }
-  },
-
   resume () {
-    // this.updateImage(); //Removed to prevent image change whenever MMM-Carousel changes slides
+    //this.updateImage(); //Removed to prevent image change whenever MMM-Carousel changes slides
     this.suspend();
     const self = this;
 
     if (self.config.changeImageOnResume) {
       self.updateImage();
     }
-
-    this.timer = setInterval(() => {
-      // Log.info('MMM-BackgroundSlideshow updating from resume');
-      self.updateImage();
-    }, self.config.slideshowSpeed);
   },
 
   updateImageList () {
