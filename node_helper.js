@@ -143,7 +143,6 @@ module.exports = NodeHelper.create({
     if (sendNotification) {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_READY', returnPayload);
     }
-    this.getNextImage();
   },
 
   getNextImage () {
@@ -306,6 +305,7 @@ module.exports = NodeHelper.create({
       this.config = config;
       setTimeout(() => {
         this.gatherImageList(config, true);
+        this.getNextImage();
       }, 200);
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY_VIDEO') {
       Log.info('mw got BACKGROUNDSLIDESHOW_PLAY_VIDEO');
