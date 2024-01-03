@@ -180,8 +180,8 @@ module.exports = NodeHelper.create({
     this.startOrRestartTimer();
   },
 
-    // stop timer if it's running
-    stopTimer: function () {
+  // stop timer if it's running
+  stopTimer: function () {
     if (this.timer) {
       Log.debug('BACKGROUNDSLIDESHOW: stopping update timer');
       var it = this.timer;
