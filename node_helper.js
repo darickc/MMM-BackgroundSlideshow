@@ -14,12 +14,13 @@
 // call in the required classes
 const NodeHelper = require('node_helper');
 const FileSystemImageSlideshow = require('fs');
-const Jimp = require('jimp');
 const jo = require('jpeg-autorotate');
 const {exec} = require('child_process');
 const express = require('express');
 const Log = require('../../js/logger.js');
 const basePath = '/images/';
+const sharp = require('sharp');
+const path = require('path');
 
 // the main module helper create
 module.exports = NodeHelper.create({
@@ -209,51 +210,60 @@ module.exports = NodeHelper.create({
     }
     this.getNextImage();
   },
-
-  resizeImage (input, callback) {
-    Jimp.read(input)
-      .then((image) => {
-        image
-          .scaleToFit(
-            parseInt(this.config.maxWidth, 10),
-            parseInt(this.config.maxHeight, 10)
-          )
-          .getBuffer(Jimp.MIME_JPEG, (err, buffer) => {
-            callback(`data:image/jpg;base64, ${buffer.toString('base64')}`);
-          });
+  resizeImage(input, callback) {
+    Log.log('resizing image to max: ' + this.config.maxWidth + 'x' + this.config.maxHeight);
+    const transformer = sharp()
+      .rotate() 
+      .resize({
+        width: parseInt(this.config.maxWidth, 10),
+        height: parseInt(this.config.maxHeight, 10),
+        fit: 'inside',
       })
-      .catch((err) => {
-        Log.log(err);
+      .jpeg({ quality: 80 });
+  
+    // Streama image data from file to transformation and finally to buffer
+    const ext = path.extname(input).toLowerCase();
+    const outputStream = [];
+  
+    FileSystemImageSlideshow.createReadStream(input)
+      .pipe(transformer) // Stream to Sharp för att resizea
+      .on('data', (chunk) => {
+        outputStream.push(chunk); // add chunks in a buffer array
+      })
+      .on('end', () => {
+        const buffer = Buffer.concat(outputStream);
+        callback(`data:image/jpg;base64, ${buffer.toString('base64')}`);
+        Log.log('resizing done!');
+      })
+      .on('error', (err) => {
+        console.error('Error resizing image:', err);
       });
   },
 
-  readFile (filepath, callback) {
+  readFile(filepath, callback) {
+    const ext = filepath.split('.').pop();
+  
     if (this.config.resizeImages) {
-      const ext = filepath.split('.').pop();
-      if (ext === 'jpg' || ext === 'jpeg') {
-        jo.rotate(
-          filepath,
-          {quality: 30},
-          (error, buffer, orientation, dimensions, quality) => {
-            if (error) {
-              // Log.log(
-              //   'An error occurred when rotating the file: ' + error.message
-              // );
-              this.resizeImage(filepath, callback);
-            } else {
-              this.resizeImage(buffer, callback);
-            }
-          }
-        );
-      } else {
-        this.resizeImage(filepath, callback);
-      }
+        this.resizeImage(filepath, callback);  
     } else {
-      const ext = filepath.split('.').pop();
-      const data = FileSystemImageSlideshow.readFileSync(filepath, {
-        encoding: 'base64'
-      });
-      callback(`data:image/${ext};base64, ${data}`);
+      Log.log('resizeImages: false');
+      // const data = FileSystemImageSlideshow.readFileSync(filepath, { encoding: 'base64' });
+      // callback(`data:image/${ext};base64, ${data}`);
+      let chunks = [];
+      FileSystemImageSlideshow.createReadStream(filepath)
+        .on('data', (chunk) => {
+          chunks.push(chunk);  // Samla chunkar av data
+        })
+        .on('end', () => {
+          const buffer = Buffer.concat(chunks);
+          callback(`data:image/${ext.slice(1)};base64, ${buffer.toString('base64')}`);
+        })
+        .on('error', (err) => {
+          console.error('Error reading file:', err);
+        })
+        .on('close', () => {
+          console.log('Stream closed.');
+        });
     }
   },
 
