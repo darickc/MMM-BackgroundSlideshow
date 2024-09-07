@@ -25,10 +25,10 @@
   "devDependencies": {
     "@eslint/js": "latest",
     "@stylistic/eslint-plugin": "latest",
-    "eslint": "^8.56.0",
+    "eslint": "^8.57.0",
     "eslint-plugin-import": "latest",
     "globals": "latest",
-    "prettier": "^3.1.1"
+    "prettier": "^3.3.3"
   },
   "scripts": {
     "lint": "prettier --check . && eslint .",
