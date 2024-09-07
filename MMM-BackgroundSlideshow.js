@@ -153,7 +153,6 @@ Module.register('MMM-BackgroundSlideshow', {
   getScripts () {
     return [
       `modules/${this.name}/node_modules/exif-js/exif.js`,
-      `modules/${this.name}/node_modules/lodash/lodash.js`,
       'moment.js'
     ];
   },
@@ -277,7 +276,7 @@ Module.register('MMM-BackgroundSlideshow', {
         // save the image list and index.
         if (this.savedImages) {
           // check if there the sent urls are the same, or different.
-          const temp = _.union(payload.urls, this.imageList);
+          const temp = [...new Set([...payload.urls, ...this.imageList])];
           // if they are the same length, then they haven't changed, so don't do anything.
           if (temp.length !== payload.urls.length) {
             this.updateImageListWithArray(payload.urls);
@@ -635,7 +634,7 @@ Module.register('MMM-BackgroundSlideshow', {
   },
 
   resume () {
-    //this.updateImage(); //Removed to prevent image change whenever MMM-Carousel changes slides
+    // this.updateImage(); //Removed to prevent image change whenever MMM-Carousel changes slides
     this.suspend();
     const self = this;
 

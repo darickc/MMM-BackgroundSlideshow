@@ -14,7 +14,6 @@
 // call in the required classes
 const NodeHelper = require('node_helper');
 const FileSystemImageSlideshow = require('fs');
-const jo = require('jpeg-autorotate');
 const {exec} = require('child_process');
 const express = require('express');
 const Log = require('../../js/logger.js');
@@ -182,19 +181,19 @@ module.exports = NodeHelper.create({
   },
 
   // stop timer if it's running
-  stopTimer: function () {
+  stopTimer () {
     if (this.timer) {
       Log.debug('BACKGROUNDSLIDESHOW: stopping update timer');
-      var it = this.timer;
+      const it = this.timer;
       this.timer = null;
       clearTimeout(it);
     }
   },
   // resume timer if it's not running; reset if it is
-  startOrRestartTimer: function () {
+  startOrRestartTimer () {
     this.stopTimer();
     Log.debug('BACKGROUNDSLIDESHOW: restarting update timer');
-    this.timer = setTimeout(function () {
+    this.timer = setTimeout(() => {
       self.getNextImage();
     }, self.config?.slideshowSpeed || 10000);
   },
@@ -210,21 +209,20 @@ module.exports = NodeHelper.create({
     }
     this.getNextImage();
   },
-  resizeImage(input, callback) {
-    Log.log('resizing image to max: ' + this.config.maxWidth + 'x' + this.config.maxHeight);
+  resizeImage (input, callback) {
+    Log.log(`resizing image to max: ${this.config.maxWidth}x${this.config.maxHeight}`);
     const transformer = sharp()
-      .rotate() 
+      .rotate()
       .resize({
         width: parseInt(this.config.maxWidth, 10),
         height: parseInt(this.config.maxHeight, 10),
         fit: 'inside',
       })
-      .jpeg({ quality: 80 });
-  
+      .jpeg({quality: 80});
+
     // Streama image data from file to transformation and finally to buffer
-    const ext = path.extname(input).toLowerCase();
     const outputStream = [];
-  
+
     FileSystemImageSlideshow.createReadStream(input)
       .pipe(transformer) // Stream to Sharp för att resizea
       .on('data', (chunk) => {
@@ -236,45 +234,45 @@ module.exports = NodeHelper.create({
         Log.log('resizing done!');
       })
       .on('error', (err) => {
-        console.error('Error resizing image:', err);
+        Log.error('Error resizing image:', err);
       });
   },
 
-  readFile(filepath, callback) {
+  readFile (filepath, callback) {
     const ext = filepath.split('.').pop();
-  
+
     if (this.config.resizeImages) {
-        this.resizeImage(filepath, callback);  
+      this.resizeImage(filepath, callback);
     } else {
       Log.log('resizeImages: false');
       // const data = FileSystemImageSlideshow.readFileSync(filepath, { encoding: 'base64' });
       // callback(`data:image/${ext};base64, ${data}`);
-      let chunks = [];
+      const chunks = [];
       FileSystemImageSlideshow.createReadStream(filepath)
         .on('data', (chunk) => {
-          chunks.push(chunk);  // Samla chunkar av data
+          chunks.push(chunk); // Samla chunkar av data
         })
         .on('end', () => {
           const buffer = Buffer.concat(chunks);
           callback(`data:image/${ext.slice(1)};base64, ${buffer.toString('base64')}`);
         })
         .on('error', (err) => {
-          console.error('Error reading file:', err);
+          Log.error('Error reading file:', err);
         })
         .on('close', () => {
-          console.log('Stream closed.');
+          Log.log('Stream closed.');
         });
     }
   },
 
-  getFiles (path, imageList, config) {
-    Log.info(`BACKGROUNDSLIDESHOW: Reading directory "${path}" for images.`);
-    const contents = FileSystemImageSlideshow.readdirSync(path);
+  getFiles (imagePath, imageList, config) {
+    Log.info(`BACKGROUNDSLIDESHOW: Reading directory "${imagePath}" for images.`);
+    const contents = FileSystemImageSlideshow.readdirSync(imagePath);
     for (let i = 0; i < contents.length; i++) {
       if (this.excludePaths.has(contents[i])) {
         continue;
       }
-      const currentItem = `${path}/${contents[i]}`;
+      const currentItem = `${imagePath}/${contents[i]}`;
       const stats = FileSystemImageSlideshow.lstatSync(currentItem);
       if (stats.isDirectory() && config.recursiveSubDirectories) {
         this.getFiles(currentItem, imageList, config);
