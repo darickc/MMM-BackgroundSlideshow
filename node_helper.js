@@ -14,7 +14,6 @@
 // call in the required classes
 const NodeHelper = require('node_helper');
 const FileSystemImageSlideshow = require('fs');
-const jo = require('jpeg-autorotate');
 const {exec} = require('child_process');
 const express = require('express');
 const Log = require('../../js/logger.js');
