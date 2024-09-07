@@ -634,7 +634,7 @@ Module.register('MMM-BackgroundSlideshow', {
   },
 
   resume () {
-    //this.updateImage(); //Removed to prevent image change whenever MMM-Carousel changes slides
+    // this.updateImage(); //Removed to prevent image change whenever MMM-Carousel changes slides
     this.suspend();
     const self = this;
 
