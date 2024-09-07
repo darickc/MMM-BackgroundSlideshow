@@ -1,6 +1,6 @@
 {
   "name": "mmm-backgroundslideshow",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Show on MagicMirror² fullscreen slideshow in background from images in a local folder. Great for a photo frame.",
   "repository": {
     "type": "git",
