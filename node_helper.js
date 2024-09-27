@@ -218,6 +218,7 @@ module.exports = NodeHelper.create({
         height: parseInt(this.config.maxHeight, 10),
         fit: 'inside',
       })
+      .keepMetadata()
       .jpeg({quality: 80});
 
     // Streama image data from file to transformation and finally to buffer
