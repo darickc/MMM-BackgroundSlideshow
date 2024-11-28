@@ -108,7 +108,7 @@ module.exports = NodeHelper.create({
   excludedFiles (currentDir){
     try {
 	  const excludedFile = FileSystemImageSlideshow.readFileSync(currentDir + '/excludeImages.txt', 'utf8');
-	  const listOfExcludedFiles = excludedFile.split(/\r?\n/)
+	  const listOfExcludedFiles = excludedFile.split(/\r?\n/u)
 	  Log.info(`found excluded images list: in dir: ${currentDir} containing: ${listOfExcludedFiles.length} files`)
 	  return listOfExcludedFiles;
     } catch (err) {
@@ -117,7 +117,7 @@ module.exports = NodeHelper.create({
     }
   },
   isExcluded (filename, excludedImagesList){
-	  if(excludedImagesList.includes(filename.replace(/\.[a-zA-Z]{3,4}$/, ""))){
+	  if(excludedImagesList.includes(filename.replace(/\.[a-zA-Z]{3,4}$/u, ""))){
 		  Log.info(`${filename} is excluded in excludedImages.txt!`)
 		  return true
 	  }else{
