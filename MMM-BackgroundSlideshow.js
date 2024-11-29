@@ -22,6 +22,8 @@ Module.register('MMM-BackgroundSlideshow', {
     slideshowSpeed: 10 * 1000,
     // if true randomize image order, otherwise use sortImagesBy and sortImagesDescending
     randomizeImageOrder: false,
+	//keeps track of shown images to make sure you have seen them all before an image is shown twice.
+    showAllImagesBeforeRestart: false,
     // how to sort images: name, random, created, modified
     sortImagesBy: 'created',
     // whether to sort in ascending (default) or descending order
