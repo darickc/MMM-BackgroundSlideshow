@@ -108,12 +108,14 @@ module.exports = NodeHelper.create({
     return this.validImageFileExtensions.has(fileExtension);
   },
 	readEntireShownFile ( ) {
+	  const filepath = path.join(os.homedir(), '/filesShownTracker.txt')
 		try {
-			const filesShown = FileSystemImageSlideshow.readFileSync(path.join(os.homedir(), '/filesShownTracker.txt'), 'utf8');
+			const filesShown = FileSystemImageSlideshow.readFileSync(filepath, 'utf8');
 			const listOfShownFiles = filesShown.split(/\r?\n/u).filter(line => line.trim() !== '');
-			Log.info(`found filesShownTracker: in dir: ${baseDir} containing: ${listOfShownFiles.length} files`)
+			Log.info(`found filesShownTracker: in path: ${filepath} containing: ${listOfShownFiles.length} files`)
 			return new Set(listOfShownFiles);
 		} catch (err) {
+			Log.info(`error reading filesShownTracker: in path: ${filepath}`)
 			//no excludeImages.txt in current folder
 			return new Set();
 		}
@@ -150,9 +152,10 @@ module.exports = NodeHelper.create({
       this.getFiles(config.imagePaths[i], this.imageList, config);
     }
 	const imageListToUse = config.showAllImagesBeforeRestart
-	  ? this.imageList.filter(image => !this.alreadyShownSet.has(image))
-	  : this.imageList;
+	  ? this.imageList.filter(image => !this.alreadyShownSet.has(image.path))
+		: this.imageList;
 
+	Log.info(`skipped ${this.imageList.length - imageListToUse.length} files since allready seen!`)
 	this.imageList = config.randomizeImageOrder
 	  ? this.shuffleArray(imageListToUse)
 	  : this.sortImageList(
