@@ -105,7 +105,25 @@ module.exports = NodeHelper.create({
       .toLowerCase();
     return this.validImageFileExtensions.has(fileExtension);
   },
-
+  excludedFiles (currentDir){
+    try {
+	  const excludedFile = FileSystemImageSlideshow.readFileSync(currentDir + '/excludeImages.txt', 'utf8');
+	  const listOfExcludedFiles = excludedFile.split(/\r?\n/u)
+	  Log.info(`found excluded images list: in dir: ${currentDir} containing: ${listOfExcludedFiles.length} files`)
+	  return listOfExcludedFiles;
+    } catch (err) {
+	  //no excludeImages.txt in current folder
+	  return [];
+    }
+  },
+  isExcluded (filename, excludedImagesList){
+	  if(excludedImagesList.includes(filename.replace(/\.[a-zA-Z]{3,4}$/u, ""))){
+		  Log.info(`${filename} is excluded in excludedImages.txt!`)
+		  return true
+	  }else{
+		  return false
+	  }
+  },
   // gathers the image list
   gatherImageList (config, sendNotification) {
     // Invalid config. retrieve it again
@@ -116,7 +134,8 @@ module.exports = NodeHelper.create({
     // create an empty main image list
     this.imageList = [];
     for (let i = 0; i < config.imagePaths.length; i++) {
-      this.getFiles(config.imagePaths[i], this.imageList, config);
+	  const excludedImagesList = this.excludedFiles(config.imagePaths[i])
+      this.getFiles(config.imagePaths[i], this.imageList, excludedImagesList, config);
     }
 
     this.imageList = config.randomizeImageOrder
@@ -266,9 +285,9 @@ module.exports = NodeHelper.create({
     }
   },
 
-  getFiles (imagePath, imageList, config) {
-    Log.info(`BACKGROUNDSLIDESHOW: Reading directory "${imagePath}" for images.`);
+  getFiles (imagePath, imageList, excludedImagesList, config) {
     const contents = FileSystemImageSlideshow.readdirSync(imagePath);
+    Log.info(`BACKGROUNDSLIDESHOW: Reading directory "${imagePath}" for images, found ${contents.length} files and directories`);
     for (let i = 0; i < contents.length; i++) {
       if (this.excludePaths.has(contents[i])) {
         continue;
@@ -276,11 +295,11 @@ module.exports = NodeHelper.create({
       const currentItem = `${imagePath}/${contents[i]}`;
       const stats = FileSystemImageSlideshow.lstatSync(currentItem);
       if (stats.isDirectory() && config.recursiveSubDirectories) {
-        this.getFiles(currentItem, imageList, config);
+        this.getFiles(currentItem, imageList, this.excludedFiles(currentItem), config);
       } else if (stats.isFile()) {
-        const isValidImageFileExtension =
-          this.checkValidImageFileExtension(currentItem);
-        if (isValidImageFileExtension) {
+        const isValidImageFileExtension = this.checkValidImageFileExtension(currentItem);
+		const isExcluded = this.isExcluded(contents[i], excludedImagesList)
+        if (isValidImageFileExtension && !isExcluded) {
           imageList.push({
             path: currentItem,
             created: stats.ctimeMs,
