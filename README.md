@@ -186,6 +186,14 @@ The following properties can be configured:
 				<br>This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
+    <tr>
+			<td><code>showAllImagesBeforeRestart</code></td>
+			<td>Boolean value, if true will keep track of all the allready shown files and not show them untill all images has been shown<br>
+				<br><b>Example:</b> <code>true</code>
+				<br><b>Default value:</b> <code>false</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
 		<tr>
 			<td><code>sortImagesBy</code></td>
 			<td>String value, determines how images are sorted.  Possible values are: name (by file name), created (by file created date), modified (by file
@@ -335,8 +343,8 @@ The following properties can be configured:
 				"rgba(0, 0, 0, 0) 40%"
 				]</code>
 					<br><b>Default value:</b> <code>[
-                    "rgba(0,0,0,0) 0%", 
-                    "rgba(0,0,0,0) 75%", 
+                    "rgba(0,0,0,0) 0%",
+                    "rgba(0,0,0,0) 75%",
                     "rgba(0,0,0,0.25) 100%""
 				]</code>
 				<br>This value is <b>OPTIONAL</b>
@@ -400,6 +408,11 @@ The following properties can be configured:
 		</tr>
     </tbody>
 </table>
+
+### How to manually exclude images from a folder:
+create a file called `excludeImages.txt` that you put in the same folder as the images you want to exclude (one for each directory!)
+add the filenames you want to exclude to the file, one filename per row.
+that's it!
 
 ## Developer commands
 
