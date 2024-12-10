@@ -14,6 +14,7 @@
 // call in the required classes
 const NodeHelper = require('node_helper');
 const FileSystemImageSlideshow = require('fs');
+const os = require('os');
 const {exec} = require('child_process');
 const express = require('express');
 const Log = require('../../js/logger.js');
@@ -30,6 +31,7 @@ module.exports = NodeHelper.create({
     this.validImageFileExtensions = new Set();
     this.expressInstance = this.expressApp;
     this.imageList = [];
+    this.alreadyShownSet = new Set();
     this.index = 0;
     this.timer = null;
     self = this;
@@ -124,6 +126,35 @@ module.exports = NodeHelper.create({
 		  return false
 	  }
   },
+	readEntireShownFile ( ) {
+	  const filepath = path.join(os.homedir(), '/filesShownTracker.txt')
+		try {
+			const filesShown = FileSystemImageSlideshow.readFileSync(filepath, 'utf8');
+			const listOfShownFiles = filesShown.split(/\r?\n/u).filter(line => line.trim() !== '');
+			Log.info(`found filesShownTracker: in path: ${filepath} containing: ${listOfShownFiles.length} files`)
+			return new Set(listOfShownFiles);
+		} catch (err) {
+			Log.info(`error reading filesShownTracker: in path: ${filepath}`)
+			//no excludeImages.txt in current folder
+			return new Set();
+		}
+	},
+	addImageToShown ( imgPath ) {
+	  self.alreadyShownSet.add(imgPath)
+	  const filePath = path.join(os.homedir(), '/filesShownTracker.txt')
+		if (!FileSystemImageSlideshow.existsSync(filePath)) {
+			FileSystemImageSlideshow.writeFileSync(filePath, imgPath + '\n', { flag: 'wx' });
+		} else {
+			FileSystemImageSlideshow.appendFileSync(filePath, imgPath + '\n');
+		}
+	},
+  resetShownImagesFile(){
+    try {
+      FileSystemImageSlideshow.writeFileSync(path.join(os.homedir(), '/filesShownTracker.txt'), '', 'utf8');
+    } catch (err) {
+      console.error('Error writing empty filesShownTracker.txt', err);
+    }
+  },
   // gathers the image list
   gatherImageList (config, sendNotification) {
     // Invalid config. retrieve it again
@@ -133,18 +164,25 @@ module.exports = NodeHelper.create({
     }
     // create an empty main image list
     this.imageList = [];
+	if(config.showAllImagesBeforeRestart){
+		this.alreadyShownSet = this.readEntireShownFile()
+	}
     for (let i = 0; i < config.imagePaths.length; i++) {
 	  const excludedImagesList = this.excludedFiles(config.imagePaths[i])
       this.getFiles(config.imagePaths[i], this.imageList, excludedImagesList, config);
     }
+	const imageListToUse = config.showAllImagesBeforeRestart
+	  ? this.imageList.filter(image => !this.alreadyShownSet.has(image.path))
+		: this.imageList;
 
-    this.imageList = config.randomizeImageOrder
-      ? this.shuffleArray(this.imageList)
-      : this.sortImageList(
-        this.imageList,
-        config.sortImagesBy,
-        config.sortImagesDescending
-      );
+	Log.info(`skipped ${this.imageList.length - imageListToUse.length} files since allready seen!`)
+	this.imageList = config.randomizeImageOrder
+	  ? this.shuffleArray(imageListToUse)
+	  : this.sortImageList(
+		  imageListToUse,
+		  config.sortImagesBy,
+		  config.sortImagesDescending
+	  );
     Log.info(`BACKGROUNDSLIDESHOW: ${this.imageList.length} files found`);
     this.index = 0;
 
@@ -167,6 +205,9 @@ module.exports = NodeHelper.create({
   getNextImage () {
     if (!this.imageList.length || this.index >= this.imageList.length) {
       // if there are no images or all the images have been displayed, try loading the images again
+      if(this.config.showAllImagesBeforeRestart){
+        this.resetShownImagesFile()
+      }
       this.gatherImageList(this.config);
     }
     //
@@ -197,6 +238,9 @@ module.exports = NodeHelper.create({
 
     // (re)set the update timer
     this.startOrRestartTimer();
+  	if(this.config.showAllImagesBeforeRestart) {
+	  this.addImageToShown(image.path)
+	}
   },
 
   // stop timer if it's running
