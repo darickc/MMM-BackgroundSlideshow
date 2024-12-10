@@ -184,22 +184,22 @@ Module.register('MMM-BackgroundSlideshow', {
       this.resume();
     }
   },
-  //Setup receiver for global notifications (other modules etc)
+  // Setup receiver for global notifications (other modules etc)
   // Use for example with MMM-Remote-Control API: https://github.com/Jopyth/MMM-Remote-Control/tree/master/API
   // to change image from buttons or curl:
   // curl http://[your ip address]:8080/api/notification/BACKGROUNDSLIDESHOW_PREV or NEXT
   // make sure to set address: "0.0.0.0", and secureEndpoints: false (or setup security according to readme!)
   notificationReceived (notification, payload, sender) {
-	  if (notification === "BACKGROUNDSLIDESHOW_NEXT") {
-      this.sendSocketNotification('BACKGROUNDSLIDESHOW_NEXT_IMAGE')
-    } else if (notification === 'BACKGROUNDSLIDESHOW_PREV'){
-      this.sendSocketNotification('BACKGROUNDSLIDESHOW_PREV_IMAGE')
-    } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE'){
-      this.sendSocketNotification('BACKGROUNDSLIDESHOW_PAUSE')
+	  if (notification === 'BACKGROUNDSLIDESHOW_NEXT') {
+      this.sendSocketNotification('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
+    } else if (notification === 'BACKGROUNDSLIDESHOW_PREV') {
+      this.sendSocketNotification('BACKGROUNDSLIDESHOW_PREV_IMAGE');
+    } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') {
+      this.sendSocketNotification('BACKGROUNDSLIDESHOW_PAUSE');
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') {
-      this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY')
+      this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY');
     }
-	},
+  },
   // the socket handler from node_helper.js
   socketNotificationReceived (notification, payload) {
     // if an update was received
