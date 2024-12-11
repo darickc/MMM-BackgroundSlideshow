@@ -126,7 +126,7 @@ module.exports = NodeHelper.create({
 		  return false;
   },
 	readEntireShownFile ( ) {
-	  const filepath = path.join(os.homedir(), '/filesShownTracker.txt')
+	  const filepath = 'modules/MMM-BackgroundSlideshow/filesShownTracker.txt';
 		try {
 			const filesShown = FileSystemImageSlideshow.readFileSync(filepath, 'utf8');
 			const listOfShownFiles = filesShown.split(/\r?\n/u).filter(line => line.trim() !== '');
@@ -140,7 +140,7 @@ module.exports = NodeHelper.create({
 	},
 	addImageToShown ( imgPath ) {
 	  self.alreadyShownSet.add(imgPath)
-	  const filePath = path.join(os.homedir(), '/filesShownTracker.txt')
+	  const filePath = 'modules/MMM-BackgroundSlideshow/filesShownTracker.txt';
 		if (!FileSystemImageSlideshow.existsSync(filePath)) {
 			FileSystemImageSlideshow.writeFileSync(filePath, imgPath + '\n', { flag: 'wx' });
 		} else {
@@ -149,7 +149,7 @@ module.exports = NodeHelper.create({
 	},
   resetShownImagesFile(){
     try {
-      FileSystemImageSlideshow.writeFileSync(path.join(os.homedir(), '/filesShownTracker.txt'), '', 'utf8');
+      FileSystemImageSlideshow.writeFileSync('modules/MMM-BackgroundSlideshow/filesShownTracker.txt', '', 'utf8');
     } catch (err) {
       console.error('Error writing empty filesShownTracker.txt', err);
     }
