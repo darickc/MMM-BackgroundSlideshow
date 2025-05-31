@@ -22,7 +22,7 @@ Module.register('MMM-BackgroundSlideshow', {
     slideshowSpeed: 10 * 1000,
     // if true randomize image order, otherwise use sortImagesBy and sortImagesDescending
     randomizeImageOrder: false,
-	//keeps track of shown images to make sure you have seen them all before an image is shown twice.
+    //keeps track of shown images to make sure you have seen them all before an image is shown twice.
     showAllImagesBeforeRestart: false,
     // how to sort images: name, random, created, modified
     sortImagesBy: 'created',
@@ -103,9 +103,8 @@ Module.register('MMM-BackgroundSlideshow', {
     // remove the file extension from image name
     imageInfoNoFileExt: false,
   },
-
   // load function
-  start () {
+  start() {
     // add identifier to the config
     this.config.identifier = this.identifier;
     // ensure file extensions are lower case
@@ -150,21 +149,22 @@ Module.register('MMM-BackgroundSlideshow', {
     this.browserSupportsExifOrientationNatively = CSS.supports('image-orientation: from-image');
 
     this.playingVideo = false;
+
   },
 
-  getScripts () {
+  getScripts() {
     return [
       `modules/${this.name}/node_modules/exif-js/exif.js`,
       'moment.js'
     ];
   },
 
-  getStyles () {
+  getStyles() {
     // the css contains the make grayscale code
     return ['BackgroundSlideshow.css'];
   },
 
-  getTranslations () {
+  getTranslations() {
     return {
       en: 'translations/en.json',
       fr: 'translations/fr.json',
@@ -172,7 +172,7 @@ Module.register('MMM-BackgroundSlideshow', {
     };
   },
 
-  updateImageListWithArray (urls) {
+  updateImageListWithArray(urls) {
     this.imageList = urls.splice(0);
     this.imageIndex = 0;
     this.updateImage();
@@ -189,8 +189,8 @@ Module.register('MMM-BackgroundSlideshow', {
   // to change image from buttons or curl:
   // curl http://[your ip address]:8080/api/notification/BACKGROUNDSLIDESHOW_PREV or NEXT
   // make sure to set address: "0.0.0.0", and secureEndpoints: false (or setup security according to readme!)
-  notificationReceived (notification, payload, sender) {
-	  if (notification === 'BACKGROUNDSLIDESHOW_NEXT') {
+  notificationReceived(notification, payload, sender) {
+    if (notification === 'BACKGROUNDSLIDESHOW_NEXT') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
     } else if (notification === 'BACKGROUNDSLIDESHOW_PREV') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PREV_IMAGE');
@@ -201,27 +201,11 @@ Module.register('MMM-BackgroundSlideshow', {
     }
   },
   // the socket handler from node_helper.js
-  socketNotificationReceived (notification, payload) {
+  socketNotificationReceived(notification, payload) {
     // if an update was received
 
     // check this is for this module based on the woeid
     if (notification === 'BACKGROUNDSLIDESHOW_READY') {
-      // // Log.info('Returning Images, payload:' + JSON.stringify(payload));
-      // // set the image list
-      // if (this.savedImages) {
-      //   this.savedImages = payload.imageList;
-      //   this.savedIndex = 0;
-      // } else {
-      //   this.imageList = payload.imageList;
-      //   // if image list actually contains images
-      //   // set loaded flag to true and update dom
-      //   if (this.imageList.length > 0) {
-      //     this.updateImage(); //Added to show the image at least once, but not change it within this.resume()
-      //     if (!this.playingVideo) {
-      //       this.resume();
-      //     }
-      //   }
-      // }
       if (payload.identifier === this.identifier) {
         if (!this.playingVideo) {
           this.resume();
@@ -315,13 +299,25 @@ Module.register('MMM-BackgroundSlideshow', {
           this.resume();
         }
       }
+    } else if (notification === 'IMAGE_GEO_RESULT') {
+      Log.info(`Geo response received: ${payload.location} (lat: ${payload.lat}, lon: ${payload.lon})`);
+      if (payload.error) {
+        reject(new Error(payload.error));
+      } else {
+        this.updatePictureGeoLocation(payload.lat, payload.lon, payload.location)
+      }
+      
+
+
+        
+      
     } else {
       // Log.log(this.name + " received a system notification: " + notification);
     }
   },
 
   // Override dom generator.
-  getDom () {
+  getDom() {
     const wrapper = document.createElement('div');
     this.imagesDiv = document.createElement('div');
     this.imagesDiv.className = 'images';
@@ -329,14 +325,14 @@ Module.register('MMM-BackgroundSlideshow', {
 
     if (
       this.config.gradientDirection === 'vertical' ||
-        this.config.gradientDirection === 'both'
+      this.config.gradientDirection === 'both'
     ) {
       this.createGradientDiv('bottom', this.config.gradient, wrapper);
     }
 
     if (
       this.config.gradientDirection === 'horizontal' ||
-        this.config.gradientDirection === 'both'
+      this.config.gradientDirection === 'both'
     ) {
       this.createGradientDiv('right', this.config.horizontalGradient, wrapper);
     }
@@ -368,7 +364,7 @@ Module.register('MMM-BackgroundSlideshow', {
     return wrapper;
   },
 
-  createGradientDiv (direction, gradient, wrapper) {
+  createGradientDiv(direction, gradient, wrapper) {
     const div = document.createElement('div');
     div.style.backgroundImage =
       `linear-gradient( to ${direction}, ${gradient.join()})`;
@@ -376,7 +372,7 @@ Module.register('MMM-BackgroundSlideshow', {
     wrapper.appendChild(div);
   },
 
-  createRadialGradientDiv (type, gradient, wrapper) {
+  createRadialGradientDiv(type, gradient, wrapper) {
     const div = document.createElement('div');
     div.style.backgroundImage =
       `radial-gradient( ${type}, ${gradient.join()})`;
@@ -384,7 +380,7 @@ Module.register('MMM-BackgroundSlideshow', {
     wrapper.appendChild(div);
   },
 
-  createDiv () {
+  createDiv() {
     const div = document.createElement('div');
     div.style.backgroundSize = this.config.backgroundSize;
     div.style.backgroundPosition = this.config.backgroundPosition;
@@ -392,14 +388,40 @@ Module.register('MMM-BackgroundSlideshow', {
     return div;
   },
 
-  createImageInfoDiv (wrapper) {
+  createImageInfoDiv(wrapper) {
     const div = document.createElement('div');
     div.className = `info ${this.config.imageInfoLocation}`;
     wrapper.appendChild(div);
     return div;
   },
 
-  createProgressbarDiv (wrapper, slideshowSpeed) {
+  async createImageInfo(imageinfo, image) {
+    EXIF.getData(image, () => {
+      if (this.config.showImageInfo) {
+        let dateTime = EXIF.getTag(image, 'DateTimeOriginal');
+        // attempt to parse the date if possible
+        if (dateTime !== null) {
+          try {
+            dateTime = moment(dateTime, 'YYYY:MM:DD HH:mm:ss');
+            dateTime = dateTime.format('dddd MMMM D, YYYY HH:mm');
+          } catch (e) {
+            Log.log(`Failed to parse dateTime: ${dateTime
+              } to format YYYY:MM:DD HH:mm:ss`);
+            dateTime = '';
+          }
+        }
+        imageinfo.image = image
+        this.updateImageInfo(imageinfo, dateTime);
+      }
+
+      if (!this.browserSupportsExifOrientationNatively) {
+        const exifOrientation = EXIF.getTag(image, 'Orientation');
+        imageDiv.style.transform = this.getImageTransformCss(exifOrientation);
+      }
+    });
+  },
+
+  createProgressbarDiv(wrapper, slideshowSpeed) {
     const div = document.createElement('div');
     div.className = 'progress';
     const inner = document.createElement('div');
@@ -409,7 +431,7 @@ Module.register('MMM-BackgroundSlideshow', {
     div.appendChild(inner);
     wrapper.appendChild(div);
   },
-  displayImage (imageinfo) {
+  displayImage(imageinfo) {
     const mwLc = imageinfo.path.toLowerCase();
     if (mwLc.endsWith('.mp4') || mwLc.endsWith('.m4v')) {
       const payload = [imageinfo.path, 'PLAY'];
@@ -445,10 +467,9 @@ Module.register('MMM-BackgroundSlideshow', {
 
       const imageDiv = this.createDiv();
       imageDiv.style.backgroundImage = `url("${image.src}")`;
-      // imageDiv.style.transform = 'rotate(0deg)';
-
-      // this.div1.style.backgroundImage = `url("${image.src}")`;
-      // this.div1.style.opacity = '1';
+      imageDiv.style.backgroundSize = "contain";
+      imageDiv.style.backgroundRepeat = "no-repeat";
+      imageDiv.style.backgroundPosition = "center";
 
       if (this.config.showProgressBar) {
         // Restart css animation
@@ -461,7 +482,7 @@ Module.register('MMM-BackgroundSlideshow', {
       // Check to see if we need to animate the background
       if (
         this.config.backgroundAnimationEnabled &&
-          this.config.animations.length
+        this.config.animations.length
       ) {
         const randomNumber = Math.floor(Math.random() * this.config.animations.length);
         const animation = this.config.animations[randomNumber];
@@ -470,8 +491,8 @@ Module.register('MMM-BackgroundSlideshow', {
 
         if (animation === 'slide') {
           // check to see if the width of the picture is larger or the height
-          const {width} = image;
-          const {height} = image;
+          const { width } = image;
+          const { height } = image;
           const adjustedWidth = width * window.innerHeight / height;
           const adjustedHeight = height * window.innerWidth / width;
 
@@ -502,36 +523,7 @@ Module.register('MMM-BackgroundSlideshow', {
         }
       }
 
-      EXIF.getData(image, () => {
-        if (this.config.showImageInfo) {
-          let dateTime = EXIF.getTag(image, 'DateTimeOriginal');
-          // attempt to parse the date if possible
-          if (dateTime !== null) {
-            try {
-              dateTime = moment(dateTime, 'YYYY:MM:DD HH:mm:ss');
-              dateTime = dateTime.format('dddd MMMM D, YYYY HH:mm');
-            } catch (e) {
-              Log.log(`Failed to parse dateTime: ${
-                dateTime
-              } to format YYYY:MM:DD HH:mm:ss`);
-              dateTime = '';
-            }
-          }
-          // TODO: allow for location lookup via openMaps
-          // let lat = EXIF.getTag(this, "GPSLatitude");
-          // let lon = EXIF.getTag(this, "GPSLongitude");
-          // // Only display the location if we have both longitute and lattitude
-          // if (lat && lon) {
-          //   // Get small map of location
-          // }
-          this.updateImageInfo(imageinfo, dateTime);
-        }
-
-        if (!this.browserSupportsExifOrientationNatively) {
-          const exifOrientation = EXIF.getTag(image, 'Orientation');
-          imageDiv.style.transform = this.getImageTransformCss(exifOrientation);
-        }
-      });
+      this.createImageInfo(imageinfo, image)
       transitionDiv.appendChild(imageDiv);
       this.imagesDiv.appendChild(transitionDiv);
     };
@@ -542,7 +534,7 @@ Module.register('MMM-BackgroundSlideshow', {
     });
   },
 
-  updateImage (backToPreviousImage = false, imageToDisplay = null) {
+  updateImage(backToPreviousImage = false, imageToDisplay = null) {
     if (imageToDisplay) {
       this.displayImage({
         path: imageToDisplay,
@@ -577,7 +569,7 @@ Module.register('MMM-BackgroundSlideshow', {
     }
   },
 
-  getImageTransformCss (exifOrientation) {
+  getImageTransformCss(exifOrientation) {
     switch (exifOrientation) {
       case 2:
         return 'scaleX(-1)';
@@ -599,16 +591,25 @@ Module.register('MMM-BackgroundSlideshow', {
     }
   },
 
-  updateImageInfo (imageinfo, imageDate) {
+  gpsToDecimal(gpsData, ref) {
+    if (!gpsData || gpsData.length !== 3) return null;
+    const [degrees, minutes, seconds] = gpsData;
+    let decimal = degrees + minutes / 60 + seconds / 3600;
+    if (ref === 'S' || ref === 'W') {
+      decimal = -decimal;
+    }
+    return decimal;
+  },
+
+  updateImageInfo(imageinfo, imageDate) {
     const imageProps = [];
-    this.config.imageInfo.forEach((prop) => {
+    for (const prop of this.config.imageInfo) {
       switch (prop) {
         case 'date':
           if (imageDate && imageDate !== 'Invalid date') {
             imageProps.push(imageDate);
           }
           break;
-
         case 'name': // default is name
           // Only display last path component as image name if recurseSubDirectories is not set.
           let imageName = imageinfo.path.split('/').pop();
@@ -636,12 +637,35 @@ Module.register('MMM-BackgroundSlideshow', {
         case 'imagecount':
           imageProps.push(`${imageinfo.index} of ${imageinfo.total}`);
           break;
-        default:
-          Log.warn(`${prop
-          } is not a valid value for imageInfo.  Please check your configuration`);
-      }
-    });
+        case 'geo':
+          try {
+            const lat = EXIF.getTag(imageinfo.image, 'GPSLatitude');
+            const latRef = EXIF.getTag(imageinfo.image, 'GPSLatitudeRef');
+            const lon = EXIF.getTag(imageinfo.image, 'GPSLongitude');
+            const lonRef = EXIF.getTag(imageinfo.image, 'GPSLongitudeRef');
+            if (lat && latRef && lon && lonRef) {
+              const latitude = this.gpsToDecimal(lat, latRef).toFixed(3);
+              const longitude = this.gpsToDecimal(lon, lonRef).toFixed(3);
+              this.requestLocationForImage(latitude, longitude);
+              let location = `${latitude}, ${longitude}`;
+              if (!location || location === '') {
+                // fallback to lat/lon if location string is empty or undefined
+                location = `${latitude}, ${longitude}`;
+                imageProps.push(`${location}`);
+              }
+              imageProps.push(`${location}`);
+            }
+          } catch (error) {
+            Log.info(`Error fetching geo ${error.message}`);
+          }
 
+          break;
+        default:
+          Log.warn(`${prop} is not a valid value for imageInfo.  Please check your configuration`);
+      }
+    };
+
+    // Now all awaits finished, safe to update the DOM
     let innerHTML = `<header class="infoDivHeader">${this.translate('PICTURE_INFO')}</header>`;
     imageProps.forEach((val) => {
       innerHTML += `${val}<br/>`;
@@ -650,7 +674,25 @@ Module.register('MMM-BackgroundSlideshow', {
     this.imageInfoDiv.innerHTML = innerHTML;
   },
 
-  resume () {
+  updatePictureGeoLocation(lat, lon, location) {
+    try {
+      if (!location) return;
+
+      const currentText = this.imageInfoDiv.innerHTML;
+      const newText = currentText.replace(`${lat}, ${lon}`, location);
+
+      this.imageInfoDiv.innerHTML = newText;
+    } catch (err) {
+      Log.warn(`Geolocation update failed: ${err.message}`);
+    }
+  },
+
+  requestLocationForImage(lat, lon) {
+    const key = `${lat},${lon}`;
+    this.sendSocketNotification('IMAGE_GEO_REQUEST', { key, lat, lon });
+  },
+
+  resume() {
     // this.updateImage(); //Removed to prevent image change whenever MMM-Carousel changes slides
     this.suspend();
     const self = this;
@@ -660,7 +702,7 @@ Module.register('MMM-BackgroundSlideshow', {
     }
   },
 
-  updateImageList () {
+  updateImageList() {
     this.suspend();
     // Log.info('Getting Images');
     // ask helper function to get the image list
