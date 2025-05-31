@@ -306,11 +306,6 @@ Module.register('MMM-BackgroundSlideshow', {
       } else {
         this.updatePictureGeoLocation(payload.lat, payload.lon, payload.location)
       }
-      
-
-
-        
-      
     } else {
       // Log.log(this.name + " received a system notification: " + notification);
     }
