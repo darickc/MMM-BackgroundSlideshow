@@ -187,6 +187,14 @@ The following properties can be configured:
 			</td>
 		</tr>
     <tr>
+			<td><code>randomizeImagesLoopFolders</code></td>
+			<td>Boolean value, if true will randomize the order of all images and then create a filelist so that the images will ordered to show one image from each subfolder before next image index is shown. Subfolders with fewer images will loop so that all subfolders will get equal amount of time in the spotlight<br>
+				<br><b>Example:</b> <code>true</code>
+				<br><b>Default value:</b> <code>false</code>
+				<br>This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+    <tr>
 			<td><code>showAllImagesBeforeRestart</code></td>
 			<td>Boolean value, if true will keep track of all the allready shown files and not show them untill all images has been shown<br>
 				<br><b>Example:</b> <code>true</code>
