@@ -11,16 +11,13 @@
  * MIT Licensed.
  */
 
-// call in the required classes
+const FileSystemImageSlideshow = require('node:fs');
+const {exec} = require('node:child_process');
 const NodeHelper = require('node_helper');
-const FileSystemImageSlideshow = require('fs');
-const os = require('os');
-const {exec} = require('child_process');
 const express = require('express');
 const Log = require('../../js/logger.js');
 const basePath = '/images/';
 const sharp = require('sharp');
-const path = require('path');
 
 // the main module helper create
 module.exports = NodeHelper.create({
