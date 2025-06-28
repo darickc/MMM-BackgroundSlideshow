@@ -29,7 +29,7 @@
     "prettier": "^3.6.2"
   },
   "scripts": {
-    "lint": "prettier --check . && eslint .",
-    "lint:fix": "prettier --write . && eslint . --fix"
+    "lint": "prettier --check . && eslint",
+    "lint:fix": "prettier --write . && eslint --fix"
   }
 }
