@@ -1,4 +1,4 @@
-# Module: Background Slideshow
+# MMM-BackgroundSlideshow
 
 Show a slideshow of images in the background of [MagicMirror²](https://magicmirror.builders/). Great for a photo frame from instead of a mirror.
 
@@ -21,26 +21,22 @@ Extra configurations include setting the amount of time an image is shown for, s
 
 ## Using the module
 
-Use Git to download. Make sure Git is installed on your system. In the command line/terminal, go to the modules directory of the your MagicMirror install. run: `git clone https://github.com/darickc/MMM-BackgroundSlideshow`. The advantage of using Git is when there is an update, you can run `git pull` and it will pull down all the updates. MagicMirror can even let you know when there are updates.
+### Installation
 
-Or
-
-Download the zip file <https://github.com/darickc/MMM-BackgroundSlideshow/archive/master.zip>. Unzip contents into the modules directory of your MagicMirror install. Rename the 'MMM-BackgroundSlideshow-master' folder to 'MMM-BackgroundSlideshow'.
-
-Once downloaded, install dependencies:
+To install the module, clone the repository into the `~/MagicMirror/modules/` directory and install the dependencies:
 
 ```sh
-cd ~/MagicMirror/modules/MMM-BackgroundSlideshow
-```
-
-```sh
+cd ~/MagicMirror/modules/
+git clone https://github.com/darickc/MMM-BackgroundSlideshow
+cd MMM-BackgroundSlideshow
 npm install
 ```
+
+### Configuration
 
 Add the module to the modules array in the `config/config.js` file:
 
 ```javascript
-modules: [
   {
     module: 'MMM-BackgroundSlideshow',
     position: 'fullscreen_below',
@@ -49,11 +45,10 @@ modules: [
       transitionImages: true,
       randomizeImageOrder: true
     }
-  }
-];
+  },
 ```
 
-I also recommend adding the following to the custom.css to make the text a little brighter:
+I also recommend adding the following to the `custom.css` to make the text a little brighter:
 
 ```css
 .normal,
@@ -62,6 +57,16 @@ header,
 body {
   color: #fff;
 }
+```
+
+## Update
+
+To update the module, go to the module directory, pull the latest changes, and install any new dependencies:
+
+```sh
+cd ~/MagicMirror/modules/MMM-BackgroundSlideshow
+git pull
+npm install
 ```
 
 ## Notification options
@@ -417,10 +422,12 @@ The following properties can be configured:
     </tbody>
 </table>
 
-### How to manually exclude images from a folder:
-create a file called `excludeImages.txt` that you put in the same folder as the images you want to exclude (one for each directory!)
-add the filenames you want to exclude to the file, one filename per row.
-that's it!
+### How to manually exclude images from a folder
+
+Create a file called `excludeImages.txt` that you put in the same folder as the images you want to exclude (one for each directory!)
+
+Add the filenames you want to exclude to the file, one filename per row.
+That's it!
 
 ## Developer commands
 
