@@ -192,17 +192,17 @@ module.exports = NodeHelper.create({
   addImageToShown (imgPath) {
 	  self.alreadyShownSet.add(imgPath);
 	  const filePath = 'modules/MMM-BackgroundSlideshow/filesShownTracker.txt';
-    if (!FileSystemImageSlideshow.existsSync(filePath)) {
-      FileSystemImageSlideshow.writeFileSync(filePath, `${imgPath}\n`, {flag: 'wx'});
-    } else {
+    if (FileSystemImageSlideshow.existsSync(filePath)) {
       FileSystemImageSlideshow.appendFileSync(filePath, `${imgPath}\n`);
+    } else {
+      FileSystemImageSlideshow.writeFileSync(filePath, `${imgPath}\n`, {flag: 'wx'});
     }
   },
   resetShownImagesFile () {
     try {
       FileSystemImageSlideshow.writeFileSync('modules/MMM-BackgroundSlideshow/filesShownTracker.txt', '', 'utf8');
     } catch (err) {
-      console.error('Error writing empty filesShownTracker.txt', err);
+      Log.error('Error writing empty filesShownTracker.txt', err);
     }
   },
   // gathers the image list
@@ -241,7 +241,7 @@ module.exports = NodeHelper.create({
 
     this.imageList = finalImageList;
     Log.info(`BACKGROUNDSLIDESHOW: ${this.imageList.length} files found`);
-    Log.log(`BACKGROUNDSLIDESHOW: ${this.imageList.map(img => img.path + "\n")}`);
+    Log.log(`BACKGROUNDSLIDESHOW: ${this.imageList.map((img) => `${img.path}\n`)}`);
     this.index = 0;
 
     // let other modules know about slideshow images
@@ -442,7 +442,7 @@ module.exports = NodeHelper.create({
       Log.info(`cmd line: omxplayer --win 0,0,1920,1080 --alpha 180 ${payload[0]}`);
       exec(
         `omxplayer --win 0,0,1920,1080 --alpha 180 ${payload[0]}`,
-        (e, stdout, stderr) => {
+        () => {
           this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY', null);
           Log.info('mw video done');
         }

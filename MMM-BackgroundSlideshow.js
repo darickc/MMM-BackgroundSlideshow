@@ -191,7 +191,7 @@ Module.register('MMM-BackgroundSlideshow', {
   // to change image from buttons or curl:
   // curl http://[your ip address]:8080/api/notification/BACKGROUNDSLIDESHOW_PREV or NEXT
   // make sure to set address: "0.0.0.0", and secureEndpoints: false (or setup security according to readme!)
-  notificationReceived (notification, payload, sender) {
+  notificationReceived (notification) {
 	  if (notification === 'BACKGROUNDSLIDESHOW_NEXT') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
     } else if (notification === 'BACKGROUNDSLIDESHOW_PREV') {
