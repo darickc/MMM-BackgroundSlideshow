@@ -44,8 +44,8 @@ module.exports = NodeHelper.create({
     return array;
   },
   shuffleImagesLoopFolders (filePaths) {
-    Log.log('shuffleImagesLoopFolders = true!');
-    // Log.log(`filePaths: \n${filePaths.map(img => img.path + "\n")}`);
+    Log.log('[MMM-BackgroundSlideshow] shuffleImagesLoopFolders = true!');
+    Log.debug(`[MMM-BackgroundSlideshow] filePaths: \n${filePaths.map((img) => `${img.path}\n`)}`);
     const groupedByFolder = new Map();
     for (const imgobject of filePaths) {
       const parts = imgobject.path.split('/');
@@ -126,22 +126,21 @@ module.exports = NodeHelper.create({
     let sortedList;
     switch (sortBy) {
       case 'created':
-        // Log.log('Sorting by created date...');
+        Log.debug('[MMM-BackgroundSlideshow] Sorting by created date...');
         sortedList = imageList.sort(this.sortByCreated);
         break;
       case 'modified':
-        // Log.log('Sorting by modified date...');
+        Log.debug('[MMM-BackgroundSlideshow] Sorting by modified date...');
         sortedList = imageList.sort(this.sortByModified);
         break;
       default:
-        // sort by name
-        // Log.log('Sorting by name...');
+        Log.debug('[MMM-BackgroundSlideshow] Sorting by name...');
         sortedList = imageList.sort(this.sortByFilename);
     }
 
     // If the user chose to sort in descending order then reverse the array
     if (sortDescending === true) {
-      // Log.log('Reversing sort order...');
+      Log.debug('[MMM-BackgroundSlideshow] Reversing sort order...');
       sortedList = sortedList.reverse();
     }
 
@@ -162,7 +161,7 @@ module.exports = NodeHelper.create({
     try {
       const excludedFile = FileSystemImageSlideshow.readFileSync(`${currentDir}/excludeImages.txt`, 'utf8');
       const listOfExcludedFiles = excludedFile.split(/\r?\n/u);
-      Log.info(`found excluded images list: in dir: ${currentDir} containing: ${listOfExcludedFiles.length} files`);
+      Log.info(`[MMM-BackgroundSlideshow] Found excluded images list: in dir: ${currentDir} containing: ${listOfExcludedFiles.length} files`);
       return listOfExcludedFiles;
     } catch {
       Log.debug('[MMM-BackgroundSlideshow] No "excludeImages.txt" in current folder.');
@@ -171,7 +170,7 @@ module.exports = NodeHelper.create({
   },
   isExcluded (filename, excludedImagesList) {
     if (excludedImagesList.includes(filename.replace(/\.[a-zA-Z]{3,4}$/u, ''))) {
-      Log.info(`${filename} is excluded in excludedImages.txt!`);
+      Log.info(`[MMM-BackgroundSlideshow] ${filename} is excluded in excludedImages.txt!`);
       return true;
     }
     return false;
@@ -181,7 +180,7 @@ module.exports = NodeHelper.create({
     try {
       const filesShown = FileSystemImageSlideshow.readFileSync(filepath, 'utf8');
       const listOfShownFiles = filesShown.split(/\r?\n/u).filter((line) => line.trim() !== '');
-      Log.info(`found filesShownTracker: in path: ${filepath} containing: ${listOfShownFiles.length} files`);
+      Log.info(`[MMM-BackgroundSlideshow] Found filesShownTracker: in path: ${filepath} containing: ${listOfShownFiles.length} files`);
       return new Set(listOfShownFiles);
     } catch {
       Log.info(`[MMM-BackgroundSlideshow] Error reading filesShownTracker: in path: ${filepath}`);
@@ -201,7 +200,7 @@ module.exports = NodeHelper.create({
     try {
       FileSystemImageSlideshow.writeFileSync('modules/MMM-BackgroundSlideshow/filesShownTracker.txt', '', 'utf8');
     } catch (err) {
-      Log.error('Error writing empty filesShownTracker.txt', err);
+      Log.error('[MMM-BackgroundSlideshow] Error writing empty filesShownTracker.txt', err);
     }
   },
   // gathers the image list
@@ -224,7 +223,7 @@ module.exports = NodeHelper.create({
       ? this.imageList.filter((image) => !this.alreadyShownSet.has(image.path))
       : this.imageList;
 
-    Log.info(`skipped ${this.imageList.length - imageListToUse.length} files since allready seen!`);
+    Log.info(`[MMM-BackgroundSlideshow] Skipped ${this.imageList.length - imageListToUse.length} files since already seen!`);
     let finalImageList;
     if (config.randomizeImagesLoopFolders) {
       finalImageList = this.shuffleImagesLoopFolders(imageListToUse);
@@ -239,8 +238,8 @@ module.exports = NodeHelper.create({
     }
 
     this.imageList = finalImageList;
-    Log.info(`BACKGROUNDSLIDESHOW: ${this.imageList.length} files found`);
-    Log.log(`BACKGROUNDSLIDESHOW: ${this.imageList.map((img) => `${img.path}\n`)}`);
+    Log.info(`[MMM-BackgroundSlideshow] ${this.imageList.length} files found`);
+    Log.log(`[MMM-BackgroundSlideshow] ${this.imageList.map((img) => `${img.path}\n`)}`);
     this.index = 0;
 
     // let other modules know about slideshow images
@@ -277,7 +276,7 @@ module.exports = NodeHelper.create({
     }
 
     const image = this.imageList[this.index++];
-    Log.info(`BACKGROUNDSLIDESHOW: reading path "${image.path}"`);
+    Log.info(`[MMM-BackgroundSlideshow] Reading path "${image.path}"`);
     self = this;
     this.readFile(image.path, (data) => {
       const returnPayload = {
@@ -303,7 +302,7 @@ module.exports = NodeHelper.create({
   // stop timer if it's running
   stopTimer () {
     if (this.timer) {
-      Log.debug('BACKGROUNDSLIDESHOW: stopping update timer');
+      Log.debug('[MMM-BackgroundSlideshow] Stopping update timer');
       const it = this.timer;
       this.timer = null;
       clearTimeout(it);
@@ -312,7 +311,7 @@ module.exports = NodeHelper.create({
   // resume timer if it's not running; reset if it is
   startOrRestartTimer () {
     this.stopTimer();
-    Log.debug('BACKGROUNDSLIDESHOW: restarting update timer');
+    Log.debug('[MMM-BackgroundSlideshow] Restarting update timer');
     this.timer = setTimeout(() => {
       self.getNextImage();
     }, self.config?.slideshowSpeed || 10000);
@@ -330,7 +329,7 @@ module.exports = NodeHelper.create({
     this.getNextImage();
   },
   resizeImage (input, callback) {
-    Log.log(`resizing image to max: ${this.config.maxWidth}x${this.config.maxHeight}`);
+    Log.log(`[MMM-BackgroundSlideshow] Resizing image to max: ${this.config.maxWidth}x${this.config.maxHeight}`);
     const transformer = sharp()
       .rotate()
       .resize({
@@ -352,10 +351,10 @@ module.exports = NodeHelper.create({
       .on('end', () => {
         const buffer = Buffer.concat(outputStream);
         callback(`data:image/jpg;base64, ${buffer.toString('base64')}`);
-        Log.log('resizing done!');
+        Log.log('[MMM-BackgroundSlideshow] Resizing done!');
       })
       .on('error', (err) => {
-        Log.error('Error resizing image:', err);
+        Log.error('[MMM-BackgroundSlideshow] Error resizing image:', err);
       });
   },
 
@@ -365,7 +364,7 @@ module.exports = NodeHelper.create({
     if (this.config.resizeImages) {
       this.resizeImage(filepath, callback);
     } else {
-      Log.log('resizeImages: false');
+      Log.log('[MMM-BackgroundSlideshow] ResizeImages: false');
       // const data = FileSystemImageSlideshow.readFileSync(filepath, { encoding: 'base64' });
       // callback(`data:image/${ext};base64, ${data}`);
       const chunks = [];
@@ -378,17 +377,17 @@ module.exports = NodeHelper.create({
           callback(`data:image/${ext.slice(1)};base64, ${buffer.toString('base64')}`);
         })
         .on('error', (err) => {
-          Log.error('Error reading file:', err);
+          Log.error('[MMM-BackgroundSlideshow] Error reading file:', err);
         })
         .on('close', () => {
-          Log.log('Stream closed.');
+          Log.log('[MMM-BackgroundSlideshow] Stream closed.');
         });
     }
   },
 
   getFiles (imagePath, imageList, excludedImagesList, config) {
     const contents = FileSystemImageSlideshow.readdirSync(imagePath);
-    Log.info(`BACKGROUNDSLIDESHOW: Reading directory "${imagePath}" for images, found ${contents.length} files and directories`);
+    Log.info(`[MMM-BackgroundSlideshow] Reading directory "${imagePath}" for images, found ${contents.length} files and directories`);
     for (let i = 0; i < contents.length; i++) {
       if (this.excludePaths.has(contents[i])) {
         continue;
@@ -437,20 +436,20 @@ module.exports = NodeHelper.create({
         this.getNextImage();
       }, 200);
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY_VIDEO') {
-      Log.info('mw got BACKGROUNDSLIDESHOW_PLAY_VIDEO');
-      Log.info(`cmd line: omxplayer --win 0,0,1920,1080 --alpha 180 ${payload[0]}`);
+      Log.info('[MMM-BackgroundSlideshow] mw got BACKGROUNDSLIDESHOW_PLAY_VIDEO');
+      Log.info(`[MMM-BackgroundSlideshow] cmd line: omxplayer --win 0,0,1920,1080 --alpha 180 ${payload[0]}`);
       exec(
         `omxplayer --win 0,0,1920,1080 --alpha 180 ${payload[0]}`,
         () => {
           this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY', null);
-          Log.info('mw video done');
+          Log.info('[MMM-BackgroundSlideshow] mw video done');
         }
       );
     } else if (notification === 'BACKGROUNDSLIDESHOW_NEXT_IMAGE') {
-      Log.info('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
+      Log.debug('[MMM-BackgroundSlideshow] BACKGROUNDSLIDESHOW_NEXT_IMAGE');
       this.getNextImage();
     } else if (notification === 'BACKGROUNDSLIDESHOW_PREV_IMAGE') {
-      Log.info('BACKGROUNDSLIDESHOW_PREV_IMAGE');
+      Log.debug('[MMM-BackgroundSlideshow] BACKGROUNDSLIDESHOW_PREV_IMAGE');
       this.getPrevImage();
     } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') {
       this.stopTimer();

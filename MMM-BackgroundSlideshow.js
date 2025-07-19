@@ -123,7 +123,7 @@ Module.register('MMM-BackgroundSlideshow', {
     if (
       this.config.showImageInfo && !imageInfoRegex.test(this.config.imageInfo)
     ) {
-      Log.warn('MMM-BackgroundSlideshow: showImageInfo is set, but imageInfo does not have a valid value.');
+      Log.warn('[MMM-BackgroundSlideshow] showImageInfo is set, but imageInfo does not have a valid value.');
       // Use name as the default
       this.config.imageInfo = ['name'];
     } else {
@@ -208,7 +208,7 @@ Module.register('MMM-BackgroundSlideshow', {
 
     // check this is for this module based on the woeid
     if (notification === 'BACKGROUNDSLIDESHOW_READY') {
-      // // Log.info('Returning Images, payload:' + JSON.stringify(payload));
+      // // Log.info('[MMM-BackgroundSlideshow] Returning Images, payload:' + JSON.stringify(payload));
       // // set the image list
       // if (this.savedImages) {
       //   this.savedImages = payload.imageList;
@@ -252,7 +252,7 @@ Module.register('MMM-BackgroundSlideshow', {
       this.updateImageList();
       this.updateImage();
     } else if (notification === 'BACKGROUNDSLIDESHOW_IMAGE_UPDATE') {
-      Log.log('MMM-BackgroundSlideshow: Changing Background');
+      Log.log('[MMM-BackgroundSlideshow] Changing Background');
       this.suspend();
       this.updateImage();
       if (!this.playingVideo) {
@@ -289,7 +289,7 @@ Module.register('MMM-BackgroundSlideshow', {
         this.updateImage(false, payload.url);
       }
     } else if (notification === 'BACKGROUNDSLIDESHOW_URLS') {
-      Log.log(`Notification Received: BACKGROUNDSLIDESHOW_URLS. Payload: ${JSON.stringify(payload)}`);
+      Log.log(`[MMM-BackgroundSlideshow] Notification Received: BACKGROUNDSLIDESHOW_URLS. Payload: ${JSON.stringify(payload)}`);
       if (payload && payload.urls && payload.urls.length) {
         // check if image list has been saved. If not, this is the first time the notification is received
         // save the image list and index.
@@ -317,8 +317,6 @@ Module.register('MMM-BackgroundSlideshow', {
           this.resume();
         }
       }
-    } else {
-      // Log.log(this.name + " received a system notification: " + notification);
     }
   },
 
@@ -358,7 +356,7 @@ Module.register('MMM-BackgroundSlideshow', {
     }
 
     if (this.config.imagePaths.length === 0) {
-      Log.error('MMM-BackgroundSlideshow: Missing required parameter imagePaths.');
+      Log.error('[MMM-BackgroundSlideshow] Missing required parameter imagePaths.');
     } else {
       // create an empty image list
       this.imageList = [];
@@ -513,7 +511,7 @@ Module.register('MMM-BackgroundSlideshow', {
               dateTime = moment(dateTime, 'YYYY:MM:DD HH:mm:ss');
               dateTime = dateTime.format('dddd MMMM D, YYYY HH:mm');
             } catch {
-              Log.log(`Failed to parse dateTime: ${
+              Log.log(`[MMM-BackgroundSlideshow] Failed to parse dateTime: ${
                 dateTime
               } to format YYYY:MM:DD HH:mm:ss`);
               dateTime = '';
@@ -639,7 +637,7 @@ Module.register('MMM-BackgroundSlideshow', {
           imageProps.push(`${imageinfo.index} of ${imageinfo.total}`);
           break;
         default:
-          Log.warn(`${prop
+          Log.warn(`[MMM-BackgroundSlideshow] ${prop
           } is not a valid value for imageInfo.  Please check your configuration`);
       }
     });
@@ -664,7 +662,7 @@ Module.register('MMM-BackgroundSlideshow', {
 
   updateImageList () {
     this.suspend();
-    // Log.info('Getting Images');
+    Log.debug('[MMM-BackgroundSlideshow] Getting images');
     // ask helper function to get the image list
     this.sendSocketNotification(
       'BACKGROUNDSLIDESHOW_REGISTER_CONFIG',
