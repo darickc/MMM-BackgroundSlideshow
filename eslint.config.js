@@ -17,18 +17,19 @@ const config = [
       }
     },
     plugins: {
-      ...eslintPluginStylistic.configs['all-flat'].plugins,
+      ...eslintPluginStylistic.configs.all.plugins,
       import: eslintPluginImport
     },
     rules: {
       ...eslintConfigs.all.rules,
       ...eslintPluginImport.configs.recommended.rules,
-      ...eslintPluginStylistic.configs['all-flat'].rules,
+      ...eslintPluginStylistic.configs.all.rules,
       'capitalized-comments': 'off',
       complexity: ['error', 35],
       'consistent-this': 'off',
       curly: 'off',
       'id-length': 'off',
+      'init-declarations': 'off',
       'line-comment-position': 'off',
       'max-lines': 'off',
       'max-lines-per-function': ['error', 150],
@@ -38,6 +39,7 @@ const config = [
       'no-case-declarations': 'off',
       'no-continue': 'off',
       'no-global-assign': 'warn',
+      'no-implicit-globals': 'warn',
       'no-inline-comments': 'off',
       'no-lonely-if': 'off',
       'no-magic-numbers': 'off',
@@ -53,6 +55,7 @@ const config = [
       '@stylistic/function-call-argument-newline': ['error', 'consistent'],
       '@stylistic/dot-location': ['error', 'property'],
       '@stylistic/indent': ['error', 2],
+      '@stylistic/multiline-comment-style': 'off',
       '@stylistic/quote-props': ['error', 'as-needed'],
       '@stylistic/quotes': ['error', 'single'],
       '@stylistic/padded-blocks': ['error', 'never']
@@ -67,11 +70,11 @@ const config = [
       sourceType: 'module'
     },
     plugins: {
-      ...eslintPluginStylistic.configs['all-flat'].plugins
+      ...eslintPluginStylistic.configs.all.plugins
     },
     rules: {
       ...eslintConfigs.all.rules,
-      ...eslintPluginStylistic.configs['all-flat'].rules,
+      ...eslintPluginStylistic.configs.all.rules,
       'func-style': 'off',
       'max-lines-per-function': ['error', 100],
       'no-magic-numbers': 'off',
@@ -80,22 +83,5 @@ const config = [
     }
   }
 ];
-
-/*
- * Set debug to true for testing purposes.
- * Since some plugins have not yet been optimized for the flat config,
- * we will be able to optimize this file in the future. It can be helpful
- * to write the ESLint config to a file and compare it after changes.
- */
-const debug = false;
-
-if (debug === true) {
-  const FileSystem = require('fs');
-  FileSystem.writeFile('eslint-config-DEBUG.json', JSON.stringify(config, null, 2), (error) => {
-    if (error) {
-      throw error;
-    }
-  });
-}
 
 module.exports = config;

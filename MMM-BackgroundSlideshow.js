@@ -192,7 +192,7 @@ Module.register('MMM-BackgroundSlideshow', {
   // curl http://[your ip address]:8080/api/notification/BACKGROUNDSLIDESHOW_PREV or NEXT
   // make sure to set address: "0.0.0.0", and secureEndpoints: false (or setup security according to readme!)
   notificationReceived (notification) {
-	  if (notification === 'BACKGROUNDSLIDESHOW_NEXT') {
+    if (notification === 'BACKGROUNDSLIDESHOW_NEXT') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
     } else if (notification === 'BACKGROUNDSLIDESHOW_PREV') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PREV_IMAGE');
@@ -331,14 +331,14 @@ Module.register('MMM-BackgroundSlideshow', {
 
     if (
       this.config.gradientDirection === 'vertical' ||
-        this.config.gradientDirection === 'both'
+      this.config.gradientDirection === 'both'
     ) {
       this.createGradientDiv('bottom', this.config.gradient, wrapper);
     }
 
     if (
       this.config.gradientDirection === 'horizontal' ||
-        this.config.gradientDirection === 'both'
+      this.config.gradientDirection === 'both'
     ) {
       this.createGradientDiv('right', this.config.horizontalGradient, wrapper);
     }
@@ -463,7 +463,7 @@ Module.register('MMM-BackgroundSlideshow', {
       // Check to see if we need to animate the background
       if (
         this.config.backgroundAnimationEnabled &&
-          this.config.animations.length
+        this.config.animations.length
       ) {
         const randomNumber = Math.floor(Math.random() * this.config.animations.length);
         const animation = this.config.animations[randomNumber];
@@ -512,7 +512,7 @@ Module.register('MMM-BackgroundSlideshow', {
             try {
               dateTime = moment(dateTime, 'YYYY:MM:DD HH:mm:ss');
               dateTime = dateTime.format('dddd MMMM D, YYYY HH:mm');
-            } catch (e) {
+            } catch {
               Log.log(`Failed to parse dateTime: ${
                 dateTime
               } to format YYYY:MM:DD HH:mm:ss`);

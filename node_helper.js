@@ -123,7 +123,7 @@ module.exports = NodeHelper.create({
   },
 
   sortImageList (imageList, sortBy, sortDescending) {
-    let sortedList = imageList;
+    let sortedList;
     switch (sortBy) {
       case 'created':
         // Log.log('Sorting by created date...');
@@ -160,38 +160,37 @@ module.exports = NodeHelper.create({
   },
   excludedFiles (currentDir) {
     try {
-	  const excludedFile = FileSystemImageSlideshow.readFileSync(`${currentDir}/excludeImages.txt`, 'utf8');
-	  const listOfExcludedFiles = excludedFile.split(/\r?\n/u);
-	  Log.info(`found excluded images list: in dir: ${currentDir} containing: ${listOfExcludedFiles.length} files`);
-	  return listOfExcludedFiles;
-    } catch (err) {
-	  // no excludeImages.txt in current folder
-	  return [];
+      const excludedFile = FileSystemImageSlideshow.readFileSync(`${currentDir}/excludeImages.txt`, 'utf8');
+      const listOfExcludedFiles = excludedFile.split(/\r?\n/u);
+      Log.info(`found excluded images list: in dir: ${currentDir} containing: ${listOfExcludedFiles.length} files`);
+      return listOfExcludedFiles;
+    } catch {
+      Log.debug('[MMM-BackgroundSlideshow] No "excludeImages.txt" in current folder.');
+      return [];
     }
   },
   isExcluded (filename, excludedImagesList) {
-	  if (excludedImagesList.includes(filename.replace(/\.[a-zA-Z]{3,4}$/u, ''))) {
-		  Log.info(`${filename} is excluded in excludedImages.txt!`);
-		  return true;
-	  }
-		  return false;
+    if (excludedImagesList.includes(filename.replace(/\.[a-zA-Z]{3,4}$/u, ''))) {
+      Log.info(`${filename} is excluded in excludedImages.txt!`);
+      return true;
+    }
+    return false;
   },
   readEntireShownFile () {
-	  const filepath = 'modules/MMM-BackgroundSlideshow/filesShownTracker.txt';
+    const filepath = 'modules/MMM-BackgroundSlideshow/filesShownTracker.txt';
     try {
       const filesShown = FileSystemImageSlideshow.readFileSync(filepath, 'utf8');
       const listOfShownFiles = filesShown.split(/\r?\n/u).filter((line) => line.trim() !== '');
       Log.info(`found filesShownTracker: in path: ${filepath} containing: ${listOfShownFiles.length} files`);
       return new Set(listOfShownFiles);
-    } catch (err) {
-      Log.info(`error reading filesShownTracker: in path: ${filepath}`);
-      // no excludeImages.txt in current folder
+    } catch {
+      Log.info(`[MMM-BackgroundSlideshow] Error reading filesShownTracker: in path: ${filepath}`);
       return new Set();
     }
   },
   addImageToShown (imgPath) {
-	  self.alreadyShownSet.add(imgPath);
-	  const filePath = 'modules/MMM-BackgroundSlideshow/filesShownTracker.txt';
+    self.alreadyShownSet.add(imgPath);
+    const filePath = 'modules/MMM-BackgroundSlideshow/filesShownTracker.txt';
     if (FileSystemImageSlideshow.existsSync(filePath)) {
       FileSystemImageSlideshow.appendFileSync(filePath, `${imgPath}\n`);
     } else {
@@ -218,25 +217,25 @@ module.exports = NodeHelper.create({
       this.alreadyShownSet = this.readEntireShownFile();
     }
     for (let i = 0; i < config.imagePaths.length; i++) {
-	  const excludedImagesList = this.excludedFiles(config.imagePaths[i]);
+      const excludedImagesList = this.excludedFiles(config.imagePaths[i]);
       this.getFiles(config.imagePaths[i], this.imageList, excludedImagesList, config);
     }
     const imageListToUse = config.showAllImagesBeforeRestart
-	  ? this.imageList.filter((image) => !this.alreadyShownSet.has(image.path))
+      ? this.imageList.filter((image) => !this.alreadyShownSet.has(image.path))
       : this.imageList;
 
     Log.info(`skipped ${this.imageList.length - imageListToUse.length} files since allready seen!`);
-    let finalImageList = [];
+    let finalImageList;
     if (config.randomizeImagesLoopFolders) {
-	  finalImageList = this.shuffleImagesLoopFolders(imageListToUse);
+      finalImageList = this.shuffleImagesLoopFolders(imageListToUse);
     } else if (config.randomizeImageOrder) {
-	  finalImageList = this.shuffleArray(imageListToUse);
+      finalImageList = this.shuffleArray(imageListToUse);
     } else {
-	  finalImageList = this.sortImageList(
-		  imageListToUse,
-		  config.sortImagesBy,
-		  config.sortImagesDescending
-	  );
+      finalImageList = this.sortImageList(
+        imageListToUse,
+        config.sortImagesBy,
+        config.sortImagesDescending
+      );
     }
 
     this.imageList = finalImageList;
@@ -296,8 +295,8 @@ module.exports = NodeHelper.create({
 
     // (re)set the update timer
     this.startOrRestartTimer();
-  	if (this.config.showAllImagesBeforeRestart) {
-	  this.addImageToShown(image.path);
+    if (this.config.showAllImagesBeforeRestart) {
+      this.addImageToShown(image.path);
     }
   },
 
