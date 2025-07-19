@@ -78,7 +78,7 @@ module.exports = NodeHelper.create({
       if (pickableFolders[0] === lastPickedFolder) {
         // simply swap first/last if lastpickedfolder happened to be first
         [pickableFolders[0], pickableFolders[pickableFolders.length - 1]] =
-					[pickableFolders[pickableFolders.length - 1], pickableFolders[0]];
+          [pickableFolders[pickableFolders.length - 1], pickableFolders[0]];
       }
       for (const nextFolder of pickableFolders) {
         const imagePointer = pointers.get(nextFolder);
