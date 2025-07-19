@@ -15,16 +15,20 @@
     "name": "darickc",
     "url": "https://github.com/darickc"
   },
+  "main": "MMM-BackgroundSlideshow.js",
+  "type": "commonjs",
   "license": "MIT",
   "dependencies": {
     "exif-js": "^2.3.0",
     "sharp": "^0.34.3"
   },
   "devDependencies": {
+    "@eslint/css": "^0.10.0",
     "@eslint/js": "^9.31.0",
+    "@eslint/markdown": "^7.0.0",
     "@stylistic/eslint-plugin": "^5.1.0",
     "eslint": "^9.31.0",
-    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-import-x": "^4.16.1",
     "globals": "^16.3.0",
     "prettier": "^3.6.2"
   },
