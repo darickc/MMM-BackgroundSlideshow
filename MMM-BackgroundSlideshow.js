@@ -123,7 +123,7 @@ Module.register('MMM-BackgroundSlideshow', {
     if (
       this.config.showImageInfo && !imageInfoRegex.test(this.config.imageInfo)
     ) {
-      Log.warn('MMM-BackgroundSlideshow: showImageInfo is set, but imageInfo does not have a valid value.');
+      Log.warn('[MMM-BackgroundSlideshow] showImageInfo is set, but imageInfo does not have a valid value.');
       // Use name as the default
       this.config.imageInfo = ['name'];
     } else {
@@ -191,8 +191,8 @@ Module.register('MMM-BackgroundSlideshow', {
   // to change image from buttons or curl:
   // curl http://[your ip address]:8080/api/notification/BACKGROUNDSLIDESHOW_PREV or NEXT
   // make sure to set address: "0.0.0.0", and secureEndpoints: false (or setup security according to readme!)
-  notificationReceived (notification, payload, sender) {
-	  if (notification === 'BACKGROUNDSLIDESHOW_NEXT') {
+  notificationReceived (notification) {
+    if (notification === 'BACKGROUNDSLIDESHOW_NEXT') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
     } else if (notification === 'BACKGROUNDSLIDESHOW_PREV') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PREV_IMAGE');
@@ -208,7 +208,7 @@ Module.register('MMM-BackgroundSlideshow', {
 
     // check this is for this module based on the woeid
     if (notification === 'BACKGROUNDSLIDESHOW_READY') {
-      // // Log.info('Returning Images, payload:' + JSON.stringify(payload));
+      // // Log.info('[MMM-BackgroundSlideshow] Returning Images, payload:' + JSON.stringify(payload));
       // // set the image list
       // if (this.savedImages) {
       //   this.savedImages = payload.imageList;
@@ -252,7 +252,7 @@ Module.register('MMM-BackgroundSlideshow', {
       this.updateImageList();
       this.updateImage();
     } else if (notification === 'BACKGROUNDSLIDESHOW_IMAGE_UPDATE') {
-      Log.log('MMM-BackgroundSlideshow: Changing Background');
+      Log.log('[MMM-BackgroundSlideshow] Changing Background');
       this.suspend();
       this.updateImage();
       if (!this.playingVideo) {
@@ -289,7 +289,7 @@ Module.register('MMM-BackgroundSlideshow', {
         this.updateImage(false, payload.url);
       }
     } else if (notification === 'BACKGROUNDSLIDESHOW_URLS') {
-      Log.log(`Notification Received: BACKGROUNDSLIDESHOW_URLS. Payload: ${JSON.stringify(payload)}`);
+      Log.log(`[MMM-BackgroundSlideshow] Notification Received: BACKGROUNDSLIDESHOW_URLS. Payload: ${JSON.stringify(payload)}`);
       if (payload && payload.urls && payload.urls.length) {
         // check if image list has been saved. If not, this is the first time the notification is received
         // save the image list and index.
@@ -317,8 +317,6 @@ Module.register('MMM-BackgroundSlideshow', {
           this.resume();
         }
       }
-    } else {
-      // Log.log(this.name + " received a system notification: " + notification);
     }
   },
 
@@ -331,14 +329,14 @@ Module.register('MMM-BackgroundSlideshow', {
 
     if (
       this.config.gradientDirection === 'vertical' ||
-        this.config.gradientDirection === 'both'
+      this.config.gradientDirection === 'both'
     ) {
       this.createGradientDiv('bottom', this.config.gradient, wrapper);
     }
 
     if (
       this.config.gradientDirection === 'horizontal' ||
-        this.config.gradientDirection === 'both'
+      this.config.gradientDirection === 'both'
     ) {
       this.createGradientDiv('right', this.config.horizontalGradient, wrapper);
     }
@@ -358,7 +356,7 @@ Module.register('MMM-BackgroundSlideshow', {
     }
 
     if (this.config.imagePaths.length === 0) {
-      Log.error('MMM-BackgroundSlideshow: Missing required parameter imagePaths.');
+      Log.error('[MMM-BackgroundSlideshow] Missing required parameter imagePaths.');
     } else {
       // create an empty image list
       this.imageList = [];
@@ -463,7 +461,7 @@ Module.register('MMM-BackgroundSlideshow', {
       // Check to see if we need to animate the background
       if (
         this.config.backgroundAnimationEnabled &&
-          this.config.animations.length
+        this.config.animations.length
       ) {
         const randomNumber = Math.floor(Math.random() * this.config.animations.length);
         const animation = this.config.animations[randomNumber];
@@ -512,8 +510,8 @@ Module.register('MMM-BackgroundSlideshow', {
             try {
               dateTime = moment(dateTime, 'YYYY:MM:DD HH:mm:ss');
               dateTime = dateTime.format('dddd MMMM D, YYYY HH:mm');
-            } catch (e) {
-              Log.log(`Failed to parse dateTime: ${
+            } catch {
+              Log.log(`[MMM-BackgroundSlideshow] Failed to parse dateTime: ${
                 dateTime
               } to format YYYY:MM:DD HH:mm:ss`);
               dateTime = '';
@@ -639,7 +637,7 @@ Module.register('MMM-BackgroundSlideshow', {
           imageProps.push(`${imageinfo.index} of ${imageinfo.total}`);
           break;
         default:
-          Log.warn(`${prop
+          Log.warn(`[MMM-BackgroundSlideshow] ${prop
           } is not a valid value for imageInfo.  Please check your configuration`);
       }
     });
@@ -664,7 +662,7 @@ Module.register('MMM-BackgroundSlideshow', {
 
   updateImageList () {
     this.suspend();
-    // Log.info('Getting Images');
+    Log.debug('[MMM-BackgroundSlideshow] Getting images');
     // ask helper function to get the image list
     this.sendSocketNotification(
       'BACKGROUNDSLIDESHOW_REGISTER_CONFIG',
