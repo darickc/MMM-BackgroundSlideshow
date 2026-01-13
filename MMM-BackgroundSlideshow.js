@@ -509,7 +509,7 @@ Module.register('MMM-BackgroundSlideshow', {
           if (dateTime !== null) {
             try {
               dateTime = moment(dateTime, 'YYYY:MM:DD HH:mm:ss');
-              dateTime = dateTime.format('dddd MMMM D, YYYY HH:mm');
+              dateTime = dateTime.format('YYYY-MM-DD HH:mm');
             } catch {
               Log.log(`[MMM-BackgroundSlideshow] Failed to parse dateTime: ${
                 dateTime
