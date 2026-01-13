@@ -194,7 +194,7 @@ Module.register('MMM-BackgroundSlideshow', {
   notificationReceived (notification) {
     if (notification === 'BACKGROUNDSLIDESHOW_NEXT') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
-    } else if (notification === 'BACKGROUNDSLIDESHOW_PREV') {
+    } else if (notification === 'BACKGROUNDSLIDESHOW_PREVIOUS') { //c'était PREV tt court...
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PREV_IMAGE');
     } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PAUSE');
