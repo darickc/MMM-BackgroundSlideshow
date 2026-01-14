@@ -104,6 +104,7 @@ Module.register('MMM-BackgroundSlideshow', {
     maxHeight: 1080,
     // remove the file extension from image name
     imageInfoNoFileExt: false,
+    googleMapsApiKey: '',
   },
 
   // load function
@@ -635,6 +636,15 @@ Module.register('MMM-BackgroundSlideshow', {
           break;
         case 'imagecount':
           imageProps.push(`${imageinfo.index} of ${imageinfo.total}`);
+          break;
+        case 'description':
+          if (imageinfo.metadata && typeof imageinfo.metadata === 'object') {
+            const metadataWithoutUrl = { ...imageinfo.metadata };
+            delete metadataWithoutUrl.url;
+            Object.entries(metadataWithoutUrl).forEach(([key, value]) => {
+              imageProps.push(`${key}: ${value}`);
+            });
+          }
           break;
         default:
           Log.warn(`[MMM-BackgroundSlideshow] ${prop

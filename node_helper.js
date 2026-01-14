@@ -18,6 +18,9 @@ const express = require('express');
 const Log = require('../../js/logger.js');
 const basePath = '/images/';
 const sharp = require('sharp');
+const fs = require('fs');
+const path = require('path');
+const { json } = require('node:stream/consumers');
 
 // the main module helper create
 module.exports = NodeHelper.create({
@@ -278,13 +281,79 @@ module.exports = NodeHelper.create({
     const image = this.imageList[this.index++];
     Log.info(`[MMM-BackgroundSlideshow] Reading path "${image.path}"`);
     self = this;
+
+    const imageDirectory = path.dirname(image.path);
+    const imageFilename = path.basename(image.path);
+
+    let filesArray = [];
+    let jsonFilePath = '';
+    let json_metadata = {};
+
+    try {
+      if (fs.existsSync(imageDirectory)) {
+        const files = fs.readdirSync(imageDirectory);
+
+        filesArray = files.filter(file => {
+          return file.startsWith(imageFilename) && path.extname(file).toLowerCase() === '.json';
+        });
+        // actually, there is only one file expected
+        jsonFilePath = path.join(imageDirectory, filesArray[0]);
+        console.log('JSON:', jsonFilePath);
+        const jsonData = fs.readFileSync(jsonFilePath, 'utf8');
+        json_metadata = JSON.parse(jsonData);
+      } else {
+        console.log('Directory does not exist:', directoryPath);
+      }
+    } catch (error) {
+      console.error('Error reading directory:', error);
+    }
+    let metadata = {};
+    let latitude = null;
+    let longitude = null;
+    if (jsonFilePath !== '') {
+      if (json_metadata.description && !json_metadata.description.toLowerCase().includes('uploader')) {
+        console.log('Image description:', json_metadata.description);
+        metadata.description = json_metadata.description;
+      }
+      if (json_metadata.photoTakenTime && json_metadata.photoTakenTime.formatted) {
+        console.log('Image photoTakenTime:', json_metadata.photoTakenTime.formatted);
+        metadata.photoTakenTime = json_metadata.photoTakenTime.formatted;
+      } else if (json_metadata.creationTime && json_metadata.creationTime.formatted) {
+        console.log('Image creationTime:', json_metadata.creationTime.formatted);
+        metadata.creationTime = json_metadata.creationTime.formatted;
+      }
+      if (json_metadata.geoDataExif && json_metadata.geoDataExif.latitude && json_metadata.geoDataExif.longitude) {
+        console.log('Image Exif position:', json_metadata.geoDataExif.longitude, json_metadata.geoDataExif.latitude);
+        latitude = json_metadata.geoDataExif.latitude;
+        longitude = json_metadata.geoDataExif.longitude;
+      } else if (json_metadata.geoData && json_metadata.geoData.latitude && json_metadata.geoData.longitude) {
+        console.log('Image position:', json_metadata.geoData.longitude, json_metadata.geoData.latitude);
+        latitude = json_metadata.geoData.latitude;
+        longitude = json_metadata.geoData.longitude;
+      }
+      if (json_metadata.url) {
+        console.log('Image URL:', json_metadata.url);
+        metadata.url = json_metadata.url;
+      }
+      // now let us search the friendly position name
+      if (latitude && longitude) {
+        let address = this.getAddressFromCoordinates(latitude, longitude);
+        if (address) {
+          metadata.address = address;
+        } else {
+          metadata.position = `${latitude}, ${longitude}`;
+        }
+      }
+    }
+
     this.readFile(image.path, (data) => {
       const returnPayload = {
         identifier: self.config.identifier,
         path: image.path,
         data,
         index: self.index,
-        total: self.imageList.length
+        total: self.imageList.length,
+        metadata: metadata
       };
       self.sendSocketNotification(
         'BACKGROUNDSLIDESHOW_DISPLAY_IMAGE',
@@ -298,6 +367,59 @@ module.exports = NodeHelper.create({
       this.addImageToShown(image.path);
     }
   },
+
+  getAddressFromCoordinates (latitude, longitude) {
+    // Read the address cache from file if it exists
+    let addressCache = {};
+    try {
+      const cacheData = fs.readFileSync('modules/MMM-BackgroundSlideshow/addressCache.json', 'utf8');
+      addressCache = JSON.parse(cacheData);
+    } catch (error) {
+      // File doesn't exist or is invalid, use empty cache
+      addressCache = {};
+    }
+    // Check if the address is already cached
+    const cacheKey = `${latitude},${longitude}`;
+    if (addressCache[cacheKey]) {
+      console.log('Address found in cache:', addressCache[cacheKey]);
+      return addressCache[cacheKey];
+    }
+    // If not cached, make a request to Google Maps Geocoding API
+    const mapsApiKey = this.config.googleMapsApiKey || '';
+    if (mapsApiKey === '') {
+      console.log('No Google Maps API key provided.');
+      return null;
+    }
+    const mapsApiUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${mapsApiKey}`;
+    const https = require('https');
+    https.get(mapsApiUrl, (res) => {
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      res.on('end', () => {
+        try {
+          const geoData = JSON.parse(data);
+          if (geoData.status === 'OK' && geoData.results.length > 0) {
+            const address = geoData.results[0].formatted_address;
+            console.log('Resolved address:', address);
+            // Update the address cache and write it back to file
+            addressCache[`${latitude},${longitude}`] = address;
+            fs.writeFileSync('modules/MMM-BackgroundSlideshow/addressCache.json', JSON.stringify(addressCache), 'utf8');  
+
+            return address;
+          } else {
+            console.log('No address found for the given coordinates.');
+          }
+        }
+        catch (error) {
+          console.error('Error parsing geocode response:', error);
+        }
+      });
+    });
+  return null;
+  },
+
 
   // stop timer if it's running
   stopTimer () {
