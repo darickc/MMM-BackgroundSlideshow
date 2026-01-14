@@ -20,7 +20,7 @@ const basePath = '/images/';
 const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
-const { json } = require('node:stream/consumers');
+/// ? FIXME const {json} = require('node:stream/consumers');
 
 // the main module helper create
 module.exports = NodeHelper.create({
@@ -285,6 +285,7 @@ module.exports = NodeHelper.create({
     const imageDirectory = path.dirname(image.path);
     const imageFilename = path.basename(image.path);
 
+    // get infos from Google TakeOut JSON file    
     let filesArray = [];
     let jsonFilePath = '';
     let json_metadata = {};
@@ -298,48 +299,64 @@ module.exports = NodeHelper.create({
         });
         // actually, there is only one file expected
         jsonFilePath = path.join(imageDirectory, filesArray[0]);
-        console.log('JSON:', jsonFilePath);
+        Log.log('JSON:', jsonFilePath);
         const jsonData = fs.readFileSync(jsonFilePath, 'utf8');
         json_metadata = JSON.parse(jsonData);
       } else {
-        console.log('Directory does not exist:', directoryPath);
+        Log.warn('Directory does not exist:', imageDirectory);
       }
     } catch (error) {
-      console.error('Error reading directory:', error);
+      Log.error('Error reading directory:', error);
     }
     let metadata = {};
     let latitude = null;
     let longitude = null;
     if (jsonFilePath !== '') {
       if (json_metadata.description && !json_metadata.description.toLowerCase().includes('uploader')) {
-        console.log('Image description:', json_metadata.description);
+        Log.debug('Image description:', json_metadata.description);
         metadata.description = json_metadata.description;
       }
-      if (json_metadata.photoTakenTime && json_metadata.photoTakenTime.formatted) {
-        console.log('Image photoTakenTime:', json_metadata.photoTakenTime.formatted);
-        metadata.photoTakenTime = json_metadata.photoTakenTime.formatted;
-      } else if (json_metadata.creationTime && json_metadata.creationTime.formatted) {
-        console.log('Image creationTime:', json_metadata.creationTime.formatted);
-        metadata.creationTime = json_metadata.creationTime.formatted;
+      if (json_metadata.photoTakenTime && json_metadata.photoTakenTime.timestamp) {
+        let timestamp = json_metadata.photoTakenTime.timestamp;
+        // Convert to number and handle both seconds and milliseconds timestamps
+        timestamp = typeof timestamp === 'string' ? parseFloat(timestamp) : timestamp;
+        // If timestamp is in seconds (typical for Unix timestamps), convert to milliseconds
+        if (timestamp < 10000000000) {
+          timestamp *= 1000;
+        }
+        const dateTime = new Date(timestamp);
+        metadata.photoTakenTime = dateTime.toISOString().slice(0, 16).replace('T', ' ');
+        Log.debug('Photo taken time:', metadata.photoTakenTime, json_metadata.photoTakenTime.formatted);
+      } else if (json_metadata.creationTime && json_metadata.creationTime.timestamp) {
+        let timestamp = json_metadata.creationTime.timestamp;
+        // Convert to number and handle both seconds and milliseconds timestamps
+        timestamp = typeof timestamp === 'string' ? parseFloat(timestamp) : timestamp;
+        // If timestamp is in seconds (typical for Unix timestamps), convert to milliseconds
+        if (timestamp < 10000000000) {
+          timestamp *= 1000;
+        }
+        const dateTime = new Date(timestamp);
+        metadata.creationTime = dateTime.toISOString().slice(0, 16).replace('T', ' ');
+        Log.debug('Photo creation time:', metadata.creationTime, json_metadata.creationTime.formatted);
       }
       if (json_metadata.geoDataExif && json_metadata.geoDataExif.latitude && json_metadata.geoDataExif.longitude) {
-        console.log('Image Exif position:', json_metadata.geoDataExif.longitude, json_metadata.geoDataExif.latitude);
+        Log.debug('Image Exif position:', json_metadata.geoDataExif.longitude, json_metadata.geoDataExif.latitude);
         latitude = json_metadata.geoDataExif.latitude;
         longitude = json_metadata.geoDataExif.longitude;
       } else if (json_metadata.geoData && json_metadata.geoData.latitude && json_metadata.geoData.longitude) {
-        console.log('Image position:', json_metadata.geoData.longitude, json_metadata.geoData.latitude);
+        Log.debug('Image position:', json_metadata.geoData.longitude, json_metadata.geoData.latitude);
         latitude = json_metadata.geoData.latitude;
         longitude = json_metadata.geoData.longitude;
       }
       if (json_metadata.url) {
-        console.log('Image URL:', json_metadata.url);
+        Log.debug('Image URL:', json_metadata.url);
         metadata.url = json_metadata.url;
       }
       // now let us search the friendly position name
       if (latitude && longitude) {
         let address = this.getAddressFromCoordinates(latitude, longitude);
         if (address) {
-          metadata.address = address;
+          metadata.position = address;
         } else {
           metadata.position = `${latitude}, ${longitude}`;
         }
@@ -381,13 +398,13 @@ module.exports = NodeHelper.create({
     // Check if the address is already cached
     const cacheKey = `${latitude},${longitude}`;
     if (addressCache[cacheKey]) {
-      console.log('Address found in cache:', addressCache[cacheKey]);
+      Log.log('Address found in cache:', addressCache[cacheKey]);
       return addressCache[cacheKey];
     }
     // If not cached, make a request to Google Maps Geocoding API
     const mapsApiKey = this.config.googleMapsApiKey || '';
     if (mapsApiKey === '') {
-      console.log('No Google Maps API key provided.');
+      Log.log('No Google Maps API key provided.');
       return null;
     }
     const mapsApiUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${mapsApiKey}`;
@@ -402,18 +419,18 @@ module.exports = NodeHelper.create({
           const geoData = JSON.parse(data);
           if (geoData.status === 'OK' && geoData.results.length > 0) {
             const address = geoData.results[0].formatted_address;
-            console.log('Resolved address:', address);
+            Log.log('Resolved address with Google Maps API:', address);
             // Update the address cache and write it back to file
             addressCache[`${latitude},${longitude}`] = address;
             fs.writeFileSync('modules/MMM-BackgroundSlideshow/addressCache.json', JSON.stringify(addressCache), 'utf8');  
 
             return address;
           } else {
-            console.log('No address found for the given coordinates.');
+            Log.debug('No address found for the given coordinates.');
           }
         }
         catch (error) {
-          console.error('Error parsing geocode response:', error);
+          Log.error('Error parsing geocode response:', error);
         }
       });
     });

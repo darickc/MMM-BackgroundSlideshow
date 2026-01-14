@@ -604,12 +604,17 @@ Module.register('MMM-BackgroundSlideshow', {
     const imageProps = [];
     this.config.imageInfo.forEach((prop) => {
       switch (prop) {
+        // possibles : description, name, date, position, imagecount, 
         case 'date':
-          if (imageDate && imageDate !== 'Invalid date') {
+          // by priority : photoTakenTime, EXIF dateTime, creationTime
+          if (imageinfo.metadata && imageinfo.metadata.photoTakenTime) {
+            imageProps.push(imageinfo.metadata.photoTakenTime);
+          } else if (imageDate && imageDate !== 'Invalid date') {
             imageProps.push(imageDate);
+          } else if (imageinfo.metadata && imageinfo.metadata.creationTime) {
+            imageProps.push(imageinfo.metadata.creationTime);
           }
           break;
-
         case 'name': // default is name
           // Only display last path component as image name if recurseSubDirectories is not set.
           let imageName = imageinfo.path.split('/').pop();
@@ -638,12 +643,13 @@ Module.register('MMM-BackgroundSlideshow', {
           imageProps.push(`${imageinfo.index} of ${imageinfo.total}`);
           break;
         case 'description':
-          if (imageinfo.metadata && typeof imageinfo.metadata === 'object') {
-            const metadataWithoutUrl = { ...imageinfo.metadata };
-            delete metadataWithoutUrl.url;
-            Object.entries(metadataWithoutUrl).forEach(([key, value]) => {
-              imageProps.push(`${key}: ${value}`);
-            });
+          if (imageinfo.metadata && imageinfo.metadata.description) {
+            imageProps.push(`${imageinfo.metadata.description}`);
+          }
+          break;
+        case 'position':
+          if (imageinfo.metadata && imageinfo.metadata.position) {
+            imageProps.push(`${imageinfo.metadata.position}`);
           }
           break;
         default:
