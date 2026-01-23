@@ -389,7 +389,7 @@ module.exports = NodeHelper.create({
     // Read the address cache from file if it exists
     let addressCache = {};
     try {
-      const cacheData = fs.readFileSync('modules/MMM-BackgroundSlideshow/addressCache.json', 'utf8');
+      const cacheData = fs.readFileSync(this.config.addressCacheFile, 'utf8');
       addressCache = JSON.parse(cacheData);
     } catch (error) {
       // File doesn't exist or is invalid, use empty cache
@@ -422,7 +422,7 @@ module.exports = NodeHelper.create({
             Log.log('Resolved address with Google Maps API:', address);
             // Update the address cache and write it back to file
             addressCache[`${latitude},${longitude}`] = address;
-            fs.writeFileSync('modules/MMM-BackgroundSlideshow/addressCache.json', JSON.stringify(addressCache), 'utf8');  
+            fs.writeFileSync(this.config.addressCacheFile, JSON.stringify(addressCache), 'utf8');  
 
             return address;
           } else {

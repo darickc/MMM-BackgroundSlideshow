@@ -106,6 +106,7 @@ Module.register('MMM-BackgroundSlideshow', {
     imageInfoNoFileExt: false,
     googleMapsApiKey: '',
     photoSignalUrl: '',
+    addressCacheFile: '',
   },
 
   // load function
