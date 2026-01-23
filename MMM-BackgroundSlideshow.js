@@ -105,6 +105,7 @@ Module.register('MMM-BackgroundSlideshow', {
     // remove the file extension from image name
     imageInfoNoFileExt: false,
     googleMapsApiKey: '',
+    photoSignalUrl: '',
   },
 
   // load function
@@ -124,7 +125,8 @@ Module.register('MMM-BackgroundSlideshow', {
     if (
       this.config.showImageInfo && !imageInfoRegex.test(this.config.imageInfo)
     ) {
-      Log.warn('[MMM-BackgroundSlideshow] showImageInfo is set, but imageInfo does not have a valid value.');
+      // this turns on the client => no Log, only console
+      console.warn('[MMM-BackgroundSlideshow] showImageInfo is set, but imageInfo does not have a valid value.');
       // Use name as the default
       this.config.imageInfo = ['name'];
     } else {
@@ -199,8 +201,22 @@ Module.register('MMM-BackgroundSlideshow', {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PREV_IMAGE');
     } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PAUSE');
+      this.sendNotification('SHOW_ALERT', {
+                title: "Photos de F&F",
+                type: "notification",
+                message: "En pause (flèche droite pour reprendre)",
+                timer: 5000
+              })
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY');
+    } else if (notification === 'BACKGROUNDSLIDESHOW_SIGNAL_PHOTO') {
+      this.sendSocketNotification('BACKGROUNDSLIDESHOW_SIGNAL_PHOTO_HANDLER', this.currentImageInfo);
+      this.sendNotification('SHOW_ALERT', {
+                title: "Photos de F&F",
+                message: "Photo signalée (pour suppression, modification...)",
+                imageFA: "exclamation-triangle",  // seulement pour les alertes
+                timer: 5000
+              })
     }
   },
   // the socket handler from node_helper.js
@@ -525,7 +541,7 @@ Module.register('MMM-BackgroundSlideshow', {
           // if (lat && lon) {
           //   // Get small map of location
           // }
-          this.updateImageInfo(imageinfo, dateTime);
+          this.currentImageInfo = this.updateImageInfo(imageinfo, dateTime);
         }
 
         if (!this.browserSupportsExifOrientationNatively) {
@@ -601,7 +617,10 @@ Module.register('MMM-BackgroundSlideshow', {
   },
 
   updateImageInfo (imageinfo, imageDate) {
+    // build the image info string based on imageinfo and EXIF data
+    // return the updated imageinfo object
     const imageProps = [];
+    let correctTime = null;
     this.config.imageInfo.forEach((prop) => {
       switch (prop) {
         // possibles : description, name, date, position, imagecount, 
@@ -609,11 +628,19 @@ Module.register('MMM-BackgroundSlideshow', {
           // by priority : photoTakenTime, EXIF dateTime, creationTime
           if (imageinfo.metadata && imageinfo.metadata.photoTakenTime) {
             imageProps.push(imageinfo.metadata.photoTakenTime);
-          } else if (imageDate && imageDate !== 'Invalid date') {
+            correctTime = imageinfo.metadata.photoTakenTime;
+          } else if (imageDate && imageDate !== 'Invalid date') {            
             imageProps.push(imageDate);
+            imageinfo.metadata.EXIFTime = imageDate;
+            correctTime = imageDate;
           } else if (imageinfo.metadata && imageinfo.metadata.creationTime) {
             imageProps.push(imageinfo.metadata.creationTime);
+            correctTime = imageinfo.metadata.creationTime;
           }
+          // Save displayed time for other uses
+          if (correctTime) {
+          }
+          imageinfo.metadata.displayedTime = correctTime;
           break;
         case 'name': // default is name
           // Only display last path component as image name if recurseSubDirectories is not set.
@@ -638,6 +665,7 @@ Module.register('MMM-BackgroundSlideshow', {
             imageName = imageName.substring(0, imageName.lastIndexOf('.'));
           }
           imageProps.push(imageName);
+          imageinfo.metadata.displayedName = imageName;
           break;
         case 'imagecount':
           imageProps.push(`${imageinfo.index} of ${imageinfo.total}`);
@@ -645,11 +673,13 @@ Module.register('MMM-BackgroundSlideshow', {
         case 'description':
           if (imageinfo.metadata && imageinfo.metadata.description) {
             imageProps.push(`${imageinfo.metadata.description}`);
+            imageinfo.metadata.displayedDescription = imageinfo.metadata.description;
           }
           break;
         case 'position':
           if (imageinfo.metadata && imageinfo.metadata.position) {
             imageProps.push(`${imageinfo.metadata.position}`);
+            imageinfo.metadata.displayedPosition = imageinfo.metadata.position;
           }
           break;
         default:
@@ -664,6 +694,7 @@ Module.register('MMM-BackgroundSlideshow', {
     });
 
     this.imageInfoDiv.innerHTML = innerHTML;
+    return imageinfo;
   },
 
   resume () {
