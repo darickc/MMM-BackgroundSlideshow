@@ -81,7 +81,7 @@ module.exports = NodeHelper.create({
         // simply swap first/last if lastpickedfolder happened to be first
         [pickableFolders[0], pickableFolders[pickableFolders.length - 1]] = [
           pickableFolders[pickableFolders.length - 1],
-          pickableFolders[0],
+          pickableFolders[0]
         ];
       }
       for (const nextFolder of pickableFolders) {
@@ -165,7 +165,7 @@ module.exports = NodeHelper.create({
     try {
       const excludedFile = FileSystemImageSlideshow.readFileSync(
         `${currentDir}/excludeImages.txt`,
-        'utf8',
+        'utf8'
       );
       const listOfExcludedFiles = excludedFile.split(/\r?\n/u);
       Log.info(`Found excluded images list: in dir: ${currentDir} containing: ${listOfExcludedFiles.length} files`);
@@ -189,7 +189,7 @@ module.exports = NodeHelper.create({
     try {
       const filesShown = FileSystemImageSlideshow.readFileSync(
         filepath,
-        'utf8',
+        'utf8'
       );
       const listOfShownFiles = filesShown
         .split(/\r?\n/u)
@@ -208,7 +208,7 @@ module.exports = NodeHelper.create({
       FileSystemImageSlideshow.appendFileSync(filePath, `${imgPath}\n`);
     } else {
       FileSystemImageSlideshow.writeFileSync(filePath, `${imgPath}\n`, {
-        flag: 'wx',
+        flag: 'wx'
       });
     }
   },
@@ -217,7 +217,7 @@ module.exports = NodeHelper.create({
       FileSystemImageSlideshow.writeFileSync(
         'modules/MMM-BackgroundSlideshow/filesShownTracker.txt',
         '',
-        'utf8',
+        'utf8'
       );
     } catch (err) {
       Log.error('Error writing empty filesShownTracker.txt', err);
@@ -244,7 +244,7 @@ module.exports = NodeHelper.create({
         config.imagePaths[i],
         this.imageList,
         excludedImagesList,
-        config,
+        config
       );
     }
     const imageListToUse = config.showAllImagesBeforeRestart
@@ -261,7 +261,7 @@ module.exports = NodeHelper.create({
       finalImageList = this.sortImageList(
         imageListToUse,
         config.sortImagesBy,
-        config.sortImagesDescending,
+        config.sortImagesDescending
       );
     }
 
@@ -272,12 +272,12 @@ module.exports = NodeHelper.create({
 
     // let other modules know about slideshow images
     this.sendSocketNotification('BACKGROUNDSLIDESHOW_FILELIST', {
-      imageList: this.imageList,
+      imageList: this.imageList
     });
 
     // build the return payload
     const returnPayload = {
-      identifier: config.identifier,
+      identifier: config.identifier
     };
 
     // signal ready
@@ -381,7 +381,7 @@ module.exports = NodeHelper.create({
         Log.debug(
           'Photo taken time:',
           metadata.photoTakenTime,
-          json_metadata.photoTakenTime.formatted,
+          json_metadata.photoTakenTime.formatted
         );
       } else if (
         json_metadata.creationTime &&
@@ -405,7 +405,7 @@ module.exports = NodeHelper.create({
         Log.debug(
           'Photo creation time:',
           metadata.creationTime,
-          json_metadata.creationTime.formatted,
+          json_metadata.creationTime.formatted
         );
       }
       if (
@@ -416,7 +416,7 @@ module.exports = NodeHelper.create({
         Log.debug(
           'Image Exif position:',
           json_metadata.geoDataExif.longitude,
-          json_metadata.geoDataExif.latitude,
+          json_metadata.geoDataExif.latitude
         );
         latitude = json_metadata.geoDataExif.latitude;
         longitude = json_metadata.geoDataExif.longitude;
@@ -428,7 +428,7 @@ module.exports = NodeHelper.create({
         Log.debug(
           'Image position:',
           json_metadata.geoData.longitude,
-          json_metadata.geoData.latitude,
+          json_metadata.geoData.latitude
         );
         latitude = json_metadata.geoData.latitude;
         longitude = json_metadata.geoData.longitude;
@@ -445,12 +445,12 @@ module.exports = NodeHelper.create({
           // clean the first part of address if its a street number (numbers + space, or numbers+comma+space, or numbers + bis,ter + space)
           metadata.position = metadata.position.replace(
             /^[0-9]+(,[ ]|[ ]|(bis|ter)[ ])+/u,
-            '',
+            ''
           );
           // clean the first part of address if its a "Plus Code Google" (4 alphanum + space + 3 alphanum + space)
           metadata.position = metadata.position.replace(
             /^[A-Za-z0-9]{4}[ \+][A-Za-z0-9]+[ ]+/u,
-            '',
+            ''
           );
         } else {
           metadata.position = `${Math.round(latitude * 100) / 100}, ${Math.round(longitude * 100) / 100}`;
@@ -465,11 +465,11 @@ module.exports = NodeHelper.create({
         data,
         index: self.index,
         total: self.imageList.length,
-        metadata,
+        metadata
       };
       self.sendSocketNotification(
         'BACKGROUNDSLIDESHOW_DISPLAY_IMAGE',
-        returnPayload,
+        returnPayload
       );
     });
 
@@ -520,7 +520,7 @@ module.exports = NodeHelper.create({
             fs.writeFileSync(
               this.config.addressCacheFile,
               JSON.stringify(addressCache),
-              'utf8',
+              'utf8'
             );
 
             return address;
@@ -570,7 +570,7 @@ module.exports = NodeHelper.create({
       .resize({
         width: parseInt(this.config.maxWidth, 10),
         height: parseInt(this.config.maxHeight, 10),
-        fit: 'inside',
+        fit: 'inside'
       })
       .keepMetadata()
       .jpeg({quality: 80});
@@ -634,7 +634,7 @@ module.exports = NodeHelper.create({
           currentItem,
           imageList,
           this.excludedFiles(currentItem),
-          config,
+          config
         );
       } else if (stats.isFile()) {
         const isValidImageFileExtension =
@@ -644,7 +644,7 @@ module.exports = NodeHelper.create({
           imageList.push({
             path: currentItem,
             created: stats.ctimeMs,
-            modified: stats.mtimeMs,
+            modified: stats.mtimeMs
           });
         }
       }
@@ -670,7 +670,7 @@ module.exports = NodeHelper.create({
     // Log.log(`Form data: photoUrl=${payload.metadata.url || ''}, filename=${payload.metadata.displayedName || ''}, creationTime=${payload.metadata.displayedTime || ''}`);
     fetch(this.config.photoSignalUrl, {
       method: 'POST',
-      body: formData,
+      body: formData
     })
       .then((response) => {
         Log.log('Success signaling photo');
@@ -685,7 +685,7 @@ module.exports = NodeHelper.create({
       const config = payload;
       this.expressInstance.use(
         basePath + config.imagePaths[0],
-        express.static(config.imagePaths[0], {maxAge: 3600000}),
+        express.static(config.imagePaths[0], {maxAge: 3600000})
       );
 
       // Create set of excluded subdirectories.
@@ -724,5 +724,5 @@ module.exports = NodeHelper.create({
     } else if (notification === 'BACKGROUNDSLIDESHOW_SIGNAL_PHOTO_HANDLER') {
       this.signalPhoto(payload);
     }
-  },
+  }
 });

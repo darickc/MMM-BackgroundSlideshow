@@ -57,18 +57,18 @@ Module.register('MMM-BackgroundSlideshow', {
       'rgba(0, 0, 0, 0.75) 0%',
       'rgba(0, 0, 0, 0) 40%',
       'rgba(0, 0, 0, 0) 80%',
-      'rgba(0, 0, 0, 0.75) 100%',
+      'rgba(0, 0, 0, 0.75) 100%'
     ],
     horizontalGradient: [
       'rgba(0, 0, 0, 0.75) 0%',
       'rgba(0, 0, 0, 0) 40%',
       'rgba(0, 0, 0, 0) 80%',
-      'rgba(0, 0, 0, 0.75) 100%',
+      'rgba(0, 0, 0, 0.75) 100%'
     ],
     radialGradient: [
       'rgba(0,0,0,0) 0%',
       'rgba(0,0,0,0) 75%',
-      'rgba(0,0,0,0.25) 100%',
+      'rgba(0,0,0,0.25) 100%'
     ],
     // the direction the gradient goes, vertical, horizontal, both or radial
     gradientDirection: 'vertical',
@@ -94,7 +94,7 @@ Module.register('MMM-BackgroundSlideshow', {
       'slideFromBottomLeft',
       'slideFromBottomRight',
       'flipX',
-      'flipY',
+      'flipY'
     ],
     transitionTimingFunction: 'cubic-bezier(.17,.67,.35,.96)',
     animations: ['slide', 'zoomOut', 'zoomIn'],
@@ -107,7 +107,7 @@ Module.register('MMM-BackgroundSlideshow', {
     googleMapsApiKey: '',
     photoSignalUrl: '',
     addressCacheFile: '',
-    excludeDescriptionsRegexps: [/uploaded with Flickr Uploader/],
+    excludeDescriptionsRegexps: [/uploaded with Flickr Uploader/]
   },
 
   // load function
@@ -174,7 +174,7 @@ Module.register('MMM-BackgroundSlideshow', {
     return {
       en: 'translations/en.json',
       fr: 'translations/fr.json',
-      de: 'translations/de.json',
+      de: 'translations/de.json'
     };
   },
 
@@ -207,20 +207,20 @@ Module.register('MMM-BackgroundSlideshow', {
         title: 'Photos de F&F',
         type: 'notification',
         message: 'En pause (flèche droite pour reprendre)',
-        timer: 5000,
+        timer: 5000
       });
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY');
     } else if (notification === 'BACKGROUNDSLIDESHOW_SIGNAL_PHOTO') {
       this.sendSocketNotification(
         'BACKGROUNDSLIDESHOW_SIGNAL_PHOTO_HANDLER',
-        this.currentImageInfo,
+        this.currentImageInfo
       );
       this.sendNotification('SHOW_ALERT', {
         title: 'Photos de F&F',
         message: 'Photo signalée (pour suppression, modification...)',
         imageFA: 'exclamation-triangle', // seulement pour les alertes
-        timer: 5000,
+        timer: 5000
       });
     }
   },
@@ -367,7 +367,7 @@ Module.register('MMM-BackgroundSlideshow', {
       this.createRadialGradientDiv(
         'ellipse at center',
         this.config.radialGradient,
-        wrapper,
+        wrapper
       );
     }
 
@@ -562,7 +562,7 @@ Module.register('MMM-BackgroundSlideshow', {
 
     image.src = imageinfo.data;
     this.sendSocketNotification('BACKGROUNDSLIDESHOW_IMAGE_UPDATED', {
-      url: imageinfo.path,
+      url: imageinfo.path
     });
   },
 
@@ -572,7 +572,7 @@ Module.register('MMM-BackgroundSlideshow', {
         path: imageToDisplay,
         data: imageToDisplay,
         index: 1,
-        total: 1,
+        total: 1
       });
       return;
     }
@@ -589,7 +589,7 @@ Module.register('MMM-BackgroundSlideshow', {
         path: imageToDisplay[0],
         data: imageToDisplay[0],
         index: 1,
-        total: 1,
+        total: 1
       });
       return;
     }
@@ -742,7 +742,7 @@ Module.register('MMM-BackgroundSlideshow', {
     // ask helper function to get the image list
     this.sendSocketNotification(
       'BACKGROUNDSLIDESHOW_REGISTER_CONFIG',
-      this.config,
+      this.config
     );
-  },
+  }
 });
