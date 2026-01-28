@@ -1,3 +1,6 @@
 {
-  "PICTURE_INFO": "Bildinformationen"
+  "PICTURE_INFO": "Bildinformationen",
+  "NOTIFICATIONS_TITLE": "Foto-Diashow",
+  "PAUSED": "Pausiert (Rechtspfeil zum Fortsetzen)",
+  "SIGNAL_PHOTO": "Foto gemeldet (zur Löschung, Änderung...)"
 }

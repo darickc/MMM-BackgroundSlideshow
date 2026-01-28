@@ -1,3 +1,6 @@
 {
-  "PICTURE_INFO": "Picture info"
+  "PICTURE_INFO": "Picture info",
+  "NOTIFICATIONS_TITLE": "Photo Slideshow",
+  "PAUSED": "Paused (right arrow to resume)",
+  "SIGNAL_PHOTO": "Photo reported (for deletion, modification...)"
 }

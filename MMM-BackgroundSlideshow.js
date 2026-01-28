@@ -36,7 +36,7 @@ Module.register('MMM-BackgroundSlideshow', {
     validImageFileExtensions: 'bmp,jpg,jpeg,gif,png',
     // show a panel containing information about the image currently displayed.
     showImageInfo: false,
-    // a comma separated list of values to display: name, date, geo (TODO)
+    // a comma separated list of values to display: description, name, desc_name (description with fallback to name), date, position, imagecount
     imageInfo: 'name, date, imagecount',
     // location of the info div
     imageInfoLocation: 'bottomRight', // Other possibilities are: bottomLeft, topLeft, topRight
@@ -104,6 +104,12 @@ Module.register('MMM-BackgroundSlideshow', {
     maxHeight: 1080,
     // remove the file extension from image name
     imageInfoNoFileExt: false,
+    googleMapsApiKey: '', // for goecoding position
+    addressCacheFile: '', // to cache geocoding results
+    photoSignalUrl: '', // URL to send photo's Google URL (found in json metadata)to a server to signal issues
+    // (for instance, bad pictures, , needs a backend)
+    excludeDescriptionsRegexps: [/uploaded with Flickr Uploader/u], // descriptions matching are not kept (array of regexps)
+    cleanImageName: false // remove all words (separated by spaces or /) that contain at least one number
   },
 
   // load function
@@ -111,7 +117,8 @@ Module.register('MMM-BackgroundSlideshow', {
     // add identifier to the config
     this.config.identifier = this.identifier;
     // ensure file extensions are lower case
-    this.config.validImageFileExtensions = this.config.validImageFileExtensions.toLowerCase();
+    this.config.validImageFileExtensions =
+      this.config.validImageFileExtensions.toLowerCase();
     // ensure image order is in lower case
     this.config.sortImagesBy = this.config.sortImagesBy.toLowerCase();
     // commented out since this was not doing anything
@@ -121,9 +128,11 @@ Module.register('MMM-BackgroundSlideshow', {
     // validate imageinfo property.  This will make sure we have at least 1 valid value
     const imageInfoRegex = /\bname\b|\bdate\b/giu;
     if (
-      this.config.showImageInfo && !imageInfoRegex.test(this.config.imageInfo)
+      this.config.showImageInfo &&
+      !imageInfoRegex.test(this.config.imageInfo)
     ) {
-      Log.warn('[MMM-BackgroundSlideshow] showImageInfo is set, but imageInfo does not have a valid value.');
+      // this turns on the client => no Log, only console
+      console.warn('[MMM-BackgroundSlideshow] showImageInfo is set, but imageInfo does not have a valid value.');
       // Use name as the default
       this.config.imageInfo = ['name'];
     } else {
@@ -194,12 +203,29 @@ Module.register('MMM-BackgroundSlideshow', {
   notificationReceived (notification) {
     if (notification === 'BACKGROUNDSLIDESHOW_NEXT') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
-    } else if (notification === 'BACKGROUNDSLIDESHOW_PREV') {
+    } else if (notification === 'BACKGROUNDSLIDESHOW_PREVIOUS') { // was PREV, and did not worked
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PREV_IMAGE');
     } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PAUSE');
+      this.sendNotification('SHOW_ALERT', {
+        title: this.translate('NOTIFICATIONS_TITLE'),
+        type: 'notification',
+        message: this.translate('PAUSED'),
+        timer: 5000
+      });
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY');
+    } else if (notification === 'BACKGROUNDSLIDESHOW_SIGNAL_PHOTO') {
+      this.sendSocketNotification(
+        'BACKGROUNDSLIDESHOW_SIGNAL_PHOTO_HANDLER',
+        this.currentImageInfo
+      );
+      this.sendNotification('SHOW_ALERT', {
+        title: this.translate('NOTIFICATIONS_TITLE'),
+        message: this.translate('SIGNAL_PHOTO'),
+        imageFA: 'exclamation-triangle', // seulement pour les alertes
+        timer: 5000
+      });
     }
   },
   // the socket handler from node_helper.js
@@ -524,7 +550,7 @@ Module.register('MMM-BackgroundSlideshow', {
           // if (lat && lon) {
           //   // Get small map of location
           // }
-          this.updateImageInfo(imageinfo, dateTime);
+          this.currentImageInfo = this.updateImageInfo(imageinfo, dateTime);
         }
 
         if (!this.browserSupportsExifOrientationNatively) {
@@ -600,41 +626,93 @@ Module.register('MMM-BackgroundSlideshow', {
   },
 
   updateImageInfo (imageinfo, imageDate) {
+    // build the image info string based on imageinfo and EXIF data
+    // return the updated imageinfo object
     const imageProps = [];
+    let correctTime = imageDate;
+
+    // build name, because used in 'name' AND 'desc_name'
+    // Only display last path component as image name if recurseSubDirectories is not set.
+    let imageName = imageinfo.path.split('/').pop();
+    // Otherwise display path relative to the path in configuration.
+    if (this.config.recursiveSubDirectories) {
+      for (const path of this.config.imagePaths) {
+        if (!imageinfo.path.includes(path)) {
+          continue;
+        }
+
+        imageName = imageinfo.path.split(path).pop();
+        if (imageName.startsWith('/')) {
+          imageName = imageName.substr(1);
+        }
+        break;
+      }
+    }
+    // Remove file extension from image name.
+    if (this.config.imageInfoNoFileExt) {
+      imageName = imageName.substring(0, imageName.lastIndexOf('.'));
+    }
+    if (this.config.cleanImageName) {
+      // now remove all words (separated by spaces or /) that contain at least one number
+      const imageNameCleaned = imageName
+        .split(/[\s/]+/u)
+        .filter((word) => !(/\d/gu).test(word))
+        .join(' ');
+      // if the cleaned name is not empty or only spaces, use it
+      if (imageNameCleaned.trim().length > 0) {
+        imageName = imageNameCleaned;
+      }
+    }
+    imageinfo.metadata.displayedName = imageName;
+
     this.config.imageInfo.forEach((prop) => {
       switch (prop) {
+        // possibles : description, name, desc_name, date, position, imagecount,
         case 'date':
-          if (imageDate && imageDate !== 'Invalid date') {
+          // by priority : photoTakenTime, EXIF dateTime, creationTime
+          if (imageinfo.metadata && imageinfo.metadata.photoTakenTime) {
+            imageProps.push(imageinfo.metadata.photoTakenTime);
+            correctTime = imageinfo.metadata.photoTakenTime;
+          } else if (imageDate && imageDate !== 'Invalid date') {
             imageProps.push(imageDate);
+            imageinfo.metadata.EXIFTime = imageDate;
+            correctTime = imageDate;
+          } else if (imageinfo.metadata && imageinfo.metadata.creationTime) {
+            imageProps.push(imageinfo.metadata.creationTime);
+            correctTime = imageinfo.metadata.creationTime;
+          }
+          // Save displayed time for other uses
+          if (correctTime) {
+            imageinfo.metadata.displayedTime = correctTime;
           }
           break;
-
         case 'name': // default is name
-          // Only display last path component as image name if recurseSubDirectories is not set.
-          let imageName = imageinfo.path.split('/').pop();
-
-          // Otherwise display path relative to the path in configuration.
-          if (this.config.recursiveSubDirectories) {
-            for (const path of this.config.imagePaths) {
-              if (!imageinfo.path.includes(path)) {
-                continue;
-              }
-
-              imageName = imageinfo.path.split(path).pop();
-              if (imageName.startsWith('/')) {
-                imageName = imageName.substr(1);
-              }
-              break;
-            }
-          }
-          // Remove file extension from image name.
-          if (this.config.imageInfoNoFileExt) {
-            imageName = imageName.substring(0, imageName.lastIndexOf('.'));
-          }
-          imageProps.push(imageName);
+          imageProps.push(imageinfo.metadata.displayedName);
           break;
         case 'imagecount':
           imageProps.push(`${imageinfo.index} of ${imageinfo.total}`);
+          break;
+        case 'description':
+          if (imageinfo.metadata && imageinfo.metadata.description) {
+            imageProps.push(`${imageinfo.metadata.description}`);
+            imageinfo.metadata.displayedDescription =
+              imageinfo.metadata.description;
+          }
+          break;
+        case 'desc_or_name':
+          if (imageinfo.metadata && imageinfo.metadata.description) {
+            imageProps.push(`${imageinfo.metadata.description}`);
+            imageinfo.metadata.displayedDescription =
+              imageinfo.metadata.description;
+          } else {
+            imageProps.push(imageinfo.metadata.displayedName);
+          }
+          break;
+        case 'position':
+          if (imageinfo.metadata && imageinfo.metadata.position) {
+            imageProps.push(`${imageinfo.metadata.position}`);
+            imageinfo.metadata.displayedPosition = imageinfo.metadata.position;
+          }
           break;
         default:
           Log.warn(`[MMM-BackgroundSlideshow] ${prop
@@ -648,6 +726,7 @@ Module.register('MMM-BackgroundSlideshow', {
     });
 
     this.imageInfoDiv.innerHTML = innerHTML;
+    return imageinfo;
   },
 
   resume () {

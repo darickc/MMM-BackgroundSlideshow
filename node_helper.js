@@ -18,6 +18,9 @@ const express = require('express');
 const Log = require('../../js/logger.js');
 const basePath = '/images/';
 const sharp = require('sharp');
+const fs = require('fs');
+const path = require('path');
+// / ? FIXME const {json} = require('node:stream/consumers');
 
 // the main module helper create
 module.exports = NodeHelper.create({
@@ -44,8 +47,8 @@ module.exports = NodeHelper.create({
     return array;
   },
   shuffleImagesLoopFolders (filePaths) {
-    Log.log('[MMM-BackgroundSlideshow] shuffleImagesLoopFolders = true!');
-    Log.debug(`[MMM-BackgroundSlideshow] filePaths: \n${filePaths.map((img) => `${img.path}\n`)}`);
+    Log.log('shuffleImagesLoopFolders = true!');
+    Log.debug(`filePaths: \n${filePaths.map((img) => `${img.path}\n`)}`);
     const groupedByFolder = new Map();
     for (const imgobject of filePaths) {
       const parts = imgobject.path.split('/');
@@ -126,21 +129,21 @@ module.exports = NodeHelper.create({
     let sortedList;
     switch (sortBy) {
       case 'created':
-        Log.debug('[MMM-BackgroundSlideshow] Sorting by created date...');
+        Log.debug('Sorting by created date...');
         sortedList = imageList.sort(this.sortByCreated);
         break;
       case 'modified':
-        Log.debug('[MMM-BackgroundSlideshow] Sorting by modified date...');
+        Log.debug('Sorting by modified date...');
         sortedList = imageList.sort(this.sortByModified);
         break;
       default:
-        Log.debug('[MMM-BackgroundSlideshow] Sorting by name...');
+        Log.debug('Sorting by name...');
         sortedList = imageList.sort(this.sortByFilename);
     }
 
     // If the user chose to sort in descending order then reverse the array
     if (sortDescending === true) {
-      Log.debug('[MMM-BackgroundSlideshow] Reversing sort order...');
+      Log.debug('Reversing sort order...');
       sortedList = sortedList.reverse();
     }
 
@@ -161,16 +164,16 @@ module.exports = NodeHelper.create({
     try {
       const excludedFile = FileSystemImageSlideshow.readFileSync(`${currentDir}/excludeImages.txt`, 'utf8');
       const listOfExcludedFiles = excludedFile.split(/\r?\n/u);
-      Log.info(`[MMM-BackgroundSlideshow] Found excluded images list: in dir: ${currentDir} containing: ${listOfExcludedFiles.length} files`);
+      Log.info(`Found excluded images list: in dir: ${currentDir} containing: ${listOfExcludedFiles.length} files`);
       return listOfExcludedFiles;
     } catch {
-      Log.debug('[MMM-BackgroundSlideshow] No "excludeImages.txt" in current folder.');
+      Log.debug('No "excludeImages.txt" in current folder.');
       return [];
     }
   },
   isExcluded (filename, excludedImagesList) {
     if (excludedImagesList.includes(filename.replace(/\.[a-zA-Z]{3,4}$/u, ''))) {
-      Log.info(`[MMM-BackgroundSlideshow] ${filename} is excluded in excludedImages.txt!`);
+      Log.info(`${filename} is excluded in excludedImages.txt!`);
       return true;
     }
     return false;
@@ -180,10 +183,10 @@ module.exports = NodeHelper.create({
     try {
       const filesShown = FileSystemImageSlideshow.readFileSync(filepath, 'utf8');
       const listOfShownFiles = filesShown.split(/\r?\n/u).filter((line) => line.trim() !== '');
-      Log.info(`[MMM-BackgroundSlideshow] Found filesShownTracker: in path: ${filepath} containing: ${listOfShownFiles.length} files`);
+      Log.info(`Found filesShownTracker: in path: ${filepath} containing: ${listOfShownFiles.length} files`);
       return new Set(listOfShownFiles);
     } catch {
-      Log.info(`[MMM-BackgroundSlideshow] Error reading filesShownTracker: in path: ${filepath}`);
+      Log.info(`Error reading filesShownTracker: in path: ${filepath}`);
       return new Set();
     }
   },
@@ -200,7 +203,7 @@ module.exports = NodeHelper.create({
     try {
       FileSystemImageSlideshow.writeFileSync('modules/MMM-BackgroundSlideshow/filesShownTracker.txt', '', 'utf8');
     } catch (err) {
-      Log.error('[MMM-BackgroundSlideshow] Error writing empty filesShownTracker.txt', err);
+      Log.error('Error writing empty filesShownTracker.txt', err);
     }
   },
   // gathers the image list
@@ -223,7 +226,7 @@ module.exports = NodeHelper.create({
       ? this.imageList.filter((image) => !this.alreadyShownSet.has(image.path))
       : this.imageList;
 
-    Log.info(`[MMM-BackgroundSlideshow] Skipped ${this.imageList.length - imageListToUse.length} files since already seen!`);
+    Log.info(`Skipped ${this.imageList.length - imageListToUse.length} files since already seen!`);
     let finalImageList;
     if (config.randomizeImagesLoopFolders) {
       finalImageList = this.shuffleImagesLoopFolders(imageListToUse);
@@ -238,8 +241,8 @@ module.exports = NodeHelper.create({
     }
 
     this.imageList = finalImageList;
-    Log.info(`[MMM-BackgroundSlideshow] ${this.imageList.length} files found`);
-    Log.log(`[MMM-BackgroundSlideshow] ${this.imageList.map((img) => `${img.path}\n`)}`);
+    Log.info(`${this.imageList.length} files found`);
+    Log.log(`${this.imageList.map((img) => `${img.path}\n`)}`);
     this.index = 0;
 
     // let other modules know about slideshow images
@@ -276,15 +279,122 @@ module.exports = NodeHelper.create({
     }
 
     const image = this.imageList[this.index++];
-    Log.info(`[MMM-BackgroundSlideshow] Reading path "${image.path}"`);
+    Log.info(`Reading path "${image.path}"`);
     self = this;
+
+    const imageDirectory = path.dirname(image.path);
+    const imageFilename = path.basename(image.path);
+
+    // get infos from Google TakeOut JSON file
+    let filesArray = [];
+    let jsonFilePath = '';
+    let json_metadata = {};
+
+    try {
+      if (fs.existsSync(imageDirectory)) {
+        const files = fs.readdirSync(imageDirectory);
+
+        // when 2 images with same name in album, Google TakeOut will save the second as
+        // 'Google Photos/2009/p2200111(1).jpg', and the json like
+        // 'Google Photos/2009/p2200111.jpg.supplemental-metadata(1).json'
+        // so let us handle these cases, also
+
+        const match = imageFilename.replace(/\.[^.]+$/, '').match(/^(.+?)\s*\((\d+)\)$/);
+        const baseFilename = match
+          ? match[1]
+          : imageFilename.replace(/\.[^.]+$/, '');
+        const imageFilenameEnumeratedEnd = match
+          ? `(${match[2]})`
+          : '';
+
+        filesArray = files.filter((file) => file.startsWith(baseFilename) && path.extname(file).toLowerCase() === `${imageFilenameEnumeratedEnd}.json`);
+        // actually, there is only one file expected
+        jsonFilePath = path.join(imageDirectory, filesArray[0]);
+        Log.log('JSON:', jsonFilePath);
+        const jsonData = fs.readFileSync(jsonFilePath, 'utf8');
+        json_metadata = JSON.parse(jsonData);
+      } else {
+        Log.warn('Directory does not exist:', imageDirectory);
+      }
+    } catch (error) {
+      Log.error('Error reading directory ', imageDirectory, ':', error);
+    }
+    const metadata = {};
+    let latitude = null;
+    let longitude = null;
+    if (jsonFilePath !== '') {
+      if (
+        json_metadata.description &&
+        !this.config.excludeDescriptionsRegexps?.some((regexp) => new RegExp(regexp).test(json_metadata.description))
+      ) {
+        Log.debug('Image description:', json_metadata.description);
+        metadata.description = json_metadata.description;
+      }
+      if (json_metadata.photoTakenTime && json_metadata.photoTakenTime.timestamp) {
+        let {timestamp} = json_metadata.photoTakenTime;
+        // Convert to number and handle both seconds and milliseconds timestamps
+        timestamp = typeof timestamp === 'string'
+          ? parseFloat(timestamp)
+          : timestamp;
+        // If timestamp is in seconds (typical for Unix timestamps), convert to milliseconds
+        if (timestamp < 10000000000) {
+          timestamp *= 1000;
+        }
+        const dateTime = new Date(timestamp);
+        metadata.photoTakenTime = dateTime.toISOString().slice(0, 16)
+          .replace('T', ' ');
+        Log.debug('Photo taken time:', metadata.photoTakenTime, json_metadata.photoTakenTime.formatted);
+      } else if (json_metadata.creationTime && json_metadata.creationTime.timestamp) {
+        let {timestamp} = json_metadata.creationTime;
+        // Convert to number and handle both seconds and milliseconds timestamps
+        timestamp = typeof timestamp === 'string'
+          ? parseFloat(timestamp)
+          : timestamp;
+        // If timestamp is in seconds (typical for Unix timestamps), convert to milliseconds
+        if (timestamp < 10000000000) {
+          timestamp *= 1000;
+        }
+        const dateTime = new Date(timestamp);
+        metadata.creationTime = dateTime.toISOString().slice(0, 16)
+          .replace('T', ' ');
+        Log.debug('Photo creation time:', metadata.creationTime, json_metadata.creationTime.formatted);
+      }
+      if (json_metadata.geoDataExif && json_metadata.geoDataExif.latitude && json_metadata.geoDataExif.longitude) {
+        Log.debug('Image Exif position:', json_metadata.geoDataExif.longitude, json_metadata.geoDataExif.latitude);
+        latitude = json_metadata.geoDataExif.latitude;
+        longitude = json_metadata.geoDataExif.longitude;
+      } else if (json_metadata.geoData && json_metadata.geoData.latitude && json_metadata.geoData.longitude) {
+        Log.debug('Image position:', json_metadata.geoData.longitude, json_metadata.geoData.latitude);
+        latitude = json_metadata.geoData.latitude;
+        longitude = json_metadata.geoData.longitude;
+      }
+      if (json_metadata.url) {
+        Log.debug('Image URL:', json_metadata.url);
+        metadata.url = json_metadata.url;
+      }
+      // now let us search the friendly position name
+      if (latitude && longitude) {
+        const address = this.getAddressFromCoordinates(latitude, longitude);
+        if (address) {
+          metadata.position = address;
+          // clean the first part of address if its a street number (numbers + space, or numbers+comma+space, or numbers + bis,ter + space)
+          metadata.position = metadata.position.replace(/^[0-9]+(,[ ]|[ ]|(bis|ter)[ ])+/u, '');
+          // clean the first part of address if its a "Plus Code Google" (4 alphanum + space + 3 alphanum + space)
+          metadata.position = metadata.position.replace(/^[A-Za-z0-9]{4}[ \+][A-Za-z0-9]+[ ]+/u, '');
+        } else {
+          metadata.position = `${Math.round(latitude * 100) / 100}, ${Math.round(longitude * 100) / 100}`;
+        }
+      }
+    }
+
     this.readFile(image.path, (data) => {
       const returnPayload = {
         identifier: self.config.identifier,
         path: image.path,
         data,
         index: self.index,
-        total: self.imageList.length
+        total: self.imageList.length,
+        metadata
       };
       self.sendSocketNotification(
         'BACKGROUNDSLIDESHOW_DISPLAY_IMAGE',
@@ -299,10 +409,60 @@ module.exports = NodeHelper.create({
     }
   },
 
+  getAddressFromCoordinates (latitude, longitude) {
+    // Read the address cache from file if it exists
+    let addressCache = {};
+    try {
+      const cacheData = fs.readFileSync(this.config.addressCacheFile, 'utf8');
+      addressCache = JSON.parse(cacheData);
+    } catch (error) {
+      // File doesn't exist or is invalid, use empty cache
+      addressCache = {};
+    }
+    // Check if the address is already cached
+    const cacheKey = `${latitude},${longitude}`;
+    if (addressCache[cacheKey]) {
+      Log.log('Address found in cache:', addressCache[cacheKey]);
+      return addressCache[cacheKey];
+    }
+    // If not cached, make a request to Google Maps Geocoding API
+    const mapsApiKey = this.config.googleMapsApiKey || '';
+    if (mapsApiKey === '') {
+      Log.log('No Google Maps API key provided.');
+      return null;
+    }
+    const mapsApiUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${mapsApiKey}`;
+    const https = require('https');
+    https.get(mapsApiUrl, (res) => {
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      res.on('end', () => {
+        try {
+          const geoData = JSON.parse(data);
+          if (geoData.status === 'OK' && geoData.results.length > 0) {
+            const address = geoData.results[0].formatted_address;
+            Log.log('Resolved address with Google Maps API:', address);
+            // Update the address cache and write it back to file
+            addressCache[`${latitude},${longitude}`] = address;
+            fs.writeFileSync(this.config.addressCacheFile, JSON.stringify(addressCache), 'utf8');
+
+            return address;
+          }
+          Log.debug('No address found for the given coordinates.');
+        } catch (error) {
+          Log.error('Error parsing geocode response:', error);
+        }
+      });
+    });
+    return null;
+  },
+
   // stop timer if it's running
   stopTimer () {
     if (this.timer) {
-      Log.debug('[MMM-BackgroundSlideshow] Stopping update timer');
+      Log.debug('Stopping update timer');
       const it = this.timer;
       this.timer = null;
       clearTimeout(it);
@@ -311,7 +471,7 @@ module.exports = NodeHelper.create({
   // resume timer if it's not running; reset if it is
   startOrRestartTimer () {
     this.stopTimer();
-    Log.debug('[MMM-BackgroundSlideshow] Restarting update timer');
+    Log.debug('Restarting update timer');
     this.timer = setTimeout(() => {
       self.getNextImage();
     }, self.config?.slideshowSpeed || 10000);
@@ -329,7 +489,7 @@ module.exports = NodeHelper.create({
     this.getNextImage();
   },
   resizeImage (input, callback) {
-    Log.log(`[MMM-BackgroundSlideshow] Resizing image to max: ${this.config.maxWidth}x${this.config.maxHeight}`);
+    Log.log(`Resizing image to max: ${this.config.maxWidth}x${this.config.maxHeight}`);
     const transformer = sharp()
       .rotate()
       .resize({
@@ -351,10 +511,10 @@ module.exports = NodeHelper.create({
       .on('end', () => {
         const buffer = Buffer.concat(outputStream);
         callback(`data:image/jpg;base64, ${buffer.toString('base64')}`);
-        Log.log('[MMM-BackgroundSlideshow] Resizing done!');
+        Log.log('Resizing done!');
       })
       .on('error', (err) => {
-        Log.error('[MMM-BackgroundSlideshow] Error resizing image:', err);
+        Log.error('Error resizing image:', err);
       });
   },
 
@@ -364,7 +524,7 @@ module.exports = NodeHelper.create({
     if (this.config.resizeImages) {
       this.resizeImage(filepath, callback);
     } else {
-      Log.log('[MMM-BackgroundSlideshow] ResizeImages: false');
+      Log.log('ResizeImages: false');
       // const data = FileSystemImageSlideshow.readFileSync(filepath, { encoding: 'base64' });
       // callback(`data:image/${ext};base64, ${data}`);
       const chunks = [];
@@ -377,17 +537,17 @@ module.exports = NodeHelper.create({
           callback(`data:image/${ext.slice(1)};base64, ${buffer.toString('base64')}`);
         })
         .on('error', (err) => {
-          Log.error('[MMM-BackgroundSlideshow] Error reading file:', err);
+          Log.error('Error reading file:', err);
         })
         .on('close', () => {
-          Log.log('[MMM-BackgroundSlideshow] Stream closed.');
+          Log.log('Stream closed.');
         });
     }
   },
 
   getFiles (imagePath, imageList, excludedImagesList, config) {
     const contents = FileSystemImageSlideshow.readdirSync(imagePath);
-    Log.info(`[MMM-BackgroundSlideshow] Reading directory "${imagePath}" for images, found ${contents.length} files and directories`);
+    Log.info(`Reading directory "${imagePath}" for images, found ${contents.length} files and directories`);
     for (let i = 0; i < contents.length; i++) {
       if (this.excludePaths.has(contents[i])) {
         continue;
@@ -410,6 +570,33 @@ module.exports = NodeHelper.create({
     }
   },
 
+  // Function to signal a photo as not interesting
+  signalPhoto (payload) {
+    // todo
+    // savoir quelle image est affichée actuellement
+    // récupérer l'url de l'image courante, et le filename
+    Log.log(`Signaling photo: ${payload.path} on URL: ${this.config.photoSignalUrl}`);
+    // Log.log(`metadata: ${JSON.stringify(payload.metadata)}`);
+    if (!payload.metadata || !payload.metadata.url) {
+      Log.error('No photo URL found in metadata, cannot signal photo');
+      // FIXME je ne comprends pas pourquoi parfois l'URL n'est pas là
+      return;
+    }
+    const formData = new FormData();
+    formData.append('photoUrl', payload.metadata.url || '');
+    formData.append('filename', payload.metadata.displayedName || '');
+    formData.append('creationTime', payload.metadata.displayedTime || '');
+    fetch(this.config.photoSignalUrl, {
+      method: 'POST',
+      body: formData
+    })
+      .then((response) => {
+        Log.log('Success signaling photo');
+      })
+      .catch((error) => {
+        Log.error('Error signaling photo', error);
+      });
+  },
   // subclass socketNotificationReceived, received notification from module
   socketNotificationReceived (notification, payload) {
     if (notification === 'BACKGROUNDSLIDESHOW_REGISTER_CONFIG') {
@@ -436,25 +623,27 @@ module.exports = NodeHelper.create({
         this.getNextImage();
       }, 200);
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY_VIDEO') {
-      Log.info('[MMM-BackgroundSlideshow] mw got BACKGROUNDSLIDESHOW_PLAY_VIDEO');
-      Log.info(`[MMM-BackgroundSlideshow] cmd line: omxplayer --win 0,0,1920,1080 --alpha 180 ${payload[0]}`);
+      Log.info('mw got BACKGROUNDSLIDESHOW_PLAY_VIDEO');
+      Log.info(`cmd line: omxplayer --win 0,0,1920,1080 --alpha 180 ${payload[0]}`);
       exec(
         `omxplayer --win 0,0,1920,1080 --alpha 180 ${payload[0]}`,
         () => {
           this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY', null);
-          Log.info('[MMM-BackgroundSlideshow] mw video done');
+          Log.info('mw video done');
         }
       );
     } else if (notification === 'BACKGROUNDSLIDESHOW_NEXT_IMAGE') {
-      Log.debug('[MMM-BackgroundSlideshow] BACKGROUNDSLIDESHOW_NEXT_IMAGE');
+      Log.debug('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
       this.getNextImage();
     } else if (notification === 'BACKGROUNDSLIDESHOW_PREV_IMAGE') {
-      Log.debug('[MMM-BackgroundSlideshow] BACKGROUNDSLIDESHOW_PREV_IMAGE');
+      Log.debug('BACKGROUNDSLIDESHOW_PREV_IMAGE');
       this.getPrevImage();
     } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') {
       this.stopTimer();
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY') {
       this.startOrRestartTimer();
+    } else if (notification === 'BACKGROUNDSLIDESHOW_SIGNAL_PHOTO_HANDLER') {
+      this.signalPhoto(payload);
     }
   }
 });
