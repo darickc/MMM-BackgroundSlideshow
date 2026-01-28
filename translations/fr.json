@@ -1,3 +1,6 @@
 {
-  "PICTURE_INFO": "à propos de l'image"
+  "PICTURE_INFO": "à propos de l'image",
+  "NOTIFICATIONS_TITLE": "Diaporama photos",
+  "PAUSED": "En pause (flèche droite pour reprendre)",
+  "SIGNAL_PHOTO": "Photo signalée (pour suppression, modification...)"
 }

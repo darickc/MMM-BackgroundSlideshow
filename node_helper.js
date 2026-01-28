@@ -24,6 +24,7 @@ const path = require('path');
 
 // the main module helper create
 module.exports = NodeHelper.create({
+
   // subclass start method, clears the initial config array
   start () {
     this.excludePaths = new Set();
@@ -79,10 +80,8 @@ module.exports = NodeHelper.create({
       const pickableFolders = this.shuffleArray(folderKeys);
       if (pickableFolders[0] === lastPickedFolder) {
         // simply swap first/last if lastpickedfolder happened to be first
-        [pickableFolders[0], pickableFolders[pickableFolders.length - 1]] = [
-          pickableFolders[pickableFolders.length - 1],
-          pickableFolders[0]
-        ];
+        [pickableFolders[0], pickableFolders[pickableFolders.length - 1]] =
+          [pickableFolders[pickableFolders.length - 1], pickableFolders[0]];
       }
       for (const nextFolder of pickableFolders) {
         const imagePointer = pointers.get(nextFolder);
@@ -163,10 +162,7 @@ module.exports = NodeHelper.create({
   },
   excludedFiles (currentDir) {
     try {
-      const excludedFile = FileSystemImageSlideshow.readFileSync(
-        `${currentDir}/excludeImages.txt`,
-        'utf8'
-      );
+      const excludedFile = FileSystemImageSlideshow.readFileSync(`${currentDir}/excludeImages.txt`, 'utf8');
       const listOfExcludedFiles = excludedFile.split(/\r?\n/u);
       Log.info(`Found excluded images list: in dir: ${currentDir} containing: ${listOfExcludedFiles.length} files`);
       return listOfExcludedFiles;
@@ -176,9 +172,7 @@ module.exports = NodeHelper.create({
     }
   },
   isExcluded (filename, excludedImagesList) {
-    if (
-      excludedImagesList.includes(filename.replace(/\.[a-zA-Z]{3,4}$/u, ''))
-    ) {
+    if (excludedImagesList.includes(filename.replace(/\.[a-zA-Z]{3,4}$/u, ''))) {
       Log.info(`${filename} is excluded in excludedImages.txt!`);
       return true;
     }
@@ -187,13 +181,8 @@ module.exports = NodeHelper.create({
   readEntireShownFile () {
     const filepath = 'modules/MMM-BackgroundSlideshow/filesShownTracker.txt';
     try {
-      const filesShown = FileSystemImageSlideshow.readFileSync(
-        filepath,
-        'utf8'
-      );
-      const listOfShownFiles = filesShown
-        .split(/\r?\n/u)
-        .filter((line) => line.trim() !== '');
+      const filesShown = FileSystemImageSlideshow.readFileSync(filepath, 'utf8');
+      const listOfShownFiles = filesShown.split(/\r?\n/u).filter((line) => line.trim() !== '');
       Log.info(`Found filesShownTracker: in path: ${filepath} containing: ${listOfShownFiles.length} files`);
       return new Set(listOfShownFiles);
     } catch {
@@ -207,18 +196,12 @@ module.exports = NodeHelper.create({
     if (FileSystemImageSlideshow.existsSync(filePath)) {
       FileSystemImageSlideshow.appendFileSync(filePath, `${imgPath}\n`);
     } else {
-      FileSystemImageSlideshow.writeFileSync(filePath, `${imgPath}\n`, {
-        flag: 'wx'
-      });
+      FileSystemImageSlideshow.writeFileSync(filePath, `${imgPath}\n`, {flag: 'wx'});
     }
   },
   resetShownImagesFile () {
     try {
-      FileSystemImageSlideshow.writeFileSync(
-        'modules/MMM-BackgroundSlideshow/filesShownTracker.txt',
-        '',
-        'utf8'
-      );
+      FileSystemImageSlideshow.writeFileSync('modules/MMM-BackgroundSlideshow/filesShownTracker.txt', '', 'utf8');
     } catch (err) {
       Log.error('Error writing empty filesShownTracker.txt', err);
     }
@@ -226,10 +209,7 @@ module.exports = NodeHelper.create({
   // gathers the image list
   gatherImageList (config, sendNotification) {
     // Invalid config. retrieve it again
-    if (
-      typeof config === 'undefined' ||
-      !Object.hasOwn(Object(config), 'imagePaths')
-    ) {
+    if (typeof config === 'undefined' || !Object.hasOwn(Object(config), 'imagePaths')) {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_REGISTER_CONFIG');
       return;
     }
@@ -240,12 +220,7 @@ module.exports = NodeHelper.create({
     }
     for (let i = 0; i < config.imagePaths.length; i++) {
       const excludedImagesList = this.excludedFiles(config.imagePaths[i]);
-      this.getFiles(
-        config.imagePaths[i],
-        this.imageList,
-        excludedImagesList,
-        config
-      );
+      this.getFiles(config.imagePaths[i], this.imageList, excludedImagesList, config);
     }
     const imageListToUse = config.showAllImagesBeforeRestart
       ? this.imageList.filter((image) => !this.alreadyShownSet.has(image.path))
@@ -324,9 +299,7 @@ module.exports = NodeHelper.create({
         // 'Google Photos/2009/p2200111.jpg.supplemental-metadata(1).json'
         // so let us handle these cases, also
 
-        match = imageFilename
-          .replace(/\.[^.]+$/, '')
-          .match(/^(.+?)\s*\((\d+)\)$/);
+        const match = imageFilename.replace(/\.[^.]+$/, '').match(/^(.+?)\s*\((\d+)\)$/);
         const baseFilename = match
           ? match[1]
           : imageFilename.replace(/\.[^.]+$/, '');
@@ -334,9 +307,7 @@ module.exports = NodeHelper.create({
           ? `(${match[2]})`
           : '';
 
-        filesArray = files.filter((file) => file.startsWith(baseFilename) &&
-          path.extname(file).toLowerCase() ===
-          `${imageFilenameEnumeratedEnd}.json`);
+        filesArray = files.filter((file) => file.startsWith(baseFilename) && path.extname(file).toLowerCase() === `${imageFilenameEnumeratedEnd}.json`);
         // actually, there is only one file expected
         jsonFilePath = path.join(imageDirectory, filesArray[0]);
         Log.log('JSON:', jsonFilePath);
@@ -359,77 +330,41 @@ module.exports = NodeHelper.create({
         Log.debug('Image description:', json_metadata.description);
         metadata.description = json_metadata.description;
       }
-      if (
-        json_metadata.photoTakenTime &&
-        json_metadata.photoTakenTime.timestamp
-      ) {
+      if (json_metadata.photoTakenTime && json_metadata.photoTakenTime.timestamp) {
         let {timestamp} = json_metadata.photoTakenTime;
         // Convert to number and handle both seconds and milliseconds timestamps
-        timestamp =
-          typeof timestamp === 'string'
-            ? parseFloat(timestamp)
-            : timestamp;
+        timestamp = typeof timestamp === 'string'
+          ? parseFloat(timestamp)
+          : timestamp;
         // If timestamp is in seconds (typical for Unix timestamps), convert to milliseconds
         if (timestamp < 10000000000) {
           timestamp *= 1000;
         }
         const dateTime = new Date(timestamp);
-        metadata.photoTakenTime = dateTime
-          .toISOString()
-          .slice(0, 16)
+        metadata.photoTakenTime = dateTime.toISOString().slice(0, 16)
           .replace('T', ' ');
-        Log.debug(
-          'Photo taken time:',
-          metadata.photoTakenTime,
-          json_metadata.photoTakenTime.formatted
-        );
-      } else if (
-        json_metadata.creationTime &&
-        json_metadata.creationTime.timestamp
-      ) {
+        Log.debug('Photo taken time:', metadata.photoTakenTime, json_metadata.photoTakenTime.formatted);
+      } else if (json_metadata.creationTime && json_metadata.creationTime.timestamp) {
         let {timestamp} = json_metadata.creationTime;
         // Convert to number and handle both seconds and milliseconds timestamps
-        timestamp =
-          typeof timestamp === 'string'
-            ? parseFloat(timestamp)
-            : timestamp;
+        timestamp = typeof timestamp === 'string'
+          ? parseFloat(timestamp)
+          : timestamp;
         // If timestamp is in seconds (typical for Unix timestamps), convert to milliseconds
         if (timestamp < 10000000000) {
           timestamp *= 1000;
         }
         const dateTime = new Date(timestamp);
-        metadata.creationTime = dateTime
-          .toISOString()
-          .slice(0, 16)
+        metadata.creationTime = dateTime.toISOString().slice(0, 16)
           .replace('T', ' ');
-        Log.debug(
-          'Photo creation time:',
-          metadata.creationTime,
-          json_metadata.creationTime.formatted
-        );
+        Log.debug('Photo creation time:', metadata.creationTime, json_metadata.creationTime.formatted);
       }
-      if (
-        json_metadata.geoDataExif &&
-        json_metadata.geoDataExif.latitude &&
-        json_metadata.geoDataExif.longitude
-      ) {
-        Log.debug(
-          'Image Exif position:',
-          json_metadata.geoDataExif.longitude,
-          json_metadata.geoDataExif.latitude
-        );
+      if (json_metadata.geoDataExif && json_metadata.geoDataExif.latitude && json_metadata.geoDataExif.longitude) {
+        Log.debug('Image Exif position:', json_metadata.geoDataExif.longitude, json_metadata.geoDataExif.latitude);
         latitude = json_metadata.geoDataExif.latitude;
         longitude = json_metadata.geoDataExif.longitude;
-      } else if (
-        json_metadata.geoData &&
-        json_metadata.geoData.latitude &&
-        json_metadata.geoData.longitude
-      ) {
-        Log.debug(
-          'Image position:',
-          json_metadata.geoData.longitude,
-          json_metadata.geoData.latitude
-        );
+      } else if (json_metadata.geoData && json_metadata.geoData.latitude && json_metadata.geoData.longitude) {
+        Log.debug('Image position:', json_metadata.geoData.longitude, json_metadata.geoData.latitude);
         latitude = json_metadata.geoData.latitude;
         longitude = json_metadata.geoData.longitude;
       }
@@ -443,15 +378,9 @@ module.exports = NodeHelper.create({
         if (address) {
           metadata.position = address;
           // clean the first part of address if its a street number (numbers + space, or numbers+comma+space, or numbers + bis,ter + space)
-          metadata.position = metadata.position.replace(
-            /^[0-9]+(,[ ]|[ ]|(bis|ter)[ ])+/u,
-            ''
-          );
+          metadata.position = metadata.position.replace(/^[0-9]+(,[ ]|[ ]|(bis|ter)[ ])+/u, '');
           // clean the first part of address if its a "Plus Code Google" (4 alphanum + space + 3 alphanum + space)
-          metadata.position = metadata.position.replace(
-            /^[A-Za-z0-9]{4}[ \+][A-Za-z0-9]+[ ]+/u,
-            ''
-          );
+          metadata.position = metadata.position.replace(/^[A-Za-z0-9]{4}[ \+][A-Za-z0-9]+[ ]+/u, '');
         } else {
           metadata.position = `${Math.round(latitude * 100) / 100}, ${Math.round(longitude * 100) / 100}`;
         }
@@ -517,11 +446,7 @@ module.exports = NodeHelper.create({
             Log.log('Resolved address with Google Maps API:', address);
             // Update the address cache and write it back to file
             addressCache[`${latitude},${longitude}`] = address;
-            fs.writeFileSync(
-              this.config.addressCacheFile,
-              JSON.stringify(addressCache),
-              'utf8'
-            );
+            fs.writeFileSync(this.config.addressCacheFile, JSON.stringify(addressCache), 'utf8');
 
             return address;
           }
@@ -570,7 +495,7 @@ module.exports = NodeHelper.create({
       .resize({
         width: parseInt(this.config.maxWidth, 10),
         height: parseInt(this.config.maxHeight, 10),
-        fit: 'inside'
+        fit: 'inside',
       })
       .keepMetadata()
       .jpeg({quality: 80});
@@ -630,15 +555,9 @@ module.exports = NodeHelper.create({
       const currentItem = `${imagePath}/${contents[i]}`;
       const stats = FileSystemImageSlideshow.lstatSync(currentItem);
       if (stats.isDirectory() && config.recursiveSubDirectories) {
-        this.getFiles(
-          currentItem,
-          imageList,
-          this.excludedFiles(currentItem),
-          config
-        );
+        this.getFiles(currentItem, imageList, this.excludedFiles(currentItem), config);
       } else if (stats.isFile()) {
-        const isValidImageFileExtension =
-          this.checkValidImageFileExtension(currentItem);
+        const isValidImageFileExtension = this.checkValidImageFileExtension(currentItem);
         const isExcluded = this.isExcluded(contents[i], excludedImagesList);
         if (isValidImageFileExtension && !isExcluded) {
           imageList.push({
@@ -667,7 +586,6 @@ module.exports = NodeHelper.create({
     formData.append('photoUrl', payload.metadata.url || '');
     formData.append('filename', payload.metadata.displayedName || '');
     formData.append('creationTime', payload.metadata.displayedTime || '');
-    // Log.log(`Form data: photoUrl=${payload.metadata.url || ''}, filename=${payload.metadata.displayedName || ''}, creationTime=${payload.metadata.displayedTime || ''}`);
     fetch(this.config.photoSignalUrl, {
       method: 'POST',
       body: formData
@@ -707,10 +625,13 @@ module.exports = NodeHelper.create({
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY_VIDEO') {
       Log.info('mw got BACKGROUNDSLIDESHOW_PLAY_VIDEO');
       Log.info(`cmd line: omxplayer --win 0,0,1920,1080 --alpha 180 ${payload[0]}`);
-      exec(`omxplayer --win 0,0,1920,1080 --alpha 180 ${payload[0]}`, () => {
-        this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY', null);
-        Log.info('mw video done');
-      });
+      exec(
+        `omxplayer --win 0,0,1920,1080 --alpha 180 ${payload[0]}`,
+        () => {
+          this.sendSocketNotification('BACKGROUNDSLIDESHOW_PLAY', null);
+          Log.info('mw video done');
+        }
+      );
     } else if (notification === 'BACKGROUNDSLIDESHOW_NEXT_IMAGE') {
       Log.debug('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
       this.getNextImage();

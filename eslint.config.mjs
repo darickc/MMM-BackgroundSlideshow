@@ -40,7 +40,6 @@ export default defineConfig([
       '@stylistic/quote-props': ['error', 'as-needed'],
       '@stylistic/quotes': ['error', 'single'],
       '@stylistic/padded-blocks': ['error', 'never'],
-      '@stylistic/space-before-function-paren': ['error', 'always'],
       'capitalized-comments': 'off',
       'complexity': ['error', 35],
       'consistent-this': 'off',
