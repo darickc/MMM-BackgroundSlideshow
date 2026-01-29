@@ -119,6 +119,13 @@ The following notifications can be used:
        <br>Example payload: {urls:['url_to_image', 'url_to_image']}
       </td>
     </tr>
+    <tr>
+      <td><code>BACKGROUNDSLIDESHOW_SIGNAL_PHOTO</code></td>
+      <td> will send photo's Google URL (found in takeout json metadata) to signal issues (for instance, uninteresting pictures) to a backend server.
+       <br>Sends a `POST` with fields `photoUrl`, `filename`, `creationTime` to a server URL defined in config `photoSignalUrl`.
+       <br>This could be useful to rezise, rotate, modify or delete some photos from Google Photos, when you use <b>MMM-BackgroundSlideshow</b> to show photos from a Google Takeout.
+      </td>
+    </tr>
 </table>
 
 ## Configuration options
@@ -258,8 +265,8 @@ The following properties can be configured:
     </tr>
     <tr>
       <td><code>imageInfo</code></td>
-      <td>String value, a list of image properties to display in the image info div, separated by commas.  Possible values are : date (EXIF date from image), name (image name).
-      For the iamge name, the relative path from that defined in imagePaths is displayed if the recursiveSubDirectories option is set to true.<br>
+      <td>String value, a list of image properties to display in the image info div, separated by commas.  Possible values are : date (EXIF date from image), name (image name), description, desc_name (description with fallback to name), position.
+        <br>For the image name, the relative path from that defined in imagePaths is displayed if the recursiveSubDirectories option is set to true.<br>
         <br><b>Example:</b> <code>date,name</code>
         <br><b>Default value:</b> <code>name</code>
         <br>This value is <b>OPTIONAL</b>
@@ -273,7 +280,8 @@ The following properties can be configured:
         <br><b>Default value:</b> <code>false</code>
         <br>This value is <b>OPTIONAL</b>
       </td>
-    </tr>      <tr>
+    </tr>
+    <tr>
       <td><code>transitionSpeed</code></td>
       <td>Transition speed from one image to the other, transitionImages must be true. Must be a valid css transition duration.<br>
         <br><b>Example:</b> <code>'2s'</code>
@@ -413,7 +421,50 @@ The following properties can be configured:
     </tr>
     <tr>
       <td><code>changeImageOnResume</code></td>
-      <td>Should the image be changed in the moment the module resumes after it got hidden?
+      <td>Should the image be changed in the moment the module resumes after it got hidden?<br>
+        <br><b>Example:</b> <code>true</code>
+        <br><b>Default value:</b> <code>false</code>
+        <br>This value is <b>OPTIONAL</b>
+      </td>
+    </tr>
+    <tr>
+      <td><code>googleMapsApiKey</code></td>
+      <td>To geocode position (ie convert to readable address)<br>
+        <br><b>Example:</b> <code>ALzaTrucMachin5g</code>
+        <br><b>Default value:</b> <code>''</code>
+        <br>This value is <b>OPTIONAL</b>
+      </td>
+    </tr>
+    <tr>
+      <td><code>addressCacheFile</code></td>
+      <td>To cache geocoding results<br>
+        <br><b>Example:</b> <code>config/addressCache.json</code>
+        <br><b>Default value:</b> <code>''</code>
+        <br>This value is <b>OPTIONAL</b>, but definitely you should have one if you geocode
+      </td>
+    </tr>
+    <tr>
+      <td><code>photoSignalUrl</code></td>
+      <td>External backend server 's URL where `BACKGROUNDSLIDESHOW_SIGNAL_PHOTO` sends photo's Google URL (found in takeout json metadata) to signal issues (for instance, uninteresting pictures).
+       <br>Sends a <code>POST</code> with fields <code>photoUrl</code>, <code>filename</code>, <code>creationTime</code> to a server.
+       <br>This could be useful to rezise, rotate, modify or delete some photos from Google Photos, when you use <b>MMM-BackgroundSlideshow</b> to show photos from a Google Takeout.<br>
+        <br><b>Example:</b> <code>http://myserver.com/handle_photo.php"</code>
+        <br><b>Default value:</b> <code>''</code>
+        <br>This value is <b>OPTIONAL</b>
+      </td>
+    </tr>
+    <tr>
+      <td><code>excludeDescriptionsRegexps</code></td>
+      <td>Descriptions (found in takeout json metadata) matching are not kept (array of regexps)<br>
+        <br><b>Example:</b> <code>[/uploaded with Flickr Uploader/u]</code>
+        <br><b>Default value:</b> <code>''</code>
+        <br>This value is <b>OPTIONAL</b>
+      </td>
+    </tr>
+    <tr>
+      <td><code>cleanImageName: false</code></td>
+      <td>Remove all words (separated by spaces or /) that contain at least one number<br>
+        <br><code>2012/IMG_4242 nice landscape.HEIC</code> will end as <code>nice landscape</code>
         <br><b>Example:</b> <code>true</code>
         <br><b>Default value:</b> <code>false</code>
         <br>This value is <b>OPTIONAL</b>
