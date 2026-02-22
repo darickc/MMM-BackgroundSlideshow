@@ -309,10 +309,12 @@ module.exports = NodeHelper.create({
 
         filesArray = files.filter((file) => file.startsWith(baseFilename) && path.extname(file).toLowerCase() === `${imageFilenameEnumeratedEnd}.json`);
         // actually, there is only one file expected
-        jsonFilePath = path.join(imageDirectory, filesArray[0]);
-        Log.log('JSON:', jsonFilePath);
-        const jsonData = fs.readFileSync(jsonFilePath, 'utf8');
-        json_metadata = JSON.parse(jsonData);
+        if (filesArray.length > 0) {
+          jsonFilePath = path.join(imageDirectory, filesArray[0]);
+          Log.log('JSON:', jsonFilePath);
+          const jsonData = fs.readFileSync(jsonFilePath, 'utf8');
+          json_metadata = JSON.parse(jsonData);
+        }
       } else {
         Log.warn('Directory does not exist:', imageDirectory);
       }
