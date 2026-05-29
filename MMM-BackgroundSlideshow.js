@@ -48,6 +48,8 @@ Module.register('MMM-BackgroundSlideshow', {
     // cover: Resize the background image to cover the entire container, even if it has to stretch the image or cut a little bit off one of the edges
     // contain: Resize the background image to make sure the image is fully visible
     backgroundSize: 'cover', // cover or contain
+    // if true, shows a blurred copy of the image behind the main image to fill empty space
+    backgroundBlurEnabled: false,
     // if backgroundSize contain, determine where to zoom the picture. Towards top, center or bottom
     backgroundPosition: 'center', // Most useful options: "top" or "center" or "bottom"
     // transition from one image to the other (may be a bit choppy on slower devices, or if the images are too big)
@@ -148,6 +150,13 @@ Module.register('MMM-BackgroundSlideshow', {
 
     if (!this.config.transitionImages) {
       this.config.transitionSpeed = '0';
+    }
+
+    if (typeof this.config.transitions === 'string') {
+      this.config.transitions = this.config.transitions
+        .replace(/\s/gu, ',')
+        .split(',')
+        .filter((transition) => transition);
     }
 
     // Lets make sure the backgroundAnimation duration matches the slideShowSpeed unless it has been
@@ -418,6 +427,14 @@ Module.register('MMM-BackgroundSlideshow', {
     return div;
   },
 
+  createBlurredBackgroundDiv () {
+    const div = document.createElement('div');
+    div.style.backgroundSize = 'cover';
+    div.style.backgroundPosition = 'center';
+    div.className = 'image image-background';
+    return div;
+  },
+
   createImageInfoDiv (wrapper) {
     const div = document.createElement('div');
     div.className = `info ${this.config.imageInfoLocation}`;
@@ -459,14 +476,31 @@ Module.register('MMM-BackgroundSlideshow', {
 
       const transitionDiv = document.createElement('div');
       transitionDiv.className = 'transition';
+      let transitionAnimationName;
       if (this.config.transitionImages && this.config.transitions.length > 0) {
         const randomNumber = Math.floor(Math.random() * this.config.transitions.length);
-        transitionDiv.style.animationDuration = this.config.transitionSpeed;
+        transitionAnimationName = this.config.transitions[randomNumber];
+        if (transitionAnimationName === 'opacity') {
+          transitionDiv.style.animationDuration = this.config.transitionSpeed;
+          transitionDiv.style.animationName = transitionAnimationName;
+          transitionDiv.style.animationTimingFunction = this.config.transitionTimingFunction;
+          transitionAnimationName = null;
+        }
         transitionDiv.style.transition = `opacity ${this.config.transitionSpeed} ease-in-out`;
-        transitionDiv.style.animationName = this.config.transitions[
-          randomNumber
-        ];
-        transitionDiv.style.animationTimingFunction = this.config.transitionTimingFunction;
+      }
+
+      let backgroundDiv;
+      if (this.config.backgroundBlurEnabled) {
+        backgroundDiv = this.createBlurredBackgroundDiv();
+        backgroundDiv.style.backgroundImage = `url("${image.src}")`;
+      }
+
+      const foregroundDiv = document.createElement('div');
+      foregroundDiv.className = 'image-foreground-transition';
+      if (transitionAnimationName) {
+        foregroundDiv.style.animationDuration = this.config.transitionSpeed;
+        foregroundDiv.style.animationName = transitionAnimationName;
+        foregroundDiv.style.animationTimingFunction = this.config.transitionTimingFunction;
       }
 
       const imageDiv = this.createDiv();
@@ -558,7 +592,11 @@ Module.register('MMM-BackgroundSlideshow', {
           imageDiv.style.transform = this.getImageTransformCss(exifOrientation);
         }
       });
-      transitionDiv.appendChild(imageDiv);
+      if (backgroundDiv) {
+        transitionDiv.appendChild(backgroundDiv);
+      }
+      foregroundDiv.appendChild(imageDiv);
+      transitionDiv.appendChild(foregroundDiv);
       this.imagesDiv.appendChild(transitionDiv);
     };
 

@@ -1,5 +1,6 @@
 .MMM-BackgroundSlideshow .images,
 .MMM-BackgroundSlideshow .image,
+.MMM-BackgroundSlideshow .image-foreground-transition,
 .MMM-BackgroundSlideshow .transition,
 .MMM-BackgroundSlideshow .gradient {
   position: absolute;
@@ -14,8 +15,16 @@
   animation-direction: alternate;
   animation-iteration-count: infinite;
 }
+
+.MMM-BackgroundSlideshow .image-background {
+  filter: blur(25px);
+  opacity: 0.5;
+  transform: scale(1.08);
+}
+
 .MMM-BackgroundSlideshow .transition {
   animation-timing-function: ease-out;
+  overflow: hidden;
 }
 
 @keyframes opacity {

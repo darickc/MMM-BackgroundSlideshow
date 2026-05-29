@@ -390,6 +390,14 @@ The following properties can be configured:
       </td>
     </tr>
     <tr>
+      <td><code>backgroundBlurEnabled</code></td>
+      <td>Boolean value, if set to true when images are smaller than the screen size, the black space on the sides of the image will be filled with a blurred version of the same image to enhance the visual dynamic of the slideshow with blurred colors that match the image.
+        <br><b>Example:</b> <code>true</code>
+        <br><b>Default value:</b> <code>false</code>
+        <br>This value is <b>OPTIONAL</b>
+      </td>
+    </tr>
+    <tr>
       <td><code>transitions</code></td>
       <td>Array value containing strings defining what transitions to perform.
       <b>Note:</b> transitionImages must be set to true.<br>
