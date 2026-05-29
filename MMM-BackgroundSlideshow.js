@@ -38,6 +38,8 @@ Module.register('MMM-BackgroundSlideshow', {
     showImageInfo: false,
     // a comma separated list of values to display: description, name, desc_name (description with fallback to name), date, position, imagecount
     imageInfo: 'name, date, imagecount',
+    // moment.js format string used when displaying imageInfo date values
+    imageInfoDateFormat: 'dddd MMMM D, YYYY HH:mm',
     // location of the info div
     imageInfoLocation: 'bottomRight', // Other possibilities are: bottomLeft, topLeft, topRight
     // transition speed from one image to the other, transitionImages must be true
@@ -567,15 +569,7 @@ Module.register('MMM-BackgroundSlideshow', {
           let dateTime = EXIF.getTag(image, 'DateTimeOriginal');
           // attempt to parse the date if possible
           if (dateTime !== null) {
-            try {
-              dateTime = moment(dateTime, 'YYYY:MM:DD HH:mm:ss');
-              dateTime = dateTime.format('dddd MMMM D, YYYY HH:mm');
-            } catch {
-              Log.log(`[MMM-BackgroundSlideshow] Failed to parse dateTime: ${
-                dateTime
-              } to format YYYY:MM:DD HH:mm:ss`);
-              dateTime = '';
-            }
+            dateTime = this.formatImageInfoDate(dateTime);
           }
           // TODO: allow for location lookup via openMaps
           // let lat = EXIF.getTag(this, "GPSLatitude");
@@ -663,6 +657,23 @@ Module.register('MMM-BackgroundSlideshow', {
     }
   },
 
+  formatImageInfoDate (dateTime) {
+    const parsedDate = moment(
+      dateTime,
+      [moment.ISO_8601, 'YYYY-MM-DD HH:mm', 'YYYY:MM:DD HH:mm:ss'],
+      true
+    );
+
+    if (!parsedDate.isValid()) {
+      Log.log(`[MMM-BackgroundSlideshow] Failed to parse dateTime: ${
+        dateTime
+      }`);
+      return '';
+    }
+
+    return parsedDate.format(this.config.imageInfoDateFormat);
+  },
+
   updateImageInfo (imageinfo, imageDate) {
     // build the image info string based on imageinfo and EXIF data
     // return the updated imageinfo object
@@ -709,15 +720,19 @@ Module.register('MMM-BackgroundSlideshow', {
         case 'date':
           // by priority : photoTakenTime, EXIF dateTime, creationTime
           if (imageinfo.metadata && imageinfo.metadata.photoTakenTime) {
-            imageProps.push(imageinfo.metadata.photoTakenTime);
-            correctTime = imageinfo.metadata.photoTakenTime;
+            correctTime = this.formatImageInfoDate(imageinfo.metadata.photoTakenTime);
+            if (correctTime) {
+              imageProps.push(correctTime);
+            }
           } else if (imageDate && imageDate !== 'Invalid date') {
             imageProps.push(imageDate);
             imageinfo.metadata.EXIFTime = imageDate;
             correctTime = imageDate;
           } else if (imageinfo.metadata && imageinfo.metadata.creationTime) {
-            imageProps.push(imageinfo.metadata.creationTime);
-            correctTime = imageinfo.metadata.creationTime;
+            correctTime = this.formatImageInfoDate(imageinfo.metadata.creationTime);
+            if (correctTime) {
+              imageProps.push(correctTime);
+            }
           }
           // Save displayed time for other uses
           if (correctTime) {

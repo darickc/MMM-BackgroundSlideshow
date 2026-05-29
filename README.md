@@ -273,6 +273,14 @@ The following properties can be configured:
       </td>
     </tr>
     <tr>
+      <td><code>imageInfoDateFormat</code></td>
+      <td>String value, Moment.js format string used when displaying imageInfo date values.
+        <br><b>Example:</b> <code>YYYY-MM-DD HH:mm</code>
+        <br><b>Default value:</b> <code>dddd MMMM D, YYYY HH:mm</code>
+        <br>This value is <b>OPTIONAL</b>
+      </td>
+    </tr>
+    <tr>
       <td><code>imageInfoNoFileExt</code></td>
       <td>Boolean value, if true the file extension will be removed before the image name is displayed.
       <br>
