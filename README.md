@@ -273,6 +273,14 @@ The following properties can be configured:
       </td>
     </tr>
     <tr>
+      <td><code>imageInfoDateFormat</code></td>
+      <td>String value, Moment.js format string used when displaying imageInfo date values.
+        <br><b>Example:</b> <code>YYYY-MM-DD HH:mm</code>
+        <br><b>Default value:</b> <code>dddd MMMM D, YYYY HH:mm</code>
+        <br>This value is <b>OPTIONAL</b>
+      </td>
+    </tr>
+    <tr>
       <td><code>imageInfoNoFileExt</code></td>
       <td>Boolean value, if true the file extension will be removed before the image name is displayed.
       <br>
@@ -384,6 +392,14 @@ The following properties can be configured:
       <td><code>backgroundAnimationEnabled</code></td>
       <td>Boolean value, if set to true the background will scroll if the picture is larger than the screen size (e.g. for panaramic pictures).  The picture will either scroll vertically or horizontally depending on which dimension extends beyond the screen size.
       <b>Note:</b> For this to work, backgroundSize must be set to cover.<br>
+        <br><b>Example:</b> <code>true</code>
+        <br><b>Default value:</b> <code>false</code>
+        <br>This value is <b>OPTIONAL</b>
+      </td>
+    </tr>
+    <tr>
+      <td><code>backgroundBlurEnabled</code></td>
+      <td>Boolean value, if set to true when images are smaller than the screen size, the black space on the sides of the image will be filled with a blurred version of the same image to enhance the visual dynamic of the slideshow with blurred colors that match the image.
         <br><b>Example:</b> <code>true</code>
         <br><b>Default value:</b> <code>false</code>
         <br>This value is <b>OPTIONAL</b>
