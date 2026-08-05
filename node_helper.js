@@ -38,6 +38,7 @@ module.exports = NodeHelper.create({
 
   shitShuffle (array) {
     // This is the original shit shuffle that never works as it is pseudo random but ok for backup
+    Log.info(`BACKGROUNDSLIDESHOW: [shitShuffle] running Math.random Fisher-Yates on ${array.length} images`);
     for (let i = array.length - 1; i > 0; i--) {
       // j is a random index in [0, i].
       const j = Math.floor(Math.random() * (i + 1));
@@ -46,57 +47,77 @@ module.exports = NodeHelper.create({
     return array;
   },
   
-  // shuffles an array at random and returns it
-  shuffleArray (array) {
-      try {
-            if (typeof config === 'undefined' || !Object.hasOwn(Object(config), 'randomOrgApiKey')) {
-              return shitShuffle(array);
-            }
-            
-            // https://api.random.org/json-rpc/4/basic
-            const key = this.config.randomOrgApiKey;
-            const apiUrl = 'https://api.random.org/json-rpc/4/invoke';
-            const requestBody = {
-                "jsonrpc": "2.0",
-                "method": "generateIntegers",
-                "params": {
-                    "apiKey": key,
-                    "n": 1000, // 1000 pictures per day is about 1/minute for 17 hours... TODO make this configrable 
-                    "min": 0,
-                    "max": 1000, // Default set this later based on count
-                    "replacement": false // Only unique results avoid duplicate values 
-                },
-                "id": 42
-            };
+  // Randomly shrinks a (possibly very large) image list via random.org, then
+  // shitShuffles the subset. Without an API key (or on any failure) falls back
+  // to shitShuffle on the full list so the plugin keeps working.
+  //
+  // Intended flow:
+  //   1) gatherImageList loads ALL photos from disk into the array
+  //   2) random.org picks ~1000 unique indices from 0 .. array.length-1
+  //   3) array is filtered down to that random subset
+  //   4) shitShuffle orders the subset for playback
+  async shuffleArray (array) {
+    Log.info(`BACKGROUNDSLIDESHOW: [shuffleArray] start — ${array.length} images`);
 
-            requestBody.params.max = array.length-1;    
+    if (!array.length) {
+      return array;
+    }
 
-            axios.post(apiUrl, requestBody)
-                .then(response => {
-                    //console.log('Response from API:', response.data);
+    const hasApiKey = this.config && this.config.randomOrgApiKey;
+    if (!hasApiKey) {
+      Log.info('BACKGROUNDSLIDESHOW: [shuffleArray] no randomOrgApiKey — falling back to shitShuffle');
+      return this.shitShuffle(array);
+    }
 
-                    // Grab the Random index set
-                    var randomIndicesSet = response.data.result.random.data;
+    // 1000 pictures/day ≈ 1/minute for ~17 hours. TODO: make configurable.
+    const sampleSize = Math.min(1000, array.length);
 
-                    // Filter the array, keeping only the items whose index are in the random set
-                    array = array.filter((item, index) => randomIndicesSet.has(index));
+    try {
+      // https://api.random.org/json-rpc/4/basic
+      Log.info(`BACKGROUNDSLIDESHOW: [shuffleArray] calling random.org to pick ${sampleSize} of ${array.length}`);
+      const apiUrl = 'https://api.random.org/json-rpc/4/invoke';
+      const requestBody = {
+        jsonrpc: '2.0',
+        method: 'generateIntegers',
+        params: {
+          apiKey: this.config.randomOrgApiKey,
+          n: sampleSize,
+          min: 0,
+          max: array.length - 1,
+          replacement: false // unique indices only
+        },
+        id: 42
+      };
 
-                    // Now use the old shit Shuffle. Random.Org has taken car of the real Random selection
-                    array = shitShuffle(array);
-                })
-                .catch(error => {
-                    Log.error(error);
-                    //role back to the original way if there is any kind of error
-                    array = shitShuffle(array);
-                });
+      const response = await axios.post(apiUrl, requestBody);
 
-        } catch (error) {
-            Log.error(error);
-            //role back to the original way if there is any kind of error
-            array = shitShuffle(array);
-        } 
- 
-    return array;
+      if (response.data && response.data.error) {
+        throw new Error(JSON.stringify(response.data.error));
+      }
+
+      const randomIndices = response.data && response.data.result && response.data.result.random
+        ? response.data.result.random.data
+        : null;
+
+      if (!Array.isArray(randomIndices) || randomIndices.length !== sampleSize) {
+        throw new Error(`unexpected random.org data (got ${randomIndices && randomIndices.length} indices, expected ${sampleSize})`);
+      }
+
+      // Keep only items whose index was selected by random.org
+      const randomIndicesSet = new Set(randomIndices);
+      const selected = array.filter((item, index) => randomIndicesSet.has(index));
+
+      array.length = 0;
+      for (let i = 0; i < selected.length; i++) {
+        array.push(selected[i]);
+      }
+
+      Log.info(`BACKGROUNDSLIDESHOW: [shuffleArray] random.org selected ${array.length} of original set — finishing with shitShuffle`);
+      return this.shitShuffle(array);
+    } catch (error) {
+      Log.error(`BACKGROUNDSLIDESHOW: [shuffleArray] random.org failed — falling back to shitShuffle: ${error}`);
+      return this.shitShuffle(array);
+    }
   },
 
   // sort by filename attribute
@@ -161,7 +182,7 @@ module.exports = NodeHelper.create({
   },
 
   // gathers the image list
-  gatherImageList (config, sendNotification) {
+  async gatherImageList (config, sendNotification) {
     // Invalid config. retrieve it again
     if (typeof config === 'undefined' || !Object.hasOwn(Object(config), 'imagePaths')) {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_REGISTER_CONFIG');
@@ -173,13 +194,17 @@ module.exports = NodeHelper.create({
       this.getFiles(config.imagePaths[i], this.imageList, config);
     }
 
-    this.imageList = config.randomizeImageOrder
-      ? this.shuffleArray(this.imageList)
-      : this.sortImageList(
+    Log.info(`BACKGROUNDSLIDESHOW: [gatherImageList] scanned ${this.imageList.length} files; randomizeImageOrder=${config.randomizeImageOrder}`);
+    if (config.randomizeImageOrder) {
+      // Wait for shuffle (random.org or shitShuffle) before the slideshow uses the list
+      this.imageList = await this.shuffleArray(this.imageList);
+    } else {
+      this.imageList = this.sortImageList(
         this.imageList,
         config.sortImagesBy,
         config.sortImagesDescending
       );
+    }
     Log.info(`BACKGROUNDSLIDESHOW: ${this.imageList.length} files found`);
     this.index = 0;
 
@@ -199,10 +224,10 @@ module.exports = NodeHelper.create({
     }
   },
 
-  getNextImage () {
+  async getNextImage () {
     if (!this.imageList.length || this.index >= this.imageList.length) {
       // if there are no images or all the images have been displayed, try loading the images again
-      this.gatherImageList(this.config);
+      await this.gatherImageList(this.config);
     }
     //
     if (!this.imageList.length) {
@@ -358,8 +383,12 @@ module.exports = NodeHelper.create({
       // the MagicMirror startup banner to get stuck sometimes.
       this.config = config;
       setTimeout(() => {
-        this.gatherImageList(config, true);
-        this.getNextImage();
+        // Await gather (and any random.org shuffle) before showing the first image
+        this.gatherImageList(config, true)
+          .then(() => this.getNextImage())
+          .catch((error) => {
+            Log.error(`BACKGROUNDSLIDESHOW: failed to gather/start slideshow: ${error}`);
+          });
       }, 200);
     } else if (notification === 'BACKGROUNDSLIDESHOW_PLAY_VIDEO') {
       Log.info('mw got BACKGROUNDSLIDESHOW_PLAY_VIDEO');
