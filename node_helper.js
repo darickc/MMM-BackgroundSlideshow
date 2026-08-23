@@ -12,14 +12,14 @@
  */
 
 const FileSystemImageSlideshow = require('node:fs');
+const {createHash} = require('node:crypto');
 const {exec} = require('node:child_process');
 const NodeHelper = require('node_helper');
-const express = require('express');
 const Log = require('../../js/logger.js');
-const basePath = '/images/';
 const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
+const imageRoute = '/modules/MMM-BackgroundSlideshow/image';
 // / ? FIXME const {json} = require('node:stream/consumers');
 
 // the main module helper create
@@ -29,12 +29,64 @@ module.exports = NodeHelper.create({
   start () {
     this.excludePaths = new Set();
     this.validImageFileExtensions = new Set();
-    this.expressInstance = this.expressApp;
     this.imageList = [];
+    this.imageFiles = new Map();
     this.alreadyShownSet = new Set();
     this.index = 0;
     this.timer = null;
+    this.expressApp.get(`${imageRoute}/:imageId`, (request, response) => {
+      this.sendImage(request, response);
+    });
     self = this;
+  },
+
+  getImageId (imagePath) {
+    return createHash('sha256')
+      .update(imagePath)
+      .digest('hex');
+  },
+
+  getImageUrl (image) {
+    const imageId = this.getImageId(image.path);
+    const imageVersion = this.config.resizeImages
+      ? `${image.modified}-${this.config.maxWidth}x${this.config.maxHeight}`
+      : `${image.modified}-original`;
+    this.imageFiles.set(imageId, image.path);
+    return `${imageRoute}/${imageId}?v=${imageVersion}`;
+  },
+
+  sendImage (request, response) {
+    const imagePath = this.imageFiles.get(request.params.imageId);
+    if (!imagePath) {
+      response.sendStatus(404);
+      return;
+    }
+
+    response.set('Cache-Control', 'private, max-age=3600');
+    if (this.config.resizeImages) {
+      response.type('image/jpeg');
+      sharp(imagePath)
+        .rotate()
+        .resize({
+          width: parseInt(this.config.maxWidth, 10),
+          height: parseInt(this.config.maxHeight, 10),
+          fit: 'inside',
+        })
+        .keepMetadata()
+        .jpeg({quality: 80})
+        .on('error', (error) => {
+          Log.error(`Error serving image "${imagePath}":`, error);
+          if (response.headersSent) {
+            response.destroy(error);
+          } else {
+            response.sendStatus(500);
+          }
+        })
+        .pipe(response);
+      return;
+    }
+
+    response.sendFile(path.resolve(imagePath));
   },
 
   // shuffles an array at random and returns it
@@ -389,20 +441,18 @@ module.exports = NodeHelper.create({
       }
     }
 
-    this.readFile(image.path, (data) => {
-      const returnPayload = {
-        identifier: self.config.identifier,
-        path: image.path,
-        data,
-        index: self.index,
-        total: self.imageList.length,
-        metadata
-      };
-      self.sendSocketNotification(
-        'BACKGROUNDSLIDESHOW_DISPLAY_IMAGE',
-        returnPayload
-      );
-    });
+    const returnPayload = {
+      identifier: self.config.identifier,
+      path: image.path,
+      data: this.getImageUrl(image),
+      index: self.index,
+      total: self.imageList.length,
+      metadata
+    };
+    self.sendSocketNotification(
+      'BACKGROUNDSLIDESHOW_DISPLAY_IMAGE',
+      returnPayload
+    );
 
     // (re)set the update timer
     this.startOrRestartTimer();
@@ -490,63 +540,6 @@ module.exports = NodeHelper.create({
     }
     this.getNextImage();
   },
-  resizeImage (input, callback) {
-    Log.log(`Resizing image to max: ${this.config.maxWidth}x${this.config.maxHeight}`);
-    const transformer = sharp()
-      .rotate()
-      .resize({
-        width: parseInt(this.config.maxWidth, 10),
-        height: parseInt(this.config.maxHeight, 10),
-        fit: 'inside',
-      })
-      .keepMetadata()
-      .jpeg({quality: 80});
-
-    // Streama image data from file to transformation and finally to buffer
-    const outputStream = [];
-
-    FileSystemImageSlideshow.createReadStream(input)
-      .pipe(transformer) // Stream to Sharp för att resizea
-      .on('data', (chunk) => {
-        outputStream.push(chunk); // add chunks in a buffer array
-      })
-      .on('end', () => {
-        const buffer = Buffer.concat(outputStream);
-        callback(`data:image/jpg;base64, ${buffer.toString('base64')}`);
-        Log.log('Resizing done!');
-      })
-      .on('error', (err) => {
-        Log.error('Error resizing image:', err);
-      });
-  },
-
-  readFile (filepath, callback) {
-    const ext = filepath.split('.').pop();
-
-    if (this.config.resizeImages) {
-      this.resizeImage(filepath, callback);
-    } else {
-      Log.log('ResizeImages: false');
-      // const data = FileSystemImageSlideshow.readFileSync(filepath, { encoding: 'base64' });
-      // callback(`data:image/${ext};base64, ${data}`);
-      const chunks = [];
-      FileSystemImageSlideshow.createReadStream(filepath)
-        .on('data', (chunk) => {
-          chunks.push(chunk); // Samla chunkar av data
-        })
-        .on('end', () => {
-          const buffer = Buffer.concat(chunks);
-          callback(`data:image/${ext.slice(1)};base64, ${buffer.toString('base64')}`);
-        })
-        .on('error', (err) => {
-          Log.error('Error reading file:', err);
-        })
-        .on('close', () => {
-          Log.log('Stream closed.');
-        });
-    }
-  },
-
   getFiles (imagePath, imageList, excludedImagesList, config) {
     const contents = FileSystemImageSlideshow.readdirSync(imagePath);
     Log.info(`Reading directory "${imagePath}" for images, found ${contents.length} files and directories`);
@@ -603,10 +596,7 @@ module.exports = NodeHelper.create({
   socketNotificationReceived (notification, payload) {
     if (notification === 'BACKGROUNDSLIDESHOW_REGISTER_CONFIG') {
       const config = payload;
-      this.expressInstance.use(
-        basePath + config.imagePaths[0],
-        express.static(config.imagePaths[0], {maxAge: 3600000})
-      );
+      this.imageFiles.clear();
 
       // Create set of excluded subdirectories.
       this.excludePaths = new Set(config.excludePaths);
