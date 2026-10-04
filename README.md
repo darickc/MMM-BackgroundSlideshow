@@ -460,6 +460,31 @@ The following properties can be configured:
       </td>
     </tr>
     <tr>
+      <td><code>useOpenStreetMap</code></td>
+      <td>Show a place name for photos that have GPS coordinates in their EXIF data, looked up with <a href="https://nominatim.openstreetmap.org/">OpenStreetMap Nominatim</a> (free, no API key). Requires <code>position</code> in <code>imageInfo</code>. Photos with a Google Takeout position keep using that.
+        <br>Labels are the landmark name when there is a meaningful one (e.g. "Hollywood Bowl"), otherwise "neighbourhood or street, city" (e.g. "Koreatown, Los Angeles"). House numbers are never shown.<br>
+        <br><b>Example:</b> <code>true</code>
+        <br><b>Default value:</b> <code>false</code>
+        <br>This value is <b>OPTIONAL</b>
+      </td>
+    </tr>
+    <tr>
+      <td><code>openStreetMapCacheFile</code></td>
+      <td>JSON file caching OpenStreetMap place names, keyed by coordinates rounded to 3 decimals (about 100 m). You can edit names in this file; changes apply the next time that location is shown.<br>
+        <br><b>Example:</b> <code>config/geoCache.json</code>
+        <br><b>Default value:</b> <code>'modules/MMM-BackgroundSlideshow/geoCache.json'</code>
+        <br>This value is <b>OPTIONAL</b>
+      </td>
+    </tr>
+    <tr>
+      <td><code>openStreetMapLanguage</code></td>
+      <td>Language for OpenStreetMap place names.<br>
+        <br><b>Example:</b> <code>'fr'</code>
+        <br><b>Default value:</b> <code>'en'</code>
+        <br>This value is <b>OPTIONAL</b>
+      </td>
+    </tr>
+    <tr>
       <td><code>photoSignalUrl</code></td>
       <td>External backend server 's URL where `BACKGROUNDSLIDESHOW_SIGNAL_PHOTO` sends photo's Google URL (found in takeout json metadata) to signal issues (for instance, uninteresting pictures).
        <br>Sends a <code>POST</code> with fields <code>photoUrl</code>, <code>filename</code>, <code>creationTime</code> to a server.

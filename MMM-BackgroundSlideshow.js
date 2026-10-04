@@ -110,6 +110,10 @@ Module.register('MMM-BackgroundSlideshow', {
     imageInfoNoFileExt: false,
     googleMapsApiKey: '', // for goecoding position
     addressCacheFile: '', // to cache geocoding results
+    // look up a place name for photos with GPS in their EXIF data via OpenStreetMap (free, no API key)
+    useOpenStreetMap: false,
+    openStreetMapCacheFile: 'modules/MMM-BackgroundSlideshow/geoCache.json', // editable cache of place names
+    openStreetMapLanguage: 'en', // language for place names
     photoSignalUrl: '', // URL to send photo's Google URL (found in json metadata)to a server to signal issues
     // (for instance, bad pictures, , needs a backend)
     excludeDescriptionsRegexps: [/uploaded with Flickr Uploader/u], // descriptions matching are not kept (array of regexps)
@@ -281,6 +285,8 @@ Module.register('MMM-BackgroundSlideshow', {
       if (payload.identifier === this.identifier) {
         this.displayImage(payload);
       }
+    } else if (notification === 'BACKGROUNDSLIDESHOW_GEOCODE_RESULT') {
+      this.showPositionResult(payload);
     } else if (notification === 'BACKGROUNDSLIDESHOW_FILELIST') {
       // bubble up filelist notifications
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_FILELIST', payload);
@@ -571,14 +577,8 @@ Module.register('MMM-BackgroundSlideshow', {
           if (dateTime !== null) {
             dateTime = this.formatImageInfoDate(dateTime);
           }
-          // TODO: allow for location lookup via openMaps
-          // let lat = EXIF.getTag(this, "GPSLatitude");
-          // let lon = EXIF.getTag(this, "GPSLongitude");
-          // // Only display the location if we have both longitute and lattitude
-          // if (lat && lon) {
-          //   // Get small map of location
-          // }
           this.currentImageInfo = this.updateImageInfo(imageinfo, dateTime);
+          this.requestPositionFromExif(image, imageinfo, dateTime);
         }
 
         if (!this.browserSupportsExifOrientationNatively) {
@@ -672,6 +672,50 @@ Module.register('MMM-BackgroundSlideshow', {
     }
 
     return parsedDate.format(this.config.imageInfoDateFormat);
+  },
+
+  // EXIF GPS is [degrees, minutes, seconds] plus an N/S or E/W reference
+  gpsToDecimal (gpsData, ref) {
+    if (!gpsData || gpsData.length !== 3 || !ref) {
+      return null;
+    }
+    const [degrees, minutes, seconds] = gpsData.map(Number);
+    const decimal = degrees + minutes / 60 + seconds / 3600;
+    return ref === 'S' || ref === 'W'
+      ? -decimal
+      : decimal;
+  },
+
+  // Ask the node_helper for a place name when the photo has EXIF GPS but no position
+  // from Google Takeout metadata. The info box is refreshed when the answer arrives.
+  requestPositionFromExif (image, imageinfo, imageDate) {
+    this.pendingPosition = null;
+    if (!this.config.useOpenStreetMap || !this.config.imageInfo.includes('position') || imageinfo.metadata.position) {
+      return;
+    }
+    const lat = this.gpsToDecimal(EXIF.getTag(image, 'GPSLatitude'), EXIF.getTag(image, 'GPSLatitudeRef'));
+    const lon = this.gpsToDecimal(EXIF.getTag(image, 'GPSLongitude'), EXIF.getTag(image, 'GPSLongitudeRef'));
+    if (lat === null || lon === null || Number.isNaN(lat) || Number.isNaN(lon)) {
+      return;
+    }
+    this.pendingPosition = {
+      imageinfo,
+      imageDate
+    };
+    this.sendSocketNotification('BACKGROUNDSLIDESHOW_GEOCODE', {
+      path: imageinfo.path,
+      lat: lat.toFixed(3),
+      lon: lon.toFixed(3)
+    });
+  },
+
+  // Show the place name from the node_helper, if that image is still on screen
+  showPositionResult (payload) {
+    const pending = this.pendingPosition;
+    if (pending && pending.imageinfo.path === payload.path && payload.position) {
+      pending.imageinfo.metadata.position = payload.position;
+      this.currentImageInfo = this.updateImageInfo(pending.imageinfo, pending.imageDate);
+    }
   },
 
   updateImageInfo (imageinfo, imageDate) {
