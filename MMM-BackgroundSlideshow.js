@@ -779,6 +779,10 @@ Module.register('MMM-BackgroundSlideshow', {
     });
 
     this.imageInfoDiv.innerHTML = innerHTML;
+    // hide the box entirely (it has padding and a background) when there is nothing to show
+    this.imageInfoDiv.style.display = imageProps.length > 0
+      ? ''
+      : 'none';
     return imageinfo;
   },
 
