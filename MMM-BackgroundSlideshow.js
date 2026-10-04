@@ -773,10 +773,14 @@ Module.register('MMM-BackgroundSlideshow', {
       }
     });
 
-    let innerHTML = `<header class="infoDivHeader">${this.translate('PICTURE_INFO')}</header>`;
-    imageProps.forEach((val) => {
-      innerHTML += `${val}<br/>`;
-    });
+    // hide the box entirely when there is nothing to show
+    let innerHTML = '';
+    if (imageProps.length > 0) {
+      innerHTML = `<header class="infoDivHeader">${this.translate('PICTURE_INFO')}</header>`;
+      imageProps.forEach((val) => {
+        innerHTML += `${val}<br/>`;
+      });
+    }
 
     this.imageInfoDiv.innerHTML = innerHTML;
     return imageinfo;
