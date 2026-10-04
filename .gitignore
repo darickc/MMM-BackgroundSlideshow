@@ -1,3 +1,4 @@
 node_modules
 .idea*
 **filesShownTracker.txt
+geoCache.json

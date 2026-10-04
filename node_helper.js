@@ -20,6 +20,10 @@ const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 const imageRoute = '/modules/MMM-BackgroundSlideshow/image';
+// OpenStreetMap places whose name makes a poor photo caption (roads, shops, offices, parking, ...)
+const OSM_SKIP_NAME_CATEGORIES = ['highway', 'aeroway', 'railway', 'office', 'shop'];
+const OSM_SKIP_NAME_TYPES = ['fast_food', 'parking', 'parking_entrance', 'parking_space', 'fuel', 'house', 'memorial'];
+const OSM_MAX_POSITION_LENGTH = 40;
 // / ? FIXME const {json} = require('node:stream/consumers');
 
 // the main module helper create
@@ -511,6 +515,69 @@ module.exports = NodeHelper.create({
     return null;
   },
 
+  // Resolve a place name for EXIF GPS coordinates with OpenStreetMap Nominatim (no API key needed).
+  // lat/lon arrive rounded to 3 decimals (~100 m), which is also the cache key. The cache file is
+  // re-read on every lookup, so hand-edited names apply without a restart.
+  async getPositionFromOpenStreetMap (lat, lon) {
+    const cacheKey = `${lat},${lon}`;
+    const cache = this.readOpenStreetMapCache();
+    if (cache[cacheKey]) {
+      return cache[cacheKey];
+    }
+    try {
+      const language = encodeURIComponent(this.config.openStreetMapLanguage || 'en');
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=${language}&lat=${lat}&lon=${lon}`;
+      const response = await fetch(url, {
+        headers: {'User-Agent': 'MMM-BackgroundSlideshow (MagicMirror module; https://github.com/darickc/MMM-BackgroundSlideshow)'}
+      });
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
+      }
+      const position = this.formatOpenStreetMapPlace(await response.json());
+      if (position) {
+        const freshCache = this.readOpenStreetMapCache();
+        freshCache[cacheKey] = position;
+        fs.writeFileSync(this.config.openStreetMapCacheFile, JSON.stringify(freshCache, null, 2), 'utf8');
+        Log.debug(`OpenStreetMap position for ${cacheKey}: ${position}`);
+      }
+      return position;
+    } catch (error) {
+      Log.warn(`OpenStreetMap lookup failed for ${cacheKey}: ${error.message}`);
+      return null;
+    }
+  },
+
+  readOpenStreetMapCache () {
+    try {
+      return JSON.parse(fs.readFileSync(this.config.openStreetMapCacheFile, 'utf8'));
+    } catch {
+      return {};
+    }
+  },
+
+  // Landmark name if there is a meaningful one, otherwise "neighbourhood/street, city".
+  // Never shows house numbers or cuts a name mid-word.
+  formatOpenStreetMapPlace (data) {
+    const address = data.address || {};
+    const locality = address.city || address.town || address.village || address.suburb ||
+      address.hamlet || address.county || address.state || '';
+    if (data.name && !OSM_SKIP_NAME_CATEGORIES.includes(data.category) && !OSM_SKIP_NAME_TYPES.includes(data.type)) {
+      return data.name;
+    }
+    const area = address.neighbourhood || address.quarter || address.suburb || address.road || '';
+    const parts = [area, locality].filter((part, i, arr) => part && arr.indexOf(part) === i);
+    if (parts.length > 0) {
+      const label = parts.join(', ');
+      return label.length > OSM_MAX_POSITION_LENGTH && locality
+        ? locality
+        : label;
+    }
+    // Fall back to the first parts of the full address, cut at a comma
+    return (data.display_name || '').split(', ')
+      .slice(0, 2)
+      .join(', ');
+  },
+
   // stop timer if it's running
   stopTimer () {
     if (this.timer) {
@@ -636,6 +703,13 @@ module.exports = NodeHelper.create({
       this.startOrRestartTimer();
     } else if (notification === 'BACKGROUNDSLIDESHOW_SIGNAL_PHOTO_HANDLER') {
       this.signalPhoto(payload);
+    } else if (notification === 'BACKGROUNDSLIDESHOW_GEOCODE') {
+      this.getPositionFromOpenStreetMap(payload.lat, payload.lon).then((position) => {
+        this.sendSocketNotification('BACKGROUNDSLIDESHOW_GEOCODE_RESULT', {
+          path: payload.path,
+          position
+        });
+      });
     }
   }
 });
