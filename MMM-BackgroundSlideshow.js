@@ -773,16 +773,16 @@ Module.register('MMM-BackgroundSlideshow', {
       }
     });
 
-    // hide the box entirely when there is nothing to show
-    let innerHTML = '';
-    if (imageProps.length > 0) {
-      innerHTML = `<header class="infoDivHeader">${this.translate('PICTURE_INFO')}</header>`;
-      imageProps.forEach((val) => {
-        innerHTML += `${val}<br/>`;
-      });
-    }
+    let innerHTML = `<header class="infoDivHeader">${this.translate('PICTURE_INFO')}</header>`;
+    imageProps.forEach((val) => {
+      innerHTML += `${val}<br/>`;
+    });
 
     this.imageInfoDiv.innerHTML = innerHTML;
+    // hide the box entirely (it has padding and a background) when there is nothing to show
+    this.imageInfoDiv.style.display = imageProps.length > 0
+      ? ''
+      : 'none';
     return imageinfo;
   },
 
