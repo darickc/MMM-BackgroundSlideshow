@@ -473,7 +473,7 @@ Module.register('MMM-BackgroundSlideshow', {
     }
 
     const image = new Image();
-    image.onload = () => {
+    const showImage = () => {
       // check if there are more than 2 elements and remove the first one
       if (this.imagesDiv.childNodes.length > 1) {
         this.imagesDiv.removeChild(this.imagesDiv.childNodes[0]);
@@ -592,6 +592,14 @@ Module.register('MMM-BackgroundSlideshow', {
       foregroundDiv.appendChild(imageDiv);
       transitionDiv.appendChild(foregroundDiv);
       this.imagesDiv.appendChild(transitionDiv);
+    };
+    // Decode the image before it replaces the current one. Otherwise slow devices
+    // (e.g. a Raspberry Pi without GPU acceleration) visibly paint it piece by piece.
+    image.onload = () => {
+      image
+        .decode()
+        .catch((error) => Log.debug(`[MMM-BackgroundSlideshow] Could not decode image in advance: ${error}`))
+        .then(showImage);
     };
 
     image.src = imageinfo.data;
