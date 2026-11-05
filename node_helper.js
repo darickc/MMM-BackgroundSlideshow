@@ -262,8 +262,33 @@ module.exports = NodeHelper.create({
       Log.error('Error writing empty filesShownTracker.txt', err);
     }
   },
+  // returns the paths of the most recently shown half of the images of the cycle that just ended
+  getRecentlyShownPaths () {
+    const shownPaths = this.config.showAllImagesBeforeRestart
+      ? Array.from(this.readEntireShownFile())
+      : this.imageList.slice(0, this.index).map((image) => image.path);
+    return new Set(shownPaths.slice(-Math.floor(shownPaths.length / 2)));
+  },
+  // moves recently shown images to the end of a freshly shuffled list, keeping the random order
+  // within both parts, so an image is not shown again right after a new cycle has started
+  moveRecentlyShownToEnd (imageList, recentlyShownPaths) {
+    if (!recentlyShownPaths.size) {
+      return imageList;
+    }
+    const notRecent = [];
+    const recent = [];
+    for (const image of imageList) {
+      if (recentlyShownPaths.has(image.path)) {
+        recent.push(image);
+      } else {
+        notRecent.push(image);
+      }
+    }
+    Log.info(`Moved ${recent.length} recently shown files to the end of the new cycle`);
+    return notRecent.concat(recent);
+  },
   // gathers the image list
-  gatherImageList (config, sendNotification) {
+  gatherImageList (config, sendNotification, recentlyShownPaths = new Set()) {
     // Invalid config. retrieve it again
     if (typeof config === 'undefined' || !Object.hasOwn(Object(config), 'imagePaths')) {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_REGISTER_CONFIG');
@@ -288,6 +313,9 @@ module.exports = NodeHelper.create({
       finalImageList = this.shuffleImagesLoopFolders(imageListToUse);
     } else if (config.randomizeImageOrder) {
       finalImageList = this.shuffleArray(imageListToUse);
+      if (config.avoidRepeatsAcrossCycles) {
+        finalImageList = this.moveRecentlyShownToEnd(finalImageList, recentlyShownPaths);
+      }
     } else {
       finalImageList = this.sortImageList(
         imageListToUse,
@@ -320,10 +348,13 @@ module.exports = NodeHelper.create({
   getNextImage () {
     if (!this.imageList.length || this.index >= this.imageList.length) {
       // if there are no images or all the images have been displayed, try loading the images again
+      const recentlyShownPaths = this.config.avoidRepeatsAcrossCycles
+        ? this.getRecentlyShownPaths()
+        : new Set();
       if (this.config.showAllImagesBeforeRestart) {
         this.resetShownImagesFile();
       }
-      this.gatherImageList(this.config);
+      this.gatherImageList(this.config, false, recentlyShownPaths);
     }
     //
     if (!this.imageList.length) {

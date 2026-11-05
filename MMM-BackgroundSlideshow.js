@@ -26,6 +26,8 @@ Module.register('MMM-BackgroundSlideshow', {
     randomizeImagesLoopFolders: false,
     // keeps track of shown images to make sure you have seen them all before an image is shown twice.
     showAllImagesBeforeRestart: false,
+    // if true (and randomizeImageOrder is true), the images shown at the end of a cycle are moved to the end of the next cycle, so an image is not repeated right after a new cycle starts
+    avoidRepeatsAcrossCycles: false,
     // how to sort images: name, random, created, modified
     sortImagesBy: 'created',
     // whether to sort in ascending (default) or descending order
