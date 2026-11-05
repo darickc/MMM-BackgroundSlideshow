@@ -215,6 +215,14 @@ The following properties can be configured:
       </td>
     </tr>
     <tr>
+      <td><code>avoidRepeatsAcrossCycles</code></td>
+      <td>Boolean value, if true the most recently shown half of the images is moved to the end of the newly shuffled list whenever all images have been shown and a new cycle starts. This prevents an image from being shown again right after the cycle restarts, while every image is still shown exactly once per cycle. Works best together with <code>showAllImagesBeforeRestart</code>: the recently shown images are then read from <code>filesShownTracker.txt</code>, so this also works if MagicMirror was restarted during the cycle. Only used if <code>randomizeImageOrder</code> is true and <code>randomizeImagesLoopFolders</code> is false.<br>
+        <br><b>Example:</b> <code>true</code>
+        <br><b>Default value:</b> <code>false</code>
+        <br>This value is <b>OPTIONAL</b>
+      </td>
+    </tr>
+    <tr>
       <td><code>sortImagesBy</code></td>
       <td>String value, determines how images are sorted.  Possible values are: name (by file name), created (by file created date), modified (by file
       modified date). Only used if randomizeImageOrder is set to false.<br>
