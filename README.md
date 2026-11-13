@@ -273,7 +273,7 @@ The following properties can be configured:
     </tr>
     <tr>
       <td><code>imageInfo</code></td>
-      <td>String value, a list of image properties to display in the image info div, separated by commas.  Possible values are : date (EXIF date from image), name (image name), description, desc_name (description with fallback to name), position.
+      <td>String value, a list of image properties to display in the image info div, separated by commas.  Possible values are : date (EXIF date from image), name (image name), description, desc_name (description with fallback to name), position, imagecount. Values are case-insensitive; invalid values are ignored with a warning in the browser console.
         <br>For the image name, the relative path from that defined in imagePaths is displayed if the recursiveSubDirectories option is set to true.<br>
         <br><b>Example:</b> <code>date,name</code>
         <br><b>Default value:</b> <code>name</code>
