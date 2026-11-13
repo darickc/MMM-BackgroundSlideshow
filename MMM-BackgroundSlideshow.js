@@ -215,9 +215,9 @@ Module.register('MMM-BackgroundSlideshow', {
   // Setup receiver for global notifications (other modules etc)
   // Use for example with MMM-Remote-Control API: https://github.com/Jopyth/MMM-Remote-Control/tree/master/API
   // to change image from buttons or curl:
-  // curl http://[your ip address]:8080/api/notification/BACKGROUNDSLIDESHOW_PREV or NEXT
+  // curl http://[your ip address]:8080/api/notification/BACKGROUNDSLIDESHOW_PREVIOUS or NEXT
   // make sure to set address: "0.0.0.0", and secureEndpoints: false (or setup security according to readme!)
-  notificationReceived (notification) {
+  notificationReceived (notification, payload) {
     if (notification === 'BACKGROUNDSLIDESHOW_NEXT') {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
     } else if (notification === 'BACKGROUNDSLIDESHOW_PREVIOUS') { // was PREV, and did not worked
@@ -243,6 +243,52 @@ Module.register('MMM-BackgroundSlideshow', {
         imageFA: 'exclamation-triangle', // seulement pour les alertes
         timer: 5000
       });
+    } else if (notification === 'BACKGROUNDSLIDESHOW_UPDATE_IMAGE_LIST') {
+      this.imageIndex = -1;
+      this.updateImageList();
+      this.updateImage();
+    } else if (notification === 'BACKGROUNDSLIDESHOW_URL') {
+      if (payload && payload.url) {
+        // Stop timer.
+        if (payload.resume) {
+          if (this.timer) {
+            // Restart timer only if timer was already running
+            this.resume();
+          }
+        } else {
+          this.suspend();
+        }
+        this.updateImage(false, payload.url);
+      }
+    } else if (notification === 'BACKGROUNDSLIDESHOW_URLS') {
+      Log.log(`[MMM-BackgroundSlideshow] Notification Received: BACKGROUNDSLIDESHOW_URLS. Payload: ${JSON.stringify(payload)}`);
+      if (payload && payload.urls && payload.urls.length) {
+        // check if image list has been saved. If not, this is the first time the notification is received
+        // save the image list and index.
+        if (this.savedImages) {
+          // check if there the sent urls are the same, or different.
+          const temp = [...new Set([...payload.urls, ...this.imageList])];
+          // if they are the same length, then they haven't changed, so don't do anything.
+          if (temp.length !== payload.urls.length) {
+            this.updateImageListWithArray(payload.urls);
+          }
+        } else {
+          this.savedImages = this.imageList;
+          this.savedIndex = this.imageIndex;
+          this.updateImageListWithArray(payload.urls);
+        }
+        // no urls sent, see if there is saved data.
+      } else if (this.savedImages) {
+        this.imageList = this.savedImages;
+        this.imageIndex = this.savedIndex;
+        this.savedImages = null;
+        this.savedIndex = null;
+        this.updateImage();
+        if (this.timer && !this.playingVideo) {
+          // Restart timer only if timer was already running
+          this.resume();
+        }
+      }
     }
   },
   // the socket handler from node_helper.js
@@ -290,12 +336,8 @@ Module.register('MMM-BackgroundSlideshow', {
     } else if (notification === 'BACKGROUNDSLIDESHOW_GEOCODE_RESULT') {
       this.showPositionResult(payload);
     } else if (notification === 'BACKGROUNDSLIDESHOW_FILELIST') {
-      // bubble up filelist notifications
-      this.sendSocketNotification('BACKGROUNDSLIDESHOW_FILELIST', payload);
-    } else if (notification === 'BACKGROUNDSLIDESHOW_UPDATE_IMAGE_LIST') {
-      this.imageIndex = -1;
-      this.updateImageList();
-      this.updateImage();
+      // bubble up filelist notifications to other modules
+      this.sendNotification('BACKGROUNDSLIDESHOW_FILELIST', payload);
     } else if (notification === 'BACKGROUNDSLIDESHOW_IMAGE_UPDATE') {
       Log.log('[MMM-BackgroundSlideshow] Changing Background');
       this.suspend();
@@ -320,48 +362,6 @@ Module.register('MMM-BackgroundSlideshow', {
     } else if (notification === 'BACKGROUNDSLIDESHOW_PAUSE') {
       // Stop timer.
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_PAUSE');
-    } else if (notification === 'BACKGROUNDSLIDESHOW_URL') {
-      if (payload && payload.url) {
-        // Stop timer.
-        if (payload.resume) {
-          if (this.timer) {
-            // Restart timer only if timer was already running
-            this.resume();
-          }
-        } else {
-          this.suspend();
-        }
-        this.updateImage(false, payload.url);
-      }
-    } else if (notification === 'BACKGROUNDSLIDESHOW_URLS') {
-      Log.log(`[MMM-BackgroundSlideshow] Notification Received: BACKGROUNDSLIDESHOW_URLS. Payload: ${JSON.stringify(payload)}`);
-      if (payload && payload.urls && payload.urls.length) {
-        // check if image list has been saved. If not, this is the first time the notification is received
-        // save the image list and index.
-        if (this.savedImages) {
-          // check if there the sent urls are the same, or different.
-          const temp = [...new Set([...payload.urls, ...this.imageList])];
-          // if they are the same length, then they haven't changed, so don't do anything.
-          if (temp.length !== payload.urls.length) {
-            this.updateImageListWithArray(payload.urls);
-          }
-        } else {
-          this.savedImages = this.imageList;
-          this.savedIndex = this.imageIndex;
-          this.updateImageListWithArray(payload.urls);
-        }
-        // no urls sent, see if there is saved data.
-      } else if (this.savedImages) {
-        this.imageList = this.savedImages;
-        this.imageIndex = this.savedIndex;
-        this.savedImages = null;
-        this.savedIndex = null;
-        this.updateImage();
-        if (this.timer && !this.playingVideo) {
-          // Restart timer only if timer was already running
-          this.resume();
-        }
-      }
     }
   },
 
@@ -605,7 +605,8 @@ Module.register('MMM-BackgroundSlideshow', {
     };
 
     image.src = imageinfo.data;
-    this.sendSocketNotification('BACKGROUNDSLIDESHOW_IMAGE_UPDATED', {
+    // let other modules know which image is shown
+    this.sendNotification('BACKGROUNDSLIDESHOW_IMAGE_UPDATED', {
       url: imageinfo.path
     });
   },
