@@ -579,6 +579,7 @@ Module.register('MMM-BackgroundSlideshow', {
           if (dateTime !== null) {
             dateTime = this.formatImageInfoDate(dateTime);
           }
+          this.addExifDescription(image, imageinfo);
           this.currentImageInfo = this.updateImageInfo(imageinfo, dateTime);
           this.requestPositionFromExif(image, imageinfo, dateTime);
         }
@@ -643,6 +644,54 @@ Module.register('MMM-BackgroundSlideshow', {
     } else {
       this.sendSocketNotification('BACKGROUNDSLIDESHOW_NEXT_IMAGE');
     }
+  },
+
+  // Use the EXIF ImageDescription as the image description when the Google Takeout metadata has none.
+  // Placeholders written by cameras (e.g. 'OLYMPUS DIGITAL CAMERA') and descriptions
+  // matching excludeDescriptionsRegexps are ignored.
+  addExifDescription (image, imageinfo) {
+    if (!imageinfo.metadata || imageinfo.metadata.description) {
+      return;
+    }
+    const description = this.getExifDescription(image);
+    if (description) {
+      imageinfo.metadata.description = description;
+    }
+  },
+
+  getExifDescription (image) {
+    const rawDescription = EXIF.getTag(image, 'ImageDescription');
+    if (typeof rawDescription !== 'string') {
+      return null;
+    }
+    // exif-js reads strings byte by byte, so decode them as UTF-8 (falling back to Latin-1)
+    let description = rawDescription;
+    try {
+      const bytes = Uint8Array.from(rawDescription, (char) => char.charCodeAt(0));
+      description = new TextDecoder('utf-8', {fatal: true}).decode(bytes);
+    } catch {
+      // not valid UTF-8, keep the Latin-1 string
+    }
+    description = description.replace(/\0/gu, '').trim();
+    if (!description) {
+      return null;
+    }
+    const cameraNames = [EXIF.getTag(image, 'Make'), EXIF.getTag(image, 'Model')]
+      .map((name) => String(name || '')
+        .trim()
+        .toLowerCase());
+    if (
+      (/^(?:\w+ )?digital (?:still )?camera$|^(?:sony dsc|exif_jpeg_picture|pentax image|default|picasa)$/iu).test(description) ||
+      cameraNames.includes(description.toLowerCase())
+    ) {
+      return null;
+    }
+    if (this.config.excludeDescriptionsRegexps?.some((regexp) => (regexp instanceof RegExp
+      ? regexp
+      : new RegExp(regexp, 'u')).test(description))) {
+      return null;
+    }
+    return description;
   },
 
   getImageTransformCss (exifOrientation) {

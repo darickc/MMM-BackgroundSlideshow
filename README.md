@@ -504,7 +504,7 @@ The following properties can be configured:
     </tr>
     <tr>
       <td><code>excludeDescriptionsRegexps</code></td>
-      <td>Descriptions (found in takeout json metadata) matching are not kept (array of regexps)<br>
+      <td>Descriptions (found in takeout json metadata, or in the EXIF ImageDescription of images without takeout json) matching are not kept (array of regexps)<br>
         <br><b>Example:</b> <code>[/uploaded with Flickr Uploader/u]</code>
         <br><b>Default value:</b> <code>''</code>
         <br>This value is <b>OPTIONAL</b>
