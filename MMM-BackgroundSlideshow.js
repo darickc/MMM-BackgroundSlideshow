@@ -136,24 +136,24 @@ Module.register('MMM-BackgroundSlideshow', {
     // this.errorMessage = null;
 
     // validate imageinfo property.  This will make sure we have at least 1 valid value
-    const imageInfoRegex = /\bname\b|\bdate\b/giu;
-    if (
-      this.config.showImageInfo &&
-      !imageInfoRegex.test(this.config.imageInfo)
-    ) {
-      // this turns on the client => no Log, only console
-      console.warn('[MMM-BackgroundSlideshow] showImageInfo is set, but imageInfo does not have a valid value.');
-      // Use name as the default
-      this.config.imageInfo = ['name'];
-    } else {
-      // convert to lower case and replace any spaces with , to make sure we get an array back
+    if (this.config.showImageInfo) {
+      const validImageInfo = ['name', 'date', 'description', 'desc_name', 'desc_or_name', 'position', 'imagecount'];
+      // convert to lower case and split on commas and/or spaces, so we get an array back
       // even if the user provided space separated values
-      this.config.imageInfo = this.config.imageInfo
+      const requestedImageInfo = String(this.config.imageInfo)
         .toLowerCase()
-        .replace(/\s/gu, ',')
-        .split(',');
-      // now filter the array to only those that have values
-      this.config.imageInfo = this.config.imageInfo.filter((n) => n);
+        .split(/[\s,]+/u)
+        .filter((n) => n);
+      const invalidImageInfo = requestedImageInfo.filter((n) => !validImageInfo.includes(n));
+      if (invalidImageInfo.length > 0) {
+        Log.warn(`[MMM-BackgroundSlideshow] ignoring invalid imageInfo value(s): ${invalidImageInfo.join(', ')}`);
+      }
+      this.config.imageInfo = requestedImageInfo.filter((n) => validImageInfo.includes(n));
+      if (this.config.imageInfo.length === 0) {
+        Log.warn('[MMM-BackgroundSlideshow] showImageInfo is set, but imageInfo does not have a valid value.');
+        // Use name as the default
+        this.config.imageInfo = ['name'];
+      }
     }
 
     if (!this.config.transitionImages) {
@@ -806,7 +806,8 @@ Module.register('MMM-BackgroundSlideshow', {
               imageinfo.metadata.description;
           }
           break;
-        case 'desc_or_name':
+        case 'desc_name':
+        case 'desc_or_name': // kept for backwards compatibility
           if (imageinfo.metadata && imageinfo.metadata.description) {
             imageProps.push(`${imageinfo.metadata.description}`);
             imageinfo.metadata.displayedDescription =
