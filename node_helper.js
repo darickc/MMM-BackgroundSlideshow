@@ -26,6 +26,53 @@ const OSM_SKIP_NAME_TYPES = ['fast_food', 'parking', 'parking_entrance', 'parkin
 const OSM_MAX_POSITION_LENGTH = 40;
 // / ? FIXME const {json} = require('node:stream/consumers');
 
+/*
+ * Find the Google Takeout sidecar JSON of an image among the files of its directory.
+ * Takeout names the JSON after the original file name including its extension, with a varying
+ * (sometimes truncated) suffix, e.g. 'p2200111.jpg.json' or 'p2200111.jpg.supplemental-metadata.json'.
+ * When an album contains two images with the same name, the second one is saved as
+ * 'p2200111(1).jpg' and its JSON as 'p2200111.jpg.supplemental-metadata(1).json' (or 'p2200111.jpg(1).json'),
+ * so the counter has to sit right before '.json' exactly when the image name is numbered.
+ */
+const findTakeoutJsonFile = (imageFilename, files) => {
+  const extension = path.extname(imageFilename);
+  const stem = path.basename(imageFilename, extension);
+
+  const find = (originalStem, counter) => {
+    const originalFilename = `${originalStem}${extension}`;
+    const [jsonFile] = files
+      .filter((file) => {
+        if (!file.startsWith(originalFilename) || !file.toLowerCase().endsWith('.json')) {
+          return false;
+        }
+        let suffix = file.slice(originalFilename.length, -'.json'.length);
+        if (counter) {
+          if (!suffix.endsWith(counter)) {
+            return false;
+          }
+          suffix = suffix.slice(0, -counter.length);
+        } else if ((/\(\d+\)$/u).test(suffix)) {
+          // this is the JSON of a numbered duplicate
+          return false;
+        }
+        return suffix === '' || suffix.startsWith('.');
+      })
+      .sort();
+    // fall back to a JSON named after the file name without extension, e.g. 'p2200111(1).json'
+    return jsonFile ?? files.find((file) => file.toLowerCase() === `${originalStem}${counter}.json`.toLowerCase());
+  };
+
+  const match = stem.match(/^(?<originalStem>.+?)\s*(?<counter>\(\d+\))$/u);
+  // a numbered image is most likely a duplicate, but its name may also contain the counter itself
+  if (match) {
+    const jsonFile = find(match.groups.originalStem, match.groups.counter);
+    if (jsonFile) {
+      return jsonFile;
+    }
+  }
+  return find(stem, '');
+};
+
 // the main module helper create
 module.exports = NodeHelper.create({
 
@@ -373,31 +420,15 @@ module.exports = NodeHelper.create({
     const imageFilename = path.basename(image.path);
 
     // get infos from Google TakeOut JSON file
-    let filesArray = [];
     let jsonFilePath = '';
     let json_metadata = {};
 
     try {
       if (fs.existsSync(imageDirectory)) {
         const files = fs.readdirSync(imageDirectory);
-
-        // when 2 images with same name in album, Google TakeOut will save the second as
-        // 'Google Photos/2009/p2200111(1).jpg', and the json like
-        // 'Google Photos/2009/p2200111.jpg.supplemental-metadata(1).json'
-        // so let us handle these cases, also
-
-        const match = imageFilename.replace(/\.[^.]+$/, '').match(/^(.+?)\s*\((\d+)\)$/);
-        const baseFilename = match
-          ? match[1]
-          : imageFilename.replace(/\.[^.]+$/, '');
-        const imageFilenameEnumeratedEnd = match
-          ? `(${match[2]})`
-          : '';
-
-        filesArray = files.filter((file) => file.startsWith(baseFilename) && path.extname(file).toLowerCase() === `${imageFilenameEnumeratedEnd}.json`);
-        // actually, there is only one file expected
-        if (filesArray.length > 0) {
-          jsonFilePath = path.join(imageDirectory, filesArray[0]);
+        const jsonFilename = findTakeoutJsonFile(imageFilename, files);
+        if (jsonFilename) {
+          jsonFilePath = path.join(imageDirectory, jsonFilename);
           Log.log('JSON:', jsonFilePath);
           const jsonData = fs.readFileSync(jsonFilePath, 'utf8');
           json_metadata = JSON.parse(jsonData);
