@@ -266,7 +266,7 @@ The following properties can be configured:
     </tr>
         <tr>
       <td><code>recursiveSubDirectories</code></td>
-      <td>Boolean value, if true it will scan all sub-directories in the imagePaths.<br>
+      <td>Boolean value, if true it will scan all sub-directories in the imagePaths. Symbolic links to directories and images are followed.<br>
         <br><b>Example:</b> <code>true</code>
         <br><b>Default value:</b> <code>false</code>
         <br>This value is <b>OPTIONAL</b>

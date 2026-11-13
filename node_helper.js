@@ -688,17 +688,35 @@ module.exports = NodeHelper.create({
     }
     this.getNextImage();
   },
-  getFiles (imagePath, imageList, excludedImagesList, config) {
-    const contents = FileSystemImageSlideshow.readdirSync(imagePath);
+  // visitedDirectories holds the real paths of the directories already scanned, so symbolic links
+  // pointing to a parent directory (or to the same directory twice) do not cause endless loops or duplicates
+  getFiles (imagePath, imageList, excludedImagesList, config, visitedDirectories = new Set([FileSystemImageSlideshow.realpathSync(imagePath)])) {
+    // handle symbolic links last, so a directory reached directly and through a link is listed by its real path
+    const contents = FileSystemImageSlideshow.readdirSync(imagePath, {withFileTypes: true})
+      .sort((a, b) => Number(a.isSymbolicLink()) - Number(b.isSymbolicLink()))
+      .map((entry) => entry.name);
     Log.info(`Reading directory "${imagePath}" for images, found ${contents.length} files and directories`);
     for (let i = 0; i < contents.length; i++) {
       if (this.excludePaths.has(contents[i])) {
         continue;
       }
       const currentItem = `${imagePath}/${contents[i]}`;
-      const stats = FileSystemImageSlideshow.lstatSync(currentItem);
+      let stats;
+      try {
+        // statSync follows symbolic links, so linked directories and images are included
+        stats = FileSystemImageSlideshow.statSync(currentItem);
+      } catch (error) {
+        Log.warn(`Skipping "${currentItem}": ${error.message}`);
+        continue;
+      }
       if (stats.isDirectory() && config.recursiveSubDirectories) {
-        this.getFiles(currentItem, imageList, this.excludedFiles(currentItem), config);
+        const realPath = FileSystemImageSlideshow.realpathSync(currentItem);
+        if (visitedDirectories.has(realPath)) {
+          Log.info(`Skipping "${currentItem}", directory was already scanned`);
+          continue;
+        }
+        visitedDirectories.add(realPath);
+        this.getFiles(currentItem, imageList, this.excludedFiles(currentItem), config, visitedDirectories);
       } else if (stats.isFile()) {
         const isValidImageFileExtension = this.checkValidImageFileExtension(currentItem);
         const isExcluded = this.isExcluded(contents[i], excludedImagesList);
