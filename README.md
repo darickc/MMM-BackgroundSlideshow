@@ -168,7 +168,7 @@ The following properties can be configured:
     </tr>
     <tr>
       <td><code>resizeImages</code></td>
-      <td>Boolean value, if images should be resized or not.  For better performance, this should be true and the height and width set to the resolution of the monitor being used<br>
+      <td>Boolean value, if images should be resized or not.  For better performance, this should be true and the height and width set to the resolution of the monitor being used. Resizing uses the <code>sharp</code> module; if it cannot be loaded on your system, an error is logged and images are shown in their original size.<br>
         <br><b>Example:</b> <code>true</code>
         <br><b>Default value:</b> <code>false</code>
         <br>This value is <b>OPTIONAL</b>

@@ -16,10 +16,29 @@ const {createHash} = require('node:crypto');
 const {exec} = require('node:child_process');
 const NodeHelper = require('node_helper');
 const Log = require('../../js/logger.js');
-const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 const imageRoute = '/modules/MMM-BackgroundSlideshow/image';
+
+/*
+ * sharp is only needed for resizeImages. Load it on first use, so the module still works
+ * (without resizing) on systems where sharp's native binaries cannot be loaded,
+ * e.g. 32-bit Raspberry Pi OS older than Bookworm.
+ */
+let sharp = null;
+let sharpLoadFailed = false;
+const loadSharp = () => {
+  if (!sharp && !sharpLoadFailed) {
+    try {
+      sharp = require('sharp');
+    } catch (error) {
+      sharpLoadFailed = true;
+      Log.error('[MMM-BackgroundSlideshow] resizeImages is set, but the "sharp" module could not be loaded, so images are shown in their original size:', error.message);
+    }
+  }
+  return sharp;
+};
+
 // OpenStreetMap places whose name makes a poor photo caption (roads, shops, offices, parking, ...)
 const OSM_SKIP_NAME_CATEGORIES = ['highway', 'aeroway', 'railway', 'office', 'shop'];
 const OSM_SKIP_NAME_TYPES = ['fast_food', 'parking', 'parking_entrance', 'parking_space', 'fuel', 'house', 'memorial'];
@@ -67,7 +86,7 @@ module.exports = NodeHelper.create({
     }
 
     response.set('Cache-Control', 'private, max-age=3600');
-    if (this.config.resizeImages) {
+    if (this.config.resizeImages && loadSharp()) {
       response.type('image/jpeg');
       sharp(imagePath)
         .rotate()
