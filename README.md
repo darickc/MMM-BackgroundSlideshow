@@ -128,6 +128,31 @@ The following notifications can be used:
     </tr>
 </table>
 
+The module sends the following notifications to other modules:
+
+<table width="100%">
+  <thead>
+    <tr>
+      <th>Notification</th>
+      <th width="100%">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>BACKGROUNDSLIDESHOW_IMAGE_UPDATED</code></td>
+      <td>Sent whenever a new image is shown.
+       <br>Example payload: {url: '/path/to/image.jpg'}
+      </td>
+    </tr>
+    <tr>
+      <td><code>BACKGROUNDSLIDESHOW_FILELIST</code></td>
+      <td>Sent when the list of images has been (re)loaded.
+       <br>Example payload: {imageList: [{path: '/path/to/image.jpg', created: 1700000000000, modified: 1700000000000}, ...]}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 ## Configuration options
 
 The following properties can be configured:
