@@ -53,7 +53,7 @@ module.exports = NodeHelper.create({
   //
   // Intended flow:
   //   1) gatherImageList loads ALL photos from disk into the array
-  //   2) random.org picks ~1000 unique indices from 0 .. array.length-1
+  //   2) random.org picks ~randomOrgSampleSize unique indices from 0 .. array.length-1
   //   3) array is filtered down to that random subset
   //   4) shitShuffle orders the subset for playback
   async shuffleArray (array) {
@@ -69,8 +69,9 @@ module.exports = NodeHelper.create({
       return this.shitShuffle(array);
     }
 
-    // 1000 pictures/day ≈ 1/minute for ~17 hours. TODO: make configurable.
-    const sampleSize = Math.min(1000, array.length);
+    // Default 2000: more than a typical day of viewing so the deck need not wrap.
+    const configuredSample = Number(this.config.randomOrgSampleSize) || 2000;
+    const sampleSize = Math.min(Math.max(1, configuredSample), array.length);
 
     try {
       // https://api.random.org/json-rpc/4/basic
@@ -206,7 +207,20 @@ module.exports = NodeHelper.create({
       );
     }
     Log.info(`BACKGROUNDSLIDESHOW: ${this.imageList.length} files found`);
+
+    // Break timer-boot → clock-aligned deck positions: pick a random start in the
+    // day's list, then rotate so playback still walks the full deck once from
+    // index 0 (no same-day reshuffle / duplicates; getNextImage unchanged).
     this.index = 0;
+    if (config.randomizeImageOrder && this.imageList.length > 1) {
+      const start = Math.floor(Math.random() * this.imageList.length);
+      if (start > 0) {
+        this.imageList = this.imageList
+          .slice(start)
+          .concat(this.imageList.slice(0, start));
+      }
+      Log.info(`BACKGROUNDSLIDESHOW: [gatherImageList] random start index ${start} of ${this.imageList.length}`);
+    }
 
     // let other modules know about slideshow images
     this.sendSocketNotification('BACKGROUNDSLIDESHOW_FILELIST', {

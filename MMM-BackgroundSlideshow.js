@@ -16,6 +16,9 @@ Module.register('MMM-BackgroundSlideshow', {
   defaults: {
     // Random.org Api Key
     randomOrgApiKey: '',
+    // How many unique images to sample each day via random.org (online path only).
+    // Extra headroom beyond the viewing window avoids wrap/reuse of the same deck.
+    randomOrgSampleSize: 2000,
     // an array of strings, each is a path to a directory with images
     imagePaths: ['modules/MMM-BackgroundSlideshow/exampleImages'],
     // do not recurse into these subdirectory names when scanning.
